@@ -1,4 +1,4 @@
-/* Alert tracing and agent evolution views (bilingual through L(zh, en) from i18n.js).
+/* Alert tracing and learning loop views (bilingual through L(zh, en) from i18n.js).
  * Data: DATA.trace (validation cases with replay), DATA.showcase, DATA.evaluation. Helpers come from app.js.
  */
 window.AMLViews = (() => {
@@ -484,7 +484,7 @@ window.AMLViews = (() => {
     feed.scrollTo({ top: feed.scrollHeight, behavior: animate ? "smooth" : "auto" });
   }
 
-  /* =================== agent evolution =================== */
+  /* =================== learning loop =================== */
   function renderEvolution() {
     const s = DATA.showcase || {}, ta = s.tier_agent || {}, ia = s.investigation_agent || {}, ev = DATA.evaluation || {};
     const loop = [["◉", L("告警", "Alert")], ["≡", L("风险分级", "Risk grading")], ["⌕", L("调查", "Investigation")], ["✓", L("证据", "Evidence")], ["✦", L("学习", "Learning")], ["⑂", L("新规则", "New rules")]];

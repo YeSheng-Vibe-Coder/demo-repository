@@ -1,6 +1,6 @@
 /* AML·AGENT dashboard: plain JS + SVG, no external libraries.
  * Data comes from /dashboard/data.json (exported from real cycle and run state).
- * Three views: rules (this file), alert tracing and agent evolution (views.js).
+ * Three views: rules (this file), alert tracing and learning loop (views.js).
  */
 (() => {
   "use strict";
@@ -191,7 +191,7 @@
     }
     renderTree();
   }
-  // The version record lives on the agent evolution page; selecting a version also switches the rules page.
+  // The version record lives on the learning loop page; selecting a version also switches the rules page.
   function renderHistory() { const v = selectedVersion(); renderVersions(); renderVersionDetail(v); renderDiff(v); }
   const quotes = refs => [...new Set(refs)].map(p => DATA.policies[p]).filter(Boolean);
 

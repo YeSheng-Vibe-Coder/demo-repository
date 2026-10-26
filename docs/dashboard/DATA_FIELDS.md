@@ -18,9 +18,9 @@ Labels are used only for evaluation after the fact; no agent sees them. Rates ar
 | `dataset.window` | feature modal | Definition of the alert window |
 | `features{name}` | rules, drawer | `zh`, `calc`, `formula`, `description`, `unit`, `policy[]`, `table`, `distribution` (development p50/p90/p99) |
 | `policies{id}` | rules | AUSTRAC indicator: `text` (original), `zh`, `section`, `url` |
-| `versions[]`, `active_version` | rules, agent evolution | Rule versions: `rules` (groups, atoms, tree), `validation`, `parent_validation`, `plan` (incl. the rule update agent's `rationale`), `fit`, `diff`, `trigger`, `status` |
-| `evaluation` | agent evolution | `tiering` (risk grading agent vs reference model, per tier), `investigation_rounds{name}`, `feature_proposals[]` |
-| `showcase` | agent evolution, drawer | Reasoning of the three agents (below) |
+| `versions[]`, `active_version` | rules, learning loop | Rule versions: `rules` (groups, atoms, tree), `validation`, `parent_validation`, `plan` (incl. the rule update agent's `rationale`), `fit`, `diff`, `trigger`, `status` |
+| `evaluation` | learning loop | `tiering` (risk grading agent vs reference model, per tier), `investigation_rounds{name}`, `feature_proposals[]` |
+| `showcase` | learning loop, drawer | Reasoning of the three agents (below) |
 | `trace` | alert tracing | Validation headline volumes and the investigated cases with their replay (below) |
 
 ## `trace`
