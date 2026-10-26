@@ -76,6 +76,9 @@ class FeatureStore:
             sql.startswith(f"INSERT OVERWRITE DIRECTORY '{ROOT_PATH}/")
             or sql.startswith("CREATE LIGHTNING FILESTORE TABLE agent_")
             or sql.startswith("REFRESH TABLE IBM_AML.agent_")
+            # Local data pack install (local_pack.py): its two databases and the label-free transactions table.
+            or sql.startswith(('CREATE LIGHTNING DATABASE AML DESCRIBE', 'CREATE LIGHTNING DATABASE IBM_AML DESCRIBE'))
+            or sql.startswith(("CREATE LIGHTNING FILESTORE TABLE transactions FROM AML ", "REFRESH TABLE AML.transactions"))
             or sql.startswith(("SELECT ", "WITH "))
         )
         if not allowed or ";" in sql:

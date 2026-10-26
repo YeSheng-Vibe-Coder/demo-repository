@@ -149,6 +149,9 @@ def main() -> None:
     sub.add_parser("showcase-metrics", help="Recompute the chain-based validation metrics the dashboard shows")
     index = sub.add_parser("alert-index", help="Export every validation alert with its grading to a local SQLite index")
     index.add_argument("--snapshot", action="store_true", help="Also write the committed gzip copy")
+    pack = sub.add_parser("local-pack", help="Local data pack for a teammate's own Zetaris (see README)")
+    pack.add_argument("action", choices=["build", "install"])
+    pack.add_argument("--path", default=".runtime/local-data/aml-local-pack", help="install: the unpacked pack folder")
     learning = sub.add_parser("learning-cycle")
     learning.add_argument("--cases", type=int, default=30, help="Investigated alerts; the scan takes the top alert of each development day")
     learning.add_argument("--parallel", type=int, default=3, help="Team cases investigated at once")
@@ -204,6 +207,13 @@ def main() -> None:
         if args.snapshot:
             result["snapshot_bytes"] = alert_index.snapshot()
         print(json.dumps(result, indent=2))
+    elif args.command == "local-pack":
+        from . import local_pack
+
+        if args.action == "build":
+            local_pack.build()
+        else:
+            print(json.dumps(local_pack.install(Path(args.path).resolve()), indent=2))
     elif args.command == "showcase-metrics":
         from .learning_cycle import LearningCycle
         from .showcase import refresh_metrics

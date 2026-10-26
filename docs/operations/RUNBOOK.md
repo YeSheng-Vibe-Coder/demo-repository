@@ -16,7 +16,7 @@ Zetaris 特征库（按天分片） → 规则学习 agent（决策树，开发�
 
 - Python 3.11+（项目 `.venv`），Node 22.7+。
 - 根目录 `.env.local`（Git 忽略、权限 600）：`NVIDIA_API_KEY`、`ZETARIS_REST_URL`、`ZETARIS_API_KEY`、`ZETARIS_ORG_ID`。
-- Zetaris 经 SSH 隧道连接 Azure VM（8888 REST、3000 网页）。
+- Zetaris：经 SSH 隧道连接 Azure VM（8888 REST、3000 网页），或在本机 Zetaris 平台装入本地数据包（README 方式 B，同样走 8888 REST 与同一套 SQL）。
 - 所有参数来自 `docs/architecture/AML_Agent_Config_v1.0.json`（当前 `aml-config/2.0.0`）。
 - 时间划分 `evaluations/split_plan.v2.json`：开发 08-04–09-03（30 天）、验证 09-05–09-26、测试 09-28–10-19（不打开、不物化）、监控 10-21–11-04；11-05 之后的发布方长尾排除。
 
@@ -31,6 +31,7 @@ Zetaris 特征库（按天分片） → 规则学习 agent（决策树，开发�
 | `investigate CASE.json` / `run RUN_ID` | 单案调查（团队模式：协调员 + 并行专项调查员 + World Model 汇总员） |
 | `show RUN_ID` / `trace RUN_ID` | 查看案件状态 / 执行时间线 |
 | `export-schemas` | 从 Pydantic 契约重新导出 `schemas/` |
+| `local-pack build` / `local-pack install` | 打包实时调查所需的数据切片（需先运行 `scripts/export_local_pack.sh`）/ 在本机 Zetaris 注册数据包、合并状态并核对行数 |
 
 ## 3. Zetaris 特征库
 

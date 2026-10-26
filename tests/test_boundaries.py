@@ -203,3 +203,28 @@ def test_team_lease_survives_a_model_call_longer_than_the_lease(tmp_path, monkey
     state["status"] = "running"
     save()
     assert store.get(run["id"])["status"] == "running"
+
+
+def test_local_pack_seed_carries_only_live_investigation_state(tmp_path, monkeypatch):
+    from aml_agent import local_pack
+    from aml_agent.store import Store
+
+    source = Store(tmp_path / "source.sqlite")
+    policy = source.artifact("tier_policy_version", {"label": "T3·v7"})
+    source.artifact("rule_alert", {"account": "private"})
+    source.artifact("investigation_grades", {"labels": "evaluation only"})
+    source.set_program_pointer_any("tier-policy-current", policy)
+    runtime = tmp_path / "pack/runtime"
+    (runtime / "calibration").mkdir(parents=True)
+    for file in local_pack.RUNTIME_FILES:
+        (runtime / file).write_text("{}")
+    local_pack.seed(source.path, runtime / "state-seed.sqlite")
+
+    monkeypatch.setattr(local_pack, "ROOT", tmp_path / "teammate")
+    merged = local_pack.merge_state(runtime, tmp_path / "teammate/.runtime/aml.sqlite")
+    target = Store(tmp_path / "teammate/.runtime/aml.sqlite")
+    assert merged["artifacts_added"] == 1 and sorted(merged["files_copied"]) == sorted(local_pack.RUNTIME_FILES)
+    assert target.program_pointer("tier-policy-current") == policy
+    assert target.artifacts("rule_alert") == [] and target.artifacts("investigation_grades") == []
+    # Installing twice changes nothing.
+    assert local_pack.merge_state(runtime, target.path)["artifacts_added"] == 0
