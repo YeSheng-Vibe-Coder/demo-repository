@@ -10,7 +10,7 @@ from typing import Callable
 
 import httpx
 
-from .contracts import Account
+from .contracts import Account, endpoint_ref
 from .settings import Settings
 
 
@@ -33,11 +33,9 @@ class TransientDataError(DataError):
     """Connection failure, 5xx or 429: the query never produced a result."""
 
 
-SCOPE = (
-    "{p}transaction_time >= {start} AND {p}transaction_time < {end} "
-    "AND {p}payment_format IN ('ACH','Wire') "
-    "AND ({p}from_bank <> {p}to_bank OR {p}from_account <> {p}to_account)"
-)
+# In-scope transfers: ACH / Wire between two different accounts, the only ones the feature store observes.
+IN_SCOPE = "{p}payment_format IN ('ACH','Wire') AND ({p}from_bank <> {p}to_bank OR {p}from_account <> {p}to_account)"
+SCOPE = "{p}transaction_time >= {start} AND {p}transaction_time < {end} AND " + IN_SCOPE
 
 PATH_COLUMNS = [
     "transaction_id",
@@ -167,28 +165,13 @@ class Zetaris:
         predicate = self.predicate(account, direction)
         if other:
             predicate += " AND " + self.predicate(other, "both")
+        keys = PATH_COLUMNS + ["payment_format"]
         sql = (
-            "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account, "
-            "amount_received, receiving_currency, amount_paid, payment_currency, payment_format "
-            f"FROM aml.transactions WHERE {predicate} "
-            f"AND transaction_time >= {timestamp(start)} AND transaction_time < {timestamp(end)} "
-            "AND payment_format IN ('ACH','Wire') AND (from_bank <> to_bank OR from_account <> to_account) "
+            f"SELECT {', '.join(keys)} FROM aml.transactions WHERE {predicate} "
+            f"AND {SCOPE.format(p='', start=timestamp(start), end=timestamp(end))} "
             f"ORDER BY transaction_time, transaction_id LIMIT {cap + 1}"
         )
         raw = self.run(sql, cap + 1, reserve)
-        keys = [
-            "transaction_id",
-            "transaction_time",
-            "from_bank",
-            "from_account",
-            "to_bank",
-            "to_account",
-            "amount_received",
-            "receiving_currency",
-            "amount_paid",
-            "payment_currency",
-            "payment_format",
-        ]
         rows = []
         for row in raw:
             if len(row) != len(keys):
@@ -468,8 +451,8 @@ class Zetaris:
         routes = []
         for chain in chains:
             ordered = [nodes[i] for i in (reversed(chain) if mode == "upstream" else chain)]
-            accounts = [f"{ordered[0]['from_bank']}:{ordered[0]['from_account']}"] + [
-                f"{row['to_bank']}:{row['to_account']}" for row in ordered
+            accounts = [endpoint_ref(ordered[0], "from")] + [
+                endpoint_ref(row, "to") for row in ordered
             ]
             first, last = Decimal(ordered[0]["amount_received"]), Decimal(ordered[-1]["amount_paid"])
             currencies = [row["payment_currency"] for row in ordered]
@@ -494,8 +477,8 @@ class Zetaris:
         routes.sort(key=lambda r: (-len(r["transaction_ids"]), r["transaction_ids"]))
         receivers: dict[str, set] = {}
         for node in nodes.values():
-            receivers.setdefault(f"{node['to_bank']}:{node['to_account']}", set()).add(
-                f"{node['from_bank']}:{node['from_account']}"
+            receivers.setdefault(endpoint_ref(node, "to"), set()).add(
+                endpoint_ref(node, "from")
             )
         convergence = sorted(ref for ref, senders in receivers.items() if len(senders) >= 2 and ref != origin)
         return {

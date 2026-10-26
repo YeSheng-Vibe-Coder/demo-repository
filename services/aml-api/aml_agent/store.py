@@ -10,7 +10,12 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator
 
+from .contracts import account_ref
 from .profile import PROFILE, PROFILE_SHA
+
+# Registry pointers: the active rule version, and the primary grading policy (the risk grading agent's).
+RULES_POINTER = "learned-current"
+TIER_POINTER = "tier-policy-current"
 
 
 class Conflict(RuntimeError):
@@ -78,7 +83,7 @@ class Store:
                 + request["account"]["account"]: request["account"]
             },
             "account_depths": {
-                request["account"]["bank"] + ":" + request["account"]["account"]: 0
+                account_ref(request["account"]): 0
             },
             "budget": {
                 "model_requests": 0,
@@ -291,6 +296,11 @@ class Store:
                 "SELECT current_version FROM program_registry WHERE name=?", (name,)
             ).fetchone()
         return row[0] if row else None
+
+    def primary_policy(self) -> tuple[str | None, dict | None]:
+        """(id, body) of the primary grading policy, or (None, None) before one is published."""
+        pointer = self.program_pointer(TIER_POINTER)
+        return (pointer, self.read_artifact(pointer, "tier_policy_version")) if pointer else (None, None)
 
     def set_program_pointer(
         self, name: str, version: str, *, expected: str | None

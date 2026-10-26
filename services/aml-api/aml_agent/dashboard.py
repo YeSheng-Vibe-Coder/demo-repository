@@ -16,12 +16,17 @@ from .feature_registry import DESCRIPTIONS, FEATURES, POLICY, UNITS
 from .rule_learning import RuleLearner
 from .rule_program import policy_registry
 from .rule_versions import history
-from .settings import ROOT, Settings
-from .store import Store
+from .settings import ROOT, ROUNDS, SHOWCASE, Settings
+from .store import RULES_POINTER, Store
 
 OUTPUT = ROOT / ".runtime/dashboard"
 # Committed copy for running the dashboard without any data access (see README).
 SNAPSHOT = ROOT / "apps/dashboard/snapshot/data.json"
+
+
+def data_path():
+    """The data file both dashboard servers serve: the local export when there is one, else the committed snapshot."""
+    return OUTPUT / "data.json" if (OUTPUT / "data.json").exists() else SNAPSHOT
 WINDOW = "告警日 D 的窗口：截止 D+24h；24h 指 [D, D+24h)，48h 指 [D−24h, D+24h)。仅 ACH/Wire、排除自转账。"
 
 
@@ -136,10 +141,8 @@ def versions_view(store: Store) -> list[dict]:
 
 
 def percentiles(learner: RuleLearner) -> dict:
-    """Development-population distribution of every feature (p50/p90/p99), computed in Zetaris; cached."""
+    """Development-population distribution of every feature (p50/p90/p99), computed in Zetaris (cached by export)."""
     cache = OUTPUT / "feature-percentiles.json"
-    if cache.exists():
-        return json.loads(cache.read_text())
     names = list(FEATURES)
     columns = ", ".join(f"PERCENTILE_APPROX(CAST({n} AS DOUBLE), ARRAY(0.5, 0.9, 0.99))" for n in names)
     row = learner.zetaris.run(f"SELECT {columns} FROM ({learner.features('development')}) p", 2)[0]
@@ -153,7 +156,7 @@ def percentiles(learner: RuleLearner) -> dict:
 
 def evaluation_view(store: Store) -> dict:
     """The chain-based evaluation of every layer for the showcase: rules, tiering, investigation, proposals."""
-    showcase = ROOT / ".runtime/showcase/metrics.json"
+    showcase = SHOWCASE / "metrics.json"
     metrics = json.loads(showcase.read_text()) if showcase.exists() else {}
 
     def tiering(m: dict | None) -> dict | None:
@@ -164,19 +167,10 @@ def evaluation_view(store: Store) -> dict:
                 "alerts_per_day_for_90pct_chains": m.get("alerts_per_day_for_90pct_chains")}
 
     layer1 = metrics.get("layer1_validation") or {}
-    from .tier_agent import ALIAS as TIER_ALIAS
-
-    primary_id = store.program_pointer(TIER_ALIAS)
-    primary = store.read_artifact(primary_id, "tier_policy_version") if primary_id else {}
-    tier_versions = [{k: body.get(k) for k in ("label", "status", "decision", "reason", "trigger", "created", "best_round")}
-                     | {"primary": aid == primary_id} | ({"status": "primary"} if aid == primary_id else {})
-                     | {"validation": tiering(body.get("validation")), "validation_reference": tiering(body.get("validation_reference")),
-                        "high_risk_segments": [s for s in (body.get("policy") or {}).get("segments", []) if s.get("tier") == "high"],
-                        "patterns": body.get("patterns")}
-                     for aid, body in store.artifacts("tier_policy_version")]
+    primary = store.primary_policy()[1] or {}
     proposals = [body for _, body in store.artifacts("feature_proposal")]
     rounds = {}
-    for path in sorted((ROOT / ".runtime/investigator-rounds").glob("*.json")):
+    for path in sorted(ROUNDS.glob("*.json")):
         body = json.loads(path.read_text())
         summary = body.get("summary") or {}
         if summary.get("evaluation"):
@@ -202,7 +196,6 @@ def evaluation_view(store: Store) -> dict:
                     # Chain-based re-evaluation in the showcase metrics supersedes the record's own evaluation.
                     "tier_agent": tiering(metrics.get(f"tier_agent_{primary.get('label')}_validation") or primary.get("validation")),
                     "tier_model_reference": tiering(metrics.get("tier_model_validation") or primary.get("validation_reference"))},
-        "tier_agent_versions": tier_versions,
         "investigation_rounds": rounds,
         "feature_proposals": proposals[-3:],
     }
@@ -241,7 +234,7 @@ def export(log=print, snapshot: bool = False) -> dict:
         "policies": {p["paragraph_id"]: {"text": p["anchor_text"], "zh": p.get("paraphrase_zh"), "section": p["section"], "url": p["source_url"]}
                      for p in policy_registry()},
         "versions": versions,
-        "active_version": store.program_pointer("learned-current"),
+        "active_version": store.program_pointer(RULES_POINTER),
         "evaluation": evaluation,
         "showcase": {**showcase_view(store, versions), "investigation_agent": investigation_learning(evaluation["investigation_rounds"])},
         "trace": trace_view(store),

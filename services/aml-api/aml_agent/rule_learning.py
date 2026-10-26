@@ -31,7 +31,6 @@ from .evaluation import split_plan
 from .feature_registry import DESCRIPTIONS, FEATURES, INTEGER_FEATURES, POLICY
 from .chains import Chains
 from .feature_store import LABEL_TABLE, FeatureStore, features_relation
-from .harness import content_hash
 from .profile import PROFILE
 from .rule_program import RuleAtom, RuleGroup, RuleProgram, compile_program
 from .settings import ROOT
@@ -52,6 +51,12 @@ def day_range(split: str) -> tuple[str, str]:
     return plan["start"][:10], plan["end"][:10]
 
 
+def partition_days(split: str) -> list[str]:
+    """Every window day of the partition, in order."""
+    start, end = (date.fromisoformat(d) for d in day_range(split))
+    return [(start + timedelta(days=k)).isoformat() for k in range((end - start).days)]
+
+
 def days_clause(split: str, alias: str = "g") -> str:
     start, end = day_range(split)
     return f"{alias}.day >= DATE '{start}' AND {alias}.day < DATE '{end}'"
@@ -65,6 +70,30 @@ def value(features: dict, name: str) -> float:
 def atom_true(rule: RuleAtom, features: dict) -> bool:
     current = value(features, rule.feature_id)
     return current >= rule.threshold if rule.operator == "ge" else current <= rule.threshold
+
+
+def program_true(program: RuleProgram, features: dict) -> bool:
+    """Whether the program alerts on one account-day; the Python form of condition_sql."""
+    hits = {rule.rule_id: atom_true(rule, features) for rule in program.rules}
+    groups = []
+    for group in program.groups:
+        if group.operator == "weighted":
+            groups.append(sum(w for r, w in zip(group.rule_ids, group.weights) if hits[r]) >= group.cutoff)
+        else:
+            groups.append((all if group.operator == "all" else any)(hits[r] for r in group.rule_ids))
+    return (all if program.group_operator == "all" else any)(groups)
+
+
+def column_sql(name: str) -> str:
+    """A feature as a double with the missing-value default, matching value()."""
+    return f"COALESCE(CAST({name} AS DOUBLE), {MISSING.get(name, 0.0)})"
+
+
+def alert_row(columns: list[str], row: list) -> dict:
+    """One account-day row from Zetaris: identity plus decoded features."""
+    record = dict(zip(columns, row))
+    return {"bank": str(record["bank"]), "account": str(record["account"]), "day": str(record["day"]),
+            "features": {n: None if record[n] is None else float(record[n]) for n in FEATURES}}
 
 
 def atom_sql(rule: RuleAtom) -> str:
@@ -162,23 +191,23 @@ class RuleLearner:
             + f") f LEFT JOIN {LABEL_TABLE} l ON l.bank = f.bank AND l.account = f.account AND l.day = f.day"
         )
 
+    def population(self, split: str) -> dict[int, int]:
+        """Account-days of the partition per window label (evaluation side), cached."""
+        if split not in self.totals:
+            self.totals[split] = {int(r[0]): int(r[1]) for r in self.zetaris.run(
+                f"SELECT label, COUNT(*) FROM ({self.labelled(split)}) j GROUP BY label")}
+        return self.totals[split]
+
     def sample(self, split: str, negative_ratio: float) -> tuple[list[dict], dict]:
         """Every positive window of the partition plus a deterministic hash sample of negatives.
 
         Read day shard by day shard so each Zetaris request stays bounded.
         """
-        population = {
-            int(row[0]): int(row[1])
-            for row in self.zetaris.run(
-                f"SELECT label, COUNT(*) FROM ({self.labelled(split)}) j GROUP BY label"
-            )
-        }
+        population = self.population(split)
         rate = min(1.0, negative_ratio * population.get(1, 0) / max(1, population.get(0, 0)))
         keep = int(rate * 1_000_000)
         columns = ["bank", "account", "day", *FEATURES, "label"]
-        start, end = day_range(split)
-        days = [(date.fromisoformat(start) + timedelta(days=k)).isoformat()
-                for k in range((date.fromisoformat(end) - date.fromisoformat(start)).days)]
+        days = partition_days(split)
 
         def shard(day: str) -> list[list]:
             rows = self.zetaris.run(
@@ -200,70 +229,19 @@ class RuleLearner:
             record["label"] = int(record["label"])
         return records, population
 
-    def population_metrics(self, program: RuleProgram, split: str, scores: dict | None = None) -> dict:
-        """Natural-distribution confusion at a fixed daily alert budget, computed in Zetaris."""
-        budget = SETTINGS["daily_alert_budget"]
-        rows = self.zetaris.run(
-            "SELECT day, COUNT(*), SUM(label), SUM(CASE WHEN r <= "
-            f"{budget} THEN 1 ELSE 0 END), SUM(CASE WHEN r <= {budget} THEN label ELSE 0 END) "
-            "FROM (SELECT j.day, j.label, ROW_NUMBER() OVER (PARTITION BY j.day ORDER BY "
-            f"{score_sql(program, scores)} DESC, {HASH_ORDER}) AS r FROM ("
-            + self.labelled(split, condition_sql(program))
-            + ") j) h GROUP BY day ORDER BY day",
-            400,
-        )
-        positives = {
-            str(r[0]): int(r[1])
-            for r in self.zetaris.run(
-                f"SELECT day, SUM(label) FROM {LABEL_TABLE} l WHERE {days_clause(split, 'l')} GROUP BY day", 400
-            )
-        }
-        hits = sum(int(r[1]) for r in rows)
-        hit_tp = sum(int(r[2] or 0) for r in rows)
-        alerts = sum(int(r[3]) for r in rows)
-        tp = sum(int(r[4] or 0) for r in rows)
-        total_positive = sum(positives.values())
-        return {
-            "split": split,
-            "days": len(positives),
-            "daily_alert_budget": budget,
-            "rule_hits": hits,
-            "rule_hit_tp": hit_tp,
-            "alerts": alerts,
-            "tp": tp,
-            "fp": alerts - tp,
-            "precision": tp / alerts if alerts else 0.0,
-            "positive_windows": total_positive,
-            "recall": tp / total_positive if total_positive else None,
-            "uncapped_precision": hit_tp / hits if hits else 0.0,
-            "uncapped_recall": hit_tp / total_positive if total_positive else None,
-            "basis": "Every active account-day in the partition; daily alerts are rule hits ordered by development-calibrated group precision, then a label-blind hash",
-        }
-
-    def scan_alerts(self, program: RuleProgram, split: str, count: int, scores: dict | None = None, per_day: int | None = None) -> list[dict]:
-        """Full Zetaris scan of the partition; returns a label-blind sample of alerts.
-
-        With `per_day`, the top alerts of every day within the daily budget order, so the
-        sample covers the whole partition instead of the highest-scoring days only.
-        """
+    def scan_alerts(self, program: RuleProgram, split: str, count: int, per_day: int, scores: dict | None = None) -> list[dict]:
+        """Full Zetaris scan of the partition: the top `per_day` alerts of every day, label-blind,
+        so the sample covers the whole partition instead of the highest-scoring days only."""
         columns = ["bank", "account", "day", *FEATURES]
         ranked = (
             f"SELECT a.*, ROW_NUMBER() OVER (PARTITION BY day ORDER BY {score_sql(program, scores)} DESC, {HASH_ORDER}) AS r FROM ("
             + self.features(split, condition_sql(program))
             + ") a"
         )
-        where = f"WHERE r <= {per_day}" if per_day else f"WHERE r <= {SETTINGS['daily_alert_budget']}"
         rows = self.zetaris.run(
-            "SELECT " + ", ".join(columns) + f" FROM ({ranked}) s {where} "
-            f"ORDER BY {'day, r' if per_day else 'r, day'} LIMIT {count}",
-            count + 1,
+            "SELECT " + ", ".join(columns) + f" FROM ({ranked}) s WHERE r <= {per_day} ORDER BY day, r LIMIT {count}", count + 1
         )
-        alerts = []
-        for row in rows:
-            record = dict(zip(columns, row))
-            features = {n: None if record[n] is None else float(record[n]) for n in FEATURES}
-            alerts.append({"bank": str(record["bank"]), "account": str(record["account"]), "day": str(record["day"]), "features": features})
-        return alerts
+        return [alert_row(columns, row) for row in rows]
 
     # ---- learning -------------------------------------------------------------------
 
@@ -291,7 +269,7 @@ class RuleLearner:
             if structure.children_left[node] == structure.children_right[node]:
                 return str(int(node))
             name = features[structure.feature[node]]
-            column = f"COALESCE(CAST({name} AS DOUBLE), {MISSING.get(name, 0.0)})"
+            column = column_sql(name)
             return (f"CASE WHEN {column} <= {float(structure.threshold[node])!r} "
                     f"THEN {node_sql(structure.children_left[node])} ELSE {node_sql(structure.children_right[node])} END")
 
@@ -447,12 +425,8 @@ class RuleLearner:
         flagged = self.zetaris.run(
             f"SELECT COUNT(*), SUM(label), COUNT(DISTINCT CONCAT(bank, ':', account)) FROM ({self.labelled(split, condition)}) j", 2
         )[0]
-        if split not in self.totals:
-            self.totals[split] = {int(r[0]): int(r[1]) for r in self.zetaris.run(
-                f"SELECT label, COUNT(*) FROM ({self.labelled(split)}) j GROUP BY label")}
-        totals = self.totals[split]
-        start, end = day_range(split)
-        days = (date.fromisoformat(end) - date.fromisoformat(start)).days
+        totals = self.population(split)
+        days = len(partition_days(split))
         flagged_sql = f"SELECT bank, account, day FROM ({self.features(split, condition)}) f"
         chain_view = Chains(self.zetaris, log=self.log)
         chains = chain_view.recall(split, flagged_sql)
@@ -579,10 +553,5 @@ class RuleLearner:
 
 
 def training_days_note() -> dict:
-    start, end = day_range("development")
-    days = (date.fromisoformat(end) - date.fromisoformat(start)).days
-    return {"development_days": days, "first_day": start, "last_day": (date.fromisoformat(end) - timedelta(days=1)).isoformat()}
-
-
-def program_hash(program: RuleProgram) -> str:
-    return content_hash(program.model_dump(mode="json"))
+    days = partition_days("development")
+    return {"development_days": len(days), "first_day": days[0], "last_day": days[-1]}

@@ -41,9 +41,7 @@ def action_fingerprint(action: Action, state: dict) -> str:
             "arguments": arguments,
             "as_of": state["request"]["as_of"],
             "source": "aml.transactions",
-            "snapshot": state.get(
-                "source_sha256", "immutable-uploaded-IBM-HI-Large-v8"
-            ),
+            "snapshot": "immutable-uploaded-IBM-HI-Large-v8",
             "rule_version": state["request"].get("rule_version"),
         }
     )
@@ -60,12 +58,6 @@ class GuardVerdict:
 
     def to_dict(self) -> dict:
         return asdict(self)
-
-
-class GuardBlocked(ValueError):
-    def __init__(self, verdict: GuardVerdict):
-        self.verdict = verdict
-        super().__init__(verdict.reason)
 
 
 class ExecutionHarness:
@@ -109,50 +101,36 @@ class ExecutionHarness:
             record["force_finish"] = True
 
     @staticmethod
-    def has_unseen_page(state: dict, verdict: GuardVerdict, page_size: int) -> bool:
+    def next_offset(state: dict, verdict: GuardVerdict, page_size: int) -> int:
+        """Where the next unseen page of a duplicate's stored rows starts (the first page was shown with the result)."""
+        return state.get("harness", {}).get("served_offsets", {}).get(verdict.evidence_ref, page_size)
+
+    @classmethod
+    def has_unseen_page(cls, state: dict, verdict: GuardVerdict, page_size: int) -> bool:
         """A duplicate detail query can still serve retained rows the planner never saw."""
         rows = state["evidence"][verdict.evidence_ref].get("rows", [])
-        offsets = state.get("harness", {}).get("served_offsets", {})
-        return len(rows) > page_size and offsets.get(
-            verdict.evidence_ref, page_size
-        ) < len(rows)
+        return len(rows) > page_size and cls.next_offset(state, verdict, page_size) < len(rows)
 
-    @staticmethod
-    def redirect(state: dict, verdict: GuardVerdict, page_size: int) -> dict:
-        """Serve stored evidence for a duplicate action instead of a second source call.
+    @classmethod
+    def redirect(cls, state: dict, verdict: GuardVerdict, page_size: int) -> dict:
+        """Serve the next unseen page of stored rows for a duplicate action instead of a second source call.
 
-        A planner usually repeats a query because it could not see all retained rows,
-        so the next unseen page is returned. Non-row results are returned unchanged and
-        therefore count as no progress.
+        Only reached when has_unseen_page: other duplicates are rejected before they run.
         """
         stored = state["evidence"][verdict.evidence_ref]
-        rows = stored.get("rows", [])
-        offsets = state.setdefault("harness", {}).setdefault("served_offsets", {})
-        offset = offsets.get(
-            verdict.evidence_ref, page_size if len(rows) > page_size else 0
-        )
-        marker = {
+        rows = stored["rows"]
+        offset = cls.next_offset(state, verdict, page_size)
+        state.setdefault("harness", {}).setdefault("served_offsets", {})[verdict.evidence_ref] = offset + page_size
+        return {
             "duplicate_of": verdict.evidence_ref,
             "source_call": False,
             "note": "Identical action already completed; stored evidence served without a new source call. Choose a new scope, read pages, or finish.",
-        }
-        if offset < len(rows):
-            offsets[verdict.evidence_ref] = offset + page_size
-            return {
-                **marker,
-                "rows": rows[offset : offset + page_size],
-                "stored_rows": len(rows),
-                "page_offset": offset,
-                "next_offset": offset + page_size
-                if offset + page_size < len(rows)
-                else None,
-                "source_query_complete": stored.get("complete", False),
-                "complete": False,
-            }
-        return {
-            **marker,
-            **{key: value for key, value in stored.items() if key != "rows"},
-            "rows_already_served": bool(rows),
+            "rows": rows[offset : offset + page_size],
+            "stored_rows": len(rows),
+            "page_offset": offset,
+            "next_offset": offset + page_size if offset + page_size < len(rows) else None,
+            "source_query_complete": stored.get("complete", False),
+            "complete": False,
         }
 
     def observe(self, state: dict, result: dict, fingerprint: str) -> dict:
@@ -170,7 +148,6 @@ class ExecutionHarness:
                         "duplicate_of",
                         "source_call",
                         "note",
-                        "rows_already_served",
                     )
                 },
             }

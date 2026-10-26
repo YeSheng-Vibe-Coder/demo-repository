@@ -14,14 +14,14 @@ without re-investigating. Labels are never part of its input.
 from __future__ import annotations
 
 import time
-from dataclasses import replace
 from typing import Literal
 
 from pydantic import Field
 
 from . import calibration
 from . import investigator_training as training
-from .contracts import StrictModel
+from .contracts import StrictModel, account_ref
+from .digest import risk_line
 from .evidence import transaction_ledger
 from .profile import PROFILE
 from .providers import ModelError, Nvidia
@@ -85,7 +85,7 @@ def learned_adjustment(flags: set[str], config: dict | None) -> str | None:
 
 def linked_alerts(state: dict, level: str) -> list[dict]:
     """Path B: other alerted accounts in this case file move with the case's outcome in the priority queue."""
-    focus = f"{state['request']['account']['bank']}:{state['request']['account']['account']}"
+    focus = account_ref(state["request"]["account"])
     direction = {"high": "raise", "low": "lower"}.get(level)
     if not direction:
         return []
@@ -144,7 +144,7 @@ def schema(accounts: list[str]) -> dict:
 
 def chain_accounts(state: dict) -> list[str]:
     """The alerted account first, then accounts the aggregator judged, then other ledger accounts."""
-    focus = f"{state['request']['account']['bank']}:{state['request']['account']['account']}"
+    focus = account_ref(state["request"]["account"])
     conclusion = state.get("conclusion") or {}
     ordered = [focus] + [v["account_ref"] for v in conclusion.get("account_verdicts", [])]
     for row in transaction_ledger(state)["transactions"]:
@@ -168,22 +168,13 @@ def brief(state: dict, scores: dict, config: dict | None) -> dict:
     ledger = {row["transaction_id"]: row for row in transaction_ledger(state)["transactions"]}
     suspects = [ledger[i] for i in conclusion.get("suspect_transaction_ids", []) if i in ledger]
 
-    def score_line(ref: str, item: dict) -> str:
-        if not item.get("active"):
-            return f"{ref}: no activity on the case day"
-        if not item.get("layer1_alert", True):
-            return f"{ref}: not alerted by the high-recall layer-1 rule on the case day"
-        drivers = "; ".join(f"{d['feature']}={d['value']:g} ({d['position'] or 'n/a'}, {'+' if d['score_effect'] >= 0 else ''}{d['score_effect']})"
-                            for d in item.get("drivers", [])[:3])
-        return f"{ref}: tier {item['tier']} score {item['score']}; drivers {drivers}"
-
     sections = {
         "ALERT": [
             f"account {request['account']['bank']}:{request['account']['account']} day {request['start'][:10]}; layer-2 tier {tier.get('tier', '?')}",
             f"PRIOR risk level: {PRIOR.get(tier.get('tier'), 'medium')} (from the layer-2 tier)",
             *calibration.base_rates(rule),
         ],
-        "RISK SCORES (layer-2 model, case day)": [score_line(ref, item) for ref, item in scores.items()],
+        "RISK SCORES (layer-2 model, case day)": [risk_line(ref, item) for ref, item in scores.items()],
         "INVESTIGATION (team case file)": [
             f"team assessment: {conclusion.get('conclusion')} (evidence strength {conclusion.get('suspicion')})",
             *[f"chain: {step}" for step in conclusion.get("chain", [])[:6]],
@@ -198,24 +189,17 @@ def brief(state: dict, scores: dict, config: dict | None) -> dict:
     if config and rule:
         reference = training.brief_lines(config, rule, request, calibration.load(), "adjudicator")
         sections.update({k: v for k, v in reference.items() if k.startswith("REFERENCE")})
-        standard = (config.get("adjudication_thresholds") or {}).get(tier.get("tier"), {}).get("chosen")
-        if standard:
-            sections["DECISION STANDARD (this tier, development)"] = [
-                f"Risk '{standard['report_at_or_above']}' or higher was reported: kept {standard['laundering_cases_reported']}/"
-                f"{standard['laundering_cases']} laundering cases and reported {standard['normal_cases_reported']}/{standard['normal_cases']} normal cases."
-            ]
     return sections
 
 
-def adjudicate(store, tools, run_id: str, model: str | None = None, workflow=None) -> dict:
+def adjudicate(store, tools, run_id: str, workflow=None) -> dict:
     """Adjudicate one finished team case and store the result on the run."""
     state = store.get(run_id)
     if state["status"] not in ("completed", "insufficient_evidence") or not state.get("conclusion"):
         raise ValueError("Only a finished case file can be adjudicated")
     accounts = chain_accounts(state)
     scores = risk_scores(tools, state, accounts)
-    senior = Settings.load().role("senior_investigator")
-    provider = Nvidia(replace(senior, model=model) if model else senior)
+    provider = Nvidia(Settings.load().role("senior_investigator"))
     packet = {"brief": brief(state, scores, training.load()), "accounts": accounts}
     packet["brief"]["FOLLOW-UP"] = ["already ran once; decide now"] if state.get("follow_ups") else ["available once"]
     body, decision, errors = schema(accounts), None, []
@@ -224,7 +208,8 @@ def adjudicate(store, tools, run_id: str, model: str | None = None, workflow=Non
             raw, usage = provider.generate(PROMPT, packet, body)
         except ModelError as error:
             errors.append(str(error)[:200])
-            time.sleep(10)
+            if attempt == 0:
+                time.sleep(10)
             continue
         try:
             if "_invalid_response" in raw:

@@ -31,6 +31,21 @@ INVESTIGATION_TOOLS = (
 )
 
 
+# The question every rule-alert investigation starts from.
+ALERT_QUESTION = ("Investigate this rule alert: which transactions, if any, are suspicious, and what upstream/downstream "
+                  "evidence supports or contradicts that?")
+
+
+def account_ref(account: dict) -> str:
+    """bank:account reference of an account dict (e.g. a request's alerted account)."""
+    return f"{account['bank']}:{account['account']}"
+
+
+def endpoint_ref(row: dict, side: str) -> str:
+    """bank:account reference of one side ("from" / "to") of a transaction row."""
+    return f"{row[side + '_bank']}:{row[side + '_account']}"
+
+
 class Assignment(StrictModel):
     """One specialist investigator's share of a case, chosen by the coordinator."""
 
@@ -103,24 +118,18 @@ class AccountWindow(StrictModel):
     window_ref: Literal["current", "history", "lookback"] = "current"
 
 
-class ProfileArguments(StrictModel):
-    account_refs: list[str] = Field(min_length=1, max_length=5)
-    window_ref: Literal["current", "history", "lookback"] = "current"
-
-    @model_validator(mode="after")
-    def unique_accounts(self) -> "ProfileArguments":
-        # Repeated references are normalised, not rejected: they ask for the same scope.
-        self.account_refs = sorted(set(self.account_refs))
-        return self
-
-
 class RiskArguments(StrictModel):
     account_refs: list[str] = Field(min_length=1, max_length=5)
 
     @model_validator(mode="after")
     def unique_accounts(self) -> "RiskArguments":
+        # Repeated references are normalised, not rejected: they ask for the same scope.
         self.account_refs = sorted(set(self.account_refs))
         return self
+
+
+class ProfileArguments(RiskArguments):
+    window_ref: Literal["current", "history", "lookback"] = "current"
 
 
 class TransactionArguments(AccountWindow):
@@ -147,7 +156,7 @@ class StructureArguments(AccountWindow):
 class ProposalArguments(StrictModel):
     base_version: str
     evidence_refs: list[str] = Field(min_length=1, max_length=16)
-    change_type: Literal["threshold", "feature", "combination", "weight", "new_rule"]
+    change_type: Literal["threshold", "feature", "combination"]
     hypothesis: str = Field(min_length=1, max_length=400)
     changes: dict[str, Any]
 
@@ -157,8 +166,6 @@ class ProposalArguments(StrictModel):
             "threshold": {"parameters"},
             "feature": {"feature_ids"},
             "combination": {"operator", "rule_ids"},
-            "weight": {"weights"},
-            "new_rule": {"draft"},
         }[self.change_type]
         if set(self.changes) != keys:
             raise ValueError("Change payload does not match change_type")
@@ -181,25 +188,10 @@ class ProposalArguments(StrictModel):
             "OR",
         ):
             raise ValueError("Unknown combination operator")
-        if self.change_type == "weight":
-            weights = self.changes["weights"]
-            if (
-                not isinstance(weights, dict)
-                or not weights
-                or any(
-                    type(value) not in (int, float) or not 0 <= value <= 10
-                    for value in weights.values()
-                )
-            ):
-                raise ValueError("Invalid rule weights")
         if self.change_type == "feature" and not isinstance(
             self.changes["feature_ids"], list
         ):
             raise ValueError("Expected feature IDs")
-        if self.change_type == "new_rule" and not isinstance(
-            self.changes["draft"], dict
-        ):
-            raise ValueError("Expected rule draft; executable code is not accepted")
         return self
 
 

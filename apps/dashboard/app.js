@@ -295,7 +295,7 @@
     setLang(LANG);
     DATA = await fetch("/dashboard/data.json").then(r => r.json());
     $("#cycle-id").textContent = new Date(DATA.generated_at * 1000).toLocaleString("zh-CN");
-    window.AMLViews.init({ DATA, $, $$, el, esc, num, pct, fmt, svgEl, showTip, hideTip, css, featureModal, setView, renderHistory });
+    window.AMLViews.init({ DATA, $, $$, el, esc, num, fmt, svgEl, showTip, hideTip, featureModal, renderHistory });
     focusGroup = params.get("rule");
     setView(params.get("view") || "trace");
     if (params.get("case")) window.AMLViews.open(params.get("case"));

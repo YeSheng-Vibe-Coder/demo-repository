@@ -58,7 +58,7 @@ def truncation_shape(content: str) -> str:
     tail = content[-100:]
     if len(content) - len(content.rstrip()) >= 80 or not tail.strip():
         pattern = "whitespace"
-    elif len(set(tail[-100:])) <= 4:
+    elif len(set(tail)) <= 4:
         pattern = "repeated_characters"
     else:
         pattern = "text"

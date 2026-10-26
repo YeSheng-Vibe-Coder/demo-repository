@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import json
 import time
-from datetime import date
 from typing import Literal
 
 from pydantic import Field, model_validator
@@ -26,15 +25,15 @@ from pydantic import Field, model_validator
 from .chains import Chains
 from .contracts import StrictModel
 from .feature_registry import DESCRIPTIONS, FEATURES
-from .feature_store import LABEL_TABLE
 from .profile import PROFILE
 from .providers import ContextBudgetError
-from .rule_learning import HASH_ORDER, MISSING, RuleLearner, condition_sql, day_range
+from .rule_learning import HASH_ORDER, RuleLearner, alert_row, column_sql, condition_sql, partition_days, program_true
 from .rule_program import RuleProgram
+from .store import RULES_POINTER, TIER_POINTER
 
 SETTINGS = PROFILE["tier_agent"]
 TIERS = ("high", "mid", "low")
-ALIAS = "tier-policy-current"
+ALIAS = TIER_POINTER
 
 
 class Condition(StrictModel):
@@ -97,7 +96,7 @@ per round in requests. Base every threshold on the statistics shown. Return one 
 
 
 def atom(condition: Condition) -> str:
-    column = f"COALESCE(CAST({condition.feature} AS DOUBLE), {MISSING.get(condition.feature, 0.0)})"
+    column = column_sql(condition.feature)
     return f"({column} {'>=' if condition.op == 'ge' else '<='} {condition.value!r})"
 
 
@@ -123,27 +122,23 @@ class Evaluator:
 
     def ranked(self, split: str, tier: str, priority: str) -> str:
         # in_chain: the alerted account belongs to a laundering chain of the partition (chain precision).
-        chain_accounts = f"(SELECT DISTINCT account FROM {self.chains.members(split)} x)"
-        return (f"SELECT f.bank, f.account, f.day, {tier} AS tier, COALESCE(l.label, 0) AS label, "
+        return (f"SELECT f.bank, f.account, f.day, {tier} AS tier, f.label, "
                 "CASE WHEN c.account IS NULL THEN 0 ELSE 1 END AS in_chain, "
                 f"ROW_NUMBER() OVER (ORDER BY {priority} DESC, MD5(CONCAT(f.bank, ':', f.account, ':', CAST(f.day AS STRING)))) AS r "
-                f"FROM ({self.learner.features(split, condition_sql(self.program))}) f LEFT JOIN {LABEL_TABLE} l "
-                "ON l.bank = f.bank AND l.account = f.account AND l.day = f.day "
-                f"LEFT JOIN {chain_accounts} c ON c.account = CONCAT(f.bank, ':', f.account)")
+                f"FROM ({self.learner.labelled(split, condition_sql(self.program))}) f "
+                f"LEFT JOIN {self.chains.member_accounts(split)} c ON c.account = CONCAT(f.bank, ':', f.account)")
 
     def evaluate(self, split: str, tier: str, priority: str) -> dict:
         ranked = self.ranked(split, tier, priority)
         run = self.learner.zetaris.run
         per_tier = {r[0]: (int(r[1]), int(r[2] or 0), int(r[3] or 0))
                     for r in run(f"SELECT tier, COUNT(*), SUM(label), SUM(in_chain) FROM ({ranked}) t GROUP BY tier", 10)}
-        members = f"(SELECT chain, account FROM {self.chains.members(split)} x WHERE in_scope = 1)"
         first = [int(r[0]) for r in run(
-            f"SELECT MIN(q.r) FROM {members} m JOIN (SELECT CONCAT(bank, ':', account) AS account, MIN(r) AS r FROM ({ranked}) t GROUP BY 1) q "
+            f"SELECT MIN(q.r) FROM {self.chains.scoped_members(split)} m JOIN (SELECT CONCAT(bank, ':', account) AS account, MIN(r) AS r FROM ({ranked}) t GROUP BY 1) q "
             "ON q.account = m.account GROUP BY m.chain", 100000)]
-        total_chains = int(run(f"SELECT COUNT(DISTINCT chain) FROM {members} m", 2)[0][0])
+        total_chains = self.chains.total(split)
         alerts = sum(c for c, _, _ in per_tier.values())
-        start, end = day_range(split)
-        days = (date.fromisoformat(end) - date.fromisoformat(start)).days
+        days = len(partition_days(split))
         first.sort()
 
         def alerts_for(share: float) -> int | None:
@@ -171,8 +166,8 @@ class Evaluator:
     # ---- statistics for the agent ---------------------------------------------------
 
     def alerts(self) -> str:
-        return (f"SELECT f.*, COALESCE(l.label, 0) AS label FROM ({self.learner.features('development', condition_sql(self.program))}) f "
-                f"LEFT JOIN {LABEL_TABLE} l ON l.bank = f.bank AND l.account = f.account AND l.day = f.day")
+        """Development alerts with their window label (evaluation side)."""
+        return self.learner.labelled("development", condition_sql(self.program))
 
     def cuts(self) -> dict[str, list[float]]:
         columns = ", ".join(f"PERCENTILE_APPROX(CAST({n} AS DOUBLE), ARRAY(0.2, 0.4, 0.6, 0.8, 0.95))" for n in FEATURES)
@@ -184,7 +179,7 @@ class Evaluator:
         return out
 
     def bucket(self, name: str, cuts: list[float]) -> str:
-        column = f"COALESCE(CAST({name} AS DOUBLE), {MISSING.get(name, 0.0)})"
+        column = column_sql(name)
         return "CASE " + " ".join(f"WHEN {column} <= {c!r} THEN {i}" for i, c in enumerate(cuts)) + f" ELSE {len(cuts)} END"
 
     def feature_stats(self, cuts: dict) -> list[str]:
@@ -204,10 +199,10 @@ class Evaluator:
         return lines
 
     def pair_stats(self, a: str, b: str, cuts: dict) -> list[str]:
-        rows = self.learner.zetaris.run(
-            f"SELECT {self.bucket(a, cuts[a][1::2] or cuts[a])} AS x, {self.bucket(b, cuts[b][1::2] or cuts[b])} AS y, COUNT(*), SUM(label) "
-            f"FROM ({self.alerts()}) t GROUP BY 1, 2 ORDER BY 1, 2", 50)
         ea, eb = cuts[a][1::2] or cuts[a], cuts[b][1::2] or cuts[b]
+        rows = self.learner.zetaris.run(
+            f"SELECT {self.bucket(a, ea)} AS x, {self.bucket(b, eb)} AS y, COUNT(*), SUM(label) "
+            f"FROM ({self.alerts()}) t GROUP BY 1, 2 ORDER BY 1, 2", 50)
         name = lambda edges, i: f"<={edges[i]:g}" if i < len(edges) else f">{edges[-1]:g}"
         return [f"{a} {name(ea, int(x))} & {b} {name(eb, int(y))}: {int(c):,} alerts, {int(p or 0) / int(c):.1%} laundering"
                 for x, y, c, p in rows if int(c) >= 50]
@@ -290,36 +285,12 @@ def active_tiering(store, version: str, cycle) -> dict:
 def sample(learner: RuleLearner, program: RuleProgram, tiering: dict, split: str, per_cell: int) -> list[dict]:
     """Evaluation side: `per_cell` alerts per (tier, window label) in label-blind hash order, with their priority."""
     columns = ["bank", "account", "day", *FEATURES]
-    tiered = (f"SELECT f.*, {tiering['tier']} AS tier, {tiering['priority']} AS priority, COALESCE(l.label, 0) AS label FROM "
-              f"({learner.features(split, condition_sql(program))}) f LEFT JOIN {LABEL_TABLE} l "
-              "ON l.bank = f.bank AND l.account = f.account AND l.day = f.day")
+    tiered = (f"SELECT f.*, {tiering['tier']} AS tier, {tiering['priority']} AS priority "
+              f"FROM ({learner.labelled(split, condition_sql(program))}) f")
     rows = learner.zetaris.run(
         "SELECT " + ", ".join(columns) + ", tier, priority, label FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY tier, label "
         f"ORDER BY {HASH_ORDER}) AS r FROM (" + tiered + f") t) s WHERE r <= {per_cell} ORDER BY priority DESC", 6 * per_cell + 1)
-    out = []
-    for row in rows:
-        record = dict(zip(columns + ["tier", "priority", "label"], row))
-        out.append({"bank": str(record["bank"]), "account": str(record["account"]), "day": str(record["day"]),
-                    "features": {n: None if record[n] is None else float(record[n]) for n in FEATURES},
-                    "tier": record["tier"], "priority": float(record["priority"]), "label": int(record["label"])})
-    return out
-
-
-def ranked(learner: RuleLearner, program: RuleProgram, tiering: dict, split: str, per_tier: dict) -> list[dict]:
-    """Label-free: the highest-priority alerts of each tier (per_tier = {"high": n, "mid": n, "low": n}), by priority."""
-    columns = ["bank", "account", "day", *FEATURES]
-    tiered = f"SELECT f.*, {tiering['tier']} AS tier, {tiering['priority']} AS priority FROM ({learner.features(split, condition_sql(program))}) f"
-    quota = " OR ".join(f"(tier = '{tier}' AND r <= {int(n)})" for tier, n in per_tier.items())
-    rows = learner.zetaris.run(
-        "SELECT " + ", ".join(columns) + ", tier, priority FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY tier ORDER BY priority DESC) AS r "
-        f"FROM ({tiered}) t) s WHERE {quota} ORDER BY priority DESC", sum(per_tier.values()) + 1)
-    out = []
-    for row in rows:
-        record = dict(zip(columns + ["tier", "priority"], row))
-        out.append({"bank": str(record["bank"]), "account": str(record["account"]), "day": str(record["day"]),
-                    "features": {n: None if record[n] is None else float(record[n]) for n in FEATURES},
-                    "tier": record["tier"], "priority": float(record["priority"])})
-    return out
+    return [{**alert_row(columns, row), "tier": row[-3], "priority": float(row[-2]), "label": int(row[-1])} for row in rows]
 
 
 class TierAgent:
@@ -331,7 +302,7 @@ class TierAgent:
         from .rule_program import load_program, program_of
         from .tiering import score_sql, tier_sql
 
-        version = self.store.program_pointer("learned-current")
+        version = self.store.program_pointer(RULES_POINTER)
         program = program_of(load_program(self.store, version))
         model_id, stored = self.cycle.tier_model(version)
         model = stored["model"]
@@ -391,8 +362,7 @@ class TierAgent:
             # Development objective: chain recall plus chain precision at the gated capacities (higher is better).
             score = development_score(metrics)
             rounds.append({"round": index + 1, "proposal": proposal.model_dump(), "development": metrics, "segments": segments, "score": score})
-            # Only a real grading policy can be chosen: several segments, and every tier populated on development.
-            usable = len(proposal.policy.segments) >= 3 and all(metrics[t]["alerts_per_day"] > 0 for t in TIERS)
+            usable = eligible(proposal.policy.model_dump(), metrics)
             rounds[-1]["eligible"] = usable
             if usable and (best is None or score < best["score"]):
                 best = rounds[-1]
@@ -424,10 +394,7 @@ class TierAgent:
         current_score = None
         if current:
             body = self.store.read_artifact(current, "tier_policy_version")
-            policy_now = body.get("policy") or {}
-            eligible = len(policy_now.get("segments", [])) >= 3 and all(body["development"][t]["alerts_per_day"] > 0 for t in TIERS) \
-                if body.get("development") else False
-            if body.get("rule_version") == version and eligible:
+            if body.get("rule_version") == version and eligible(body.get("policy") or {}, body.get("development")):
                 current_score = development_score(body["development"])
         replace = current_score is None or best["score"] <= current_score
         record.update(decision="publish" if replace else "keep_current",
@@ -445,6 +412,11 @@ class TierAgent:
         return record
 
 
+def eligible(policy: dict, development: dict | None) -> bool:
+    """Only a real grading policy can be chosen: several segments, and every tier populated on development."""
+    return bool(development) and len(policy.get("segments", [])) >= 3 and all(development[t]["alerts_per_day"] > 0 for t in TIERS)
+
+
 def typologies(learner: RuleLearner, program: RuleProgram, rows: list[dict], population: dict, count: int = 12) -> list[dict]:
     """Common laundering patterns among layer-1 alerts, mined from the development sample by sequential covering.
 
@@ -455,18 +427,12 @@ def typologies(learner: RuleLearner, program: RuleProgram, rows: list[dict], pop
     import numpy as np
     from sklearn.tree import DecisionTreeClassifier
 
-    from .rule_learning import atom_true
-
-    def alerted(row: dict) -> bool:
-        return any(all(atom_true(a, row) for a in program.rules if a.rule_id in g.rule_ids) for g in program.groups)
-
-    pool = [r for r in rows if alerted(r)]
+    pool = [r for r in rows if program_true(program, r)]
     features = list(FEATURES)
     labels_all = np.array([r["label"] for r in rows])
     weight_pos = population.get(1, 0) / max(1, int(labels_all.sum()))
     weight_neg = population.get(0, 0) / max(1, int(len(labels_all) - labels_all.sum()))
-    start, end = day_range("development")
-    days = (date.fromisoformat(end) - date.fromisoformat(start)).days
+    days = len(partition_days("development"))
     total_pos = sum(r["label"] for r in pool) * weight_pos
     found, remaining = [], list(pool)
     for _ in range(6):

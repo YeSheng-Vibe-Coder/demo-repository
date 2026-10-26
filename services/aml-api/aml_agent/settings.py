@@ -7,16 +7,23 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
+ROUNDS = ROOT / ".runtime/investigator-rounds"
+SHOWCASE = ROOT / ".runtime/showcase"  # evaluation-side metrics the dashboard export reads (showcase-metrics)
+
+
+def team_command(run_id: str) -> list[str]:
+    """The orchestrator process for one team investigation: coordinator, parallel specialists, World Model aggregator."""
+    return ["node", "--experimental-transform-types", str(ROOT / "services/orchestrator/team.ts"), run_id]
 
 
 def environment() -> dict[str, str]:
     values: dict[str, str] = {}
-    for file in (ROOT / ".env.local",):
-        if file.exists():
-            for line in file.read_text().splitlines():
-                if "=" in line and not line.lstrip().startswith("#"):
-                    key, value = line.split("=", 1)
-                    values[key.strip()] = value.strip().strip("\"'")
+    file = ROOT / ".env.local"
+    if file.exists():
+        for line in file.read_text().splitlines():
+            if "=" in line and not line.lstrip().startswith("#"):
+                key, value = line.split("=", 1)
+                values[key.strip()] = value.strip().strip("\"'")
     values.update(os.environ)
     return values
 
@@ -33,7 +40,6 @@ class Settings:
     # OpenAI-compatible endpoint: NVIDIA's hosted API by default, or a self-hosted vLLM server.
     model_base_url: str = "https://integrate.api.nvidia.com/v1"
     requests_per_minute: float | None = None
-    role_name: str = "investigator"
 
     def role(self, name: str) -> "Settings":
         """Model endpoint for one agent role.
@@ -49,11 +55,10 @@ class Settings:
         default_model = PROFILE.get("model_roles", {}).get(name, self.model)
         return replace(
             self,
-            model=env.get(f"{prefix}_MODEL") or env.get(f"{prefix}_NAME") or default_model,
+            model=env.get(f"{prefix}_MODEL") or default_model,
             model_base_url=(env.get(f"{prefix}_BASE_URL") or "https://integrate.api.nvidia.com/v1").rstrip("/"),
             nvidia_key=env.get(f"{prefix}_KEY") or env.get("NVIDIA_API_KEY", ""),
             requests_per_minute=float(env[f"{prefix}_RPM"]) if env.get(f"{prefix}_RPM") else None,
-            role_name=name,
         )
 
     @classmethod

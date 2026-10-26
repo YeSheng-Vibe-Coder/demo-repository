@@ -23,6 +23,7 @@ import math
 import time
 
 from .calibration import position
+from .contracts import account_ref
 from .feature_registry import FEATURES
 from .profile import PROFILE
 from .settings import ROOT
@@ -99,7 +100,7 @@ def thresholds(cases: list[dict]) -> dict:
 def case_summary(case: dict, state: dict, team: list[dict]) -> dict:
     conclusion = state.get("conclusion") or {}
     return {
-        "run_id": case["run_id"], "account": f"{case['account']['bank']}:{case['account']['account']}", "day": case["day"],
+        "run_id": case["run_id"], "account": account_ref(case["account"]), "day": case["day"],
         "tier": case.get("tier"), "features": case["features"], "outcome": "laundering" if case["window_label"] else "normal",
         "team_conclusion": case["conclusion"], "suspicion": case.get("suspicion"),
         "roles": [f"{m['role']}:{','.join(m.get('tools', []))}" for m in team][:4],
@@ -186,7 +187,7 @@ def brief_lines(config: dict | None, rule_context: dict | None, request: dict, c
         return {}
     tier = (rule_context.get("tier") or {}).get("tier")
     alert = rule_context.get("alert") or {}
-    focus = (f"{request['account']['bank']}:{request['account']['account']}", request["start"][:10])
+    focus = (account_ref(request["account"]), request["start"][:10])
     cases = similar(config, tier, alert.get("features") or {}, focus, calibration)
     sections = {
         "REFERENCE CASES (closed development cases with known outcome; not this case)": [

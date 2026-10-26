@@ -1,12 +1,12 @@
-"""Live investigation from the dashboard: alert candidates, case request and progress (no labels, no secrets)."""
+"""Live investigation from the dashboard: case request, run status and progress (no labels, no secrets)."""
 
 from __future__ import annotations
 
 import json
 import time
 
-from .contracts import CaseRequest
-from .settings import ROOT
+from .contracts import ALERT_QUESTION, CaseRequest
+from .settings import ROOT, ROUNDS
 from .store import Store
 
 LIVE_SLOTS = 2
@@ -24,83 +24,36 @@ def missing_setup(settings) -> list[str]:
     if not settings.zetaris_key:
         missing.append("Zetaris API key")
     return missing
-ROUNDS = ROOT / ".runtime/investigator-rounds"
-QUESTION = ("Investigate this rule alert: which transactions, if any, are suspicious, and what upstream/downstream "
-            "evidence supports or contradicts that?")
 
 
 def primary_policy(store: Store) -> dict:
-    from .tier_agent import ALIAS
-
-    pointer = store.program_pointer(ALIAS)
-    return (store.read_artifact(pointer, "tier_policy_version") or {}).get("policy") or {} if pointer else {}
-
-
-def candidates(store: Store, limit: int = 40) -> list[dict]:
-    """Stored validation alerts of the investigation rounds, the showcase cases first, tiered by the tier agent."""
-    from .showcase import tier_of
-
-    policy = primary_policy(store)
-    showcase = set()
-    data = ROOT / ".runtime/dashboard/data.json"
-    if data.exists():
-        for case in json.loads(data.read_text()).get("showcase", {}).get("investigation_highlights", []):
-            showcase.add(store.get(case["run_id"])["request"].get("alert_id"))
-    seen, out = set(), []
-    for path in sorted(ROUNDS.glob("val-*.json"), reverse=True):
-        for item in json.loads(path.read_text()).get("alerts", []):
-            alert = store.read_artifact(item["alert_id"], "rule_alert")
-            key = (alert["account"]["bank"], alert["account"]["account"], alert["day"])
-            if key in seen and item["alert_id"] not in showcase:
-                continue
-            seen.add(key)
-            tier = tier_of(policy, alert["features"]) if policy else {"tier": alert.get("tier"), "name": "tier model"}
-            out.append({"alert_id": item["alert_id"], "account": alert["account"], "day": alert["day"],
-                        "tier": tier["tier"], "tier_rule": tier.get("name"), "tier_reason": tier.get("reason"),
-                        "rules_triggered": len(alert["triggered_rule_ids"]), "showcase": item["alert_id"] in showcase})
-    order = {"high": 0, "mid": 1, "low": 2}
-    out.sort(key=lambda a: (not a["showcase"], order.get(a["tier"], 3)))
-    # One entry per account-day (a showcase alert wins over a repeat of the same account-day).
-    unique = {}
-    for item in out:
-        unique.setdefault((item["account"]["bank"], item["account"]["account"], item["day"]), item)
-    return list(unique.values())[:limit]
-
+    """The primary grading policy's segments (empty before one is published)."""
+    return (store.primary_policy()[1] or {}).get("policy") or {}
 
 def register_listed(store: Store, key: str) -> str:
     """Store an alert from the full alert index (key alert:<bank>:<account>:<day>) so it can be investigated."""
-    from datetime import date, timedelta
-
     from . import alert_index
     from .feature_registry import FEATURES
-    from .harness import content_hash
-    from .rule_learning import triggered
-    from .rule_program import load_program, program_of
+    from .learning_cycle import store_alert
+    from .rule_program import load_program
 
     _, bank, account, day = key.split(":")
     db = alert_index.connect()
     row = db.execute("SELECT * FROM alerts WHERE account = ? AND day = ?", (f"{bank}:{account}", day)).fetchone() if db else None
     if row is None:
         # Not alerted by the active rules (e.g. a case investigated under an earlier version): reuse its stored alert.
-        for path in sorted((ROOT / ".runtime/investigator-rounds").glob("*.json"), reverse=True):
+        for path in sorted(ROUNDS.glob("*.json"), reverse=True):
             for item in json.loads(path.read_text()).get("alerts", []):
                 if item["account"] == {"bank": bank, "account": account} and item["day"] == day:
                     return item["alert_id"]
         raise KeyError("This alert is in neither the alert index nor an investigation round")
     version = db.execute("SELECT value FROM meta WHERE key = 'rule_version'").fetchone()[0]
-    from .tier_agent import ALIAS
-
-    grading = store.read_artifact(store.program_pointer(ALIAS), "tier_policy_version")
-    features = {n: row[n] for n in FEATURES}
-    package = load_program(store, version)
-    alert = {"base_version": version, "program_sha256": package["program_sha256"], "account": {"bank": bank, "account": account},
-             "start": day + "T00:00:00", "as_of": (date.fromisoformat(day) + timedelta(days=1)).isoformat() + "T00:00:00",
-             "triggered_rule_ids": triggered(program_of(package), features), "features": features,
-             "scope": "validation_alert_index", "day": day, "split": "validation", "tier": row["tier"], "priority": row["priority"],
-             "tier_score": row["priority"], "tier_source": f"risk grading agent {grading['label']}", "tier_model": grading.get("tier_model"),
-             "tier_base_rate": ((grading.get("development") or {}).get(row["tier"]) or {}).get("window_precision")}
-    alert["alert_sha256"] = content_hash(alert)
-    return store.artifact("rule_alert", alert)
+    _, grading = store.primary_policy()
+    item = {"bank": bank, "account": account, "day": day, "features": {n: row[n] for n in FEATURES}}
+    return store_alert(store, version, load_program(store, version), item, scope="validation_alert_index", split="validation",
+                       tier=row["tier"], priority=row["priority"], tier_score=row["priority"],
+                       tier_source=f"risk grading agent {grading['label']}", tier_model=grading.get("tier_model"),
+                       tier_base_rate=((grading.get("development") or {}).get(row["tier"]) or {}).get("window_precision"))
 
 
 def request_for(store: Store, alert_id: str) -> CaseRequest:
@@ -111,14 +64,19 @@ def request_for(store: Store, alert_id: str) -> CaseRequest:
     if split not in ("development", "validation"):
         raise ValueError("Live investigation is limited to development and validation alerts")
     return CaseRequest(account=alert["account"], start=alert["start"], as_of=alert["as_of"], split=split,
-                       rule_version=alert["base_version"], alert_id=alert_id, investigation_question=QUESTION)
+                       rule_version=alert["base_version"], alert_id=alert_id, investigation_question=ALERT_QUESTION)
 
 
 RUNS = ROOT / ".runtime/dashboard/live_runs.json"
 
 
+def load_runs() -> dict[str, list[str]]:
+    """Every live run per alert ("account|day"), oldest first; the last one is the alert's current investigation."""
+    return json.loads(RUNS.read_text()) if RUNS.exists() else {}
+
+
 def remember(account: str, day: str, run_id: str) -> None:
-    runs = json.loads(RUNS.read_text()) if RUNS.exists() else {}
+    runs = load_runs()
     runs.setdefault(f"{account}|{day}", []).append(run_id)
     RUNS.parent.mkdir(parents=True, exist_ok=True)
     RUNS.write_text(json.dumps(runs))
@@ -152,7 +110,7 @@ def outcome(store: Store, state: dict) -> str:
 def statuses(store: Store) -> dict[tuple[str, str], dict]:
     """Status of every alert with a live investigation, from its latest run (a retry replaces a failed attempt)."""
     out = {}
-    for key, runs in (json.loads(RUNS.read_text()) if RUNS.exists() else {}).items():
+    for key, runs in load_runs().items():
         try:
             state = store.get(runs[-1])
         except KeyError:
@@ -164,51 +122,27 @@ def statuses(store: Store) -> dict[tuple[str, str], dict]:
 
 
 def latest(account: str, day: str) -> str | None:
-    runs = json.loads(RUNS.read_text()) if RUNS.exists() else {}
-    return (runs.get(f"{account}|{day}") or [None])[-1]
-
-
-def member_view(store: Store, run_id: str, assignment: dict) -> dict:
-    state = store.get(run_id)
-    conclusion = state.get("conclusion") or {}
-    return {"role": assignment["role"], "question": assignment["question"], "status": state["status"],
-            "actions": state["budget"].get("actions"),
-            "steps": [{"tool": o["tool"], "arguments": o["arguments"], "found": (o.get("digest") or [])[:4]} for o in state["observations"]],
-            "conclusion": conclusion.get("conclusion"), "reason": conclusion.get("brief_reason")}
+    return (load_runs().get(f"{account}|{day}") or [None])[-1]
 
 
 def progress(store: Store, run_id: str) -> dict:
-    """What the team is doing now: phase, each specialist's steps, the team's conclusion and the senior decision."""
+    """Where a live investigation stands: phase, outcome, retries and setup notes (the case itself comes from run_detail)."""
     state = store.get(run_id)
-    team = state.get("team") or {}
-    members = [member_view(store, child, assignment) for assignment, child in zip(team.get("assignments", []), team.get("children", []))]
-    conclusion = state.get("conclusion") or {}
-    adjudication = state.get("adjudication") or {}
-    if adjudication:
+    children = [store.get(child)["status"] for child in (state.get("team") or {}).get("children", [])]
+    if state.get("adjudication"):
         phase = "decided"
-    elif conclusion:
+    elif state.get("conclusion"):
         phase = "senior_investigator"
-    elif members and all(m["status"] not in ("queued", "running") for m in members):
+    elif children and all(status not in ("queued", "running") for status in children):
         phase = "aggregating"
-    elif members:
+    elif children:
         phase = "investigating"
     else:
         phase = "team_setup"
-    if (state["status"] in ("failed", "cancelled", "model_unavailable", "tool_failed") and not conclusion) or stalled(store, state):
+    if (state["status"] in ("failed", "cancelled", "model_unavailable", "tool_failed") and not state.get("conclusion")) or stalled(store, state):
         phase = "stopped"
     return {
-        "run_id": run_id, "status": state["status"], "phase": phase, "created": state["created"],
+        "run_id": run_id, "phase": phase, "created": state["created"], "elapsed_seconds": round(time.time() - state["created"]),
         "outcome": outcome(store, state), "attempt": state.get("attempt", 1), "max_attempts": MAX_RETRIES + 1,
-        "retry_of": state.get("retry_of"), "retried_by": state.get("retried_by"),
-        "setup_log": state.get("setup_log", []),
-        "account": state["request"]["account"], "day": state["request"]["start"][:10],
-        "elapsed_seconds": round(time.time() - state["created"]),
-        "tier": (state.get("rule_context") or {}).get("tier"),
-        "team_plan": team.get("rationale"), "members": members,
-        "conclusion": {k: conclusion.get(k) for k in ("conclusion", "suspicion", "chain", "supported_findings", "counterevidence",
-                                                        "suspect_transaction_ids", "account_verdicts", "brief_reason")} if conclusion else None,
-        "senior_investigator": {k: adjudication.get(k) for k in ("prior_level", "adjustment", "risk_level", "decision", "rationale",
-                                                                  "evidence_flags", "key_evidence", "account_risks", "linked_alerts")}
-                               if adjudication else None,
-        "error": state.get("error"),
+        "retried_by": state.get("retried_by"), "setup_log": state.get("setup_log", []), "error": state.get("error"),
     }

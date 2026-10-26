@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 from datetime import datetime, timedelta
 
-from .contracts import Account, Action
+from .contracts import Account, Action, endpoint_ref
 from .feature_registry import EVIDENCE_SIDE
 from .profile import EVIDENCE, TOOLS
 from .zetaris import Zetaris
@@ -120,7 +120,7 @@ def known_inactive(state: dict, reference: str, side: str, window: dict) -> str 
         scope = evidence.get("query_scope") or {}
         if scope.get("account_ref") == reference and scope.get("direction") == "both" and not scope.get("other_account_ref"):
             endpoint = "to" if side == "incoming" else "from"
-            if not any(f"{row[endpoint + '_bank']}:{row[endpoint + '_account']}" == reference for row in evidence.get("rows", [])):
+            if not any(endpoint_ref(row, endpoint) == reference for row in evidence.get("rows", [])):
                 return ref
     return None
 
@@ -140,12 +140,12 @@ class Tools:
         from .tiering import TIERS, explain, load_model
 
         day = state["request"]["start"][:10]
-        if datetime.fromisoformat(day) + timedelta(hours=24) > datetime.fromisoformat(state["request"]["as_of"]):
+        if not self.case_days(state):
             return {"status": "insufficient_history", "complete": False, "reason": "Case day ends after the cutoff"}
         model = load_model((state.get("rule_context") or {}).get("tier", {}).get("tier_model"), state["request"].get("rule_version"))
         if model is None:
             return {"status": "insufficient_history", "complete": False, "reason": "No layer-2 model for this rule version"}
-        from .rule_learning import triggered
+        from .rule_learning import program_true
         from .rule_program import RuleProgram
 
         program_body = (state.get("rule_context") or {}).get("program")
@@ -157,8 +157,7 @@ class Tools:
             if features is None:
                 accounts[reference] = {"active": False}
                 continue
-            hits = set(triggered(program, features)) if program else set()
-            alerted = bool(program) and any(set(g.rule_ids) <= hits for g in program.groups)
+            alerted = bool(program) and program_true(program, features)
             # The tier model is fitted on layer-1 alerts only; outside them its score is not calibrated.
             accounts[reference] = {"active": True, "layer1_alert": alerted,
                                    **(explain(model, features, calibration.load()) if alerted else {})}
@@ -190,12 +189,13 @@ class Tools:
         start = datetime.fromisoformat(state["request"]["start"]).date()
         end = datetime.fromisoformat(state["request"]["as_of"])
         days, day = [], start
-        while datetime.combine(day, datetime.min.time()) + timedelta(hours=24) <= end and len(days) < 7:
+        # Whole days that end at or before the cutoff; CaseRequest caps the window at 7 days.
+        while datetime.combine(day, datetime.min.time()) + timedelta(hours=24) <= end:
             days.append(day.isoformat())
             day += timedelta(days=1)
-        return days or [start.isoformat()]
+        return days
 
-    def enrich(self, result: dict, state: dict, reserve, keep_rows: bool = True) -> dict:
+    def enrich(self, result: dict, state: dict, reserve) -> dict:
         """Attach Zetaris-computed context to retrieved transactions.
 
         transaction_context: backward-looking structure per payment (nothing after it);
@@ -204,7 +204,7 @@ class Tools:
         """
         rows = result.get("rows") or []
         if not rows:
-            return result if keep_rows else {}
+            return result
         note(state, "计算每笔交易此前 48 小时的资金结构", "Computing each payment's prior 48h structure")
         transaction_context = self.zetaris.transaction_context(rows, reserve)
         note(state, "读取相关账户当天的特征画像", "Reading the involved accounts' feature profiles")
@@ -212,7 +212,7 @@ class Tools:
             "transaction_context": transaction_context,
             "account_context": self.zetaris.account_features(
                 [
-                    (f"{row[side + '_bank']}:{row[side + '_account']}", row["transaction_time"][:10])
+                    (endpoint_ref(row, side), row["transaction_time"][:10])
                     for row in rows[:200]
                     for side in ("from", "to")
                 ],
@@ -220,7 +220,7 @@ class Tools:
                 reserve,
             ),
         }
-        return {**result, **context} if keep_rows else context
+        return {**result, **context}
 
     def alert_support(self, state: dict, alert: dict, reserve) -> dict:
         """Transactions behind each triggered rule condition, fetched from Zetaris.
@@ -264,7 +264,7 @@ class Tools:
                         continue
                     other = "from" if incoming else "to"
                     currency = row["receiving_currency" if incoming else "payment_currency"]
-                    key = (f"{row[other + '_bank']}:{row[other + '_account']}", currency)
+                    key = (endpoint_ref(row, other), currency)
                     groups.setdefault(key, []).append(identifier)
                 ordered = sorted(groups.items(), key=lambda item: (-len(item[1]), item[0]))
                 ranked_counterparties += [ref for (ref, _), _ in ordered]
@@ -294,11 +294,11 @@ class Tools:
         activity: dict[str, int] = {}
         for row in rows.values():
             for side in ("from", "to"):
-                endpoint = f"{row[side + '_bank']}:{row[side + '_account']}"
+                endpoint = endpoint_ref(row, side)
                 if endpoint != focus_ref:
                     activity[endpoint] = activity.get(endpoint, 0) + 1
         ranked_counterparties += sorted(activity, key=lambda ref: (-activity[ref], ref))
-        return {
+        return self.enrich({
             "rows": list(rows.values()),
             "complete": complete,
             "window": {"start": start, "end": end.isoformat()},
@@ -306,7 +306,7 @@ class Tools:
             "rule_support": support,
             "registered_account_refs": self.register(state, focus_ref, ranked_counterparties),
             "support_scope": "Zetaris-fetched transactions behind each triggered condition; a rule hit is a lead, not a laundering label",
-        } | self.enrich({"rows": list(rows.values())}, state, reserve, keep_rows=False)
+        }, state, reserve)
 
     def execute(self, action: Action, state: dict, reserve) -> dict:
         args = action.arguments
@@ -403,7 +403,7 @@ class Tools:
             return self.enrich(result, state, reserve)
         if action.tool == "compare_account_baseline":
             day = state["request"]["start"][:10]
-            if datetime.fromisoformat(day) + timedelta(hours=24) > datetime.fromisoformat(state["request"]["as_of"]):
+            if not self.case_days(state):
                 return {"status": "insufficient_history", "complete": False, "reason": "Case day ends after the cutoff"}
             baseline = self.zetaris.baseline(account, day, args["history_days"], reserve)
             baseline["new_counterparties"] = self.zetaris.new_counterparties(account, day, args["history_days"], reserve)
@@ -414,12 +414,12 @@ class Tools:
         if action.tool == "query_between_accounts":
             other = Account.model_validate(state["accounts"][args["other_account_ref"]])
             direction = "both"
-        elif direction != "both" and known_inactive(state, reference, direction, window):
+        elif direction != "both" and (basis := known_inactive(state, reference, direction, window)):
             return {
                 "status": "empty_by_prior_evidence",
                 "complete": True,
                 "rows": [],
-                "basis_evidence_ref": known_inactive(state, reference, direction, window),
+                "basis_evidence_ref": basis,
                 "window": window,
                 "query_scope": {"account_ref": reference, "direction": direction, "other_account_ref": None},
             }
@@ -432,7 +432,7 @@ class Tools:
             "other_account_ref": args.get("other_account_ref"),
         }
         endpoints = [
-            f"{row[side + '_bank']}:{row[side + '_account']}"
+            endpoint_ref(row, side)
             for row in result["rows"]
             for side in ("from", "to")
         ]

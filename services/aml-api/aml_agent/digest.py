@@ -50,6 +50,17 @@ def account_line(reference: str, days: dict, calibration: dict | None = None) ->
     )
 
 
+def risk_line(reference: str, item: dict) -> str:
+    """One account's layer-2 risk on the case day: tier, score and its top drivers."""
+    if not item.get("active"):
+        return f"{reference}: no activity on the case day"
+    if not item["layer1_alert"]:
+        return f"{reference}: not alerted by the high-recall layer-1 rule on the case day"
+    drivers = "; ".join(f"{d['feature']}={d['value']:g} ({d['position'] or 'n/a'}, {'+' if d['score_effect'] >= 0 else ''}{d['score_effect']})"
+                        for d in item["drivers"][:3])
+    return f"{reference}: tier {item['tier']} score {item['score']}; drivers {drivers}"
+
+
 def digest(tool: str, arguments: dict, result: dict, ref: str) -> list[str]:
     """Fact lines for one observation; every line ends with its evidence reference."""
     lines: list[str] = []
@@ -101,15 +112,7 @@ def digest(tool: str, arguments: dict, result: dict, ref: str) -> list[str]:
             )
     elif tool == "assess_risk":
         for reference, item in list((result.get("accounts") or {}).items())[:5]:
-            if not item.get("active"):
-                lines.append(f"Risk {reference}: no activity on the case day{cite}")
-                continue
-            if not item.get("layer1_alert", True):
-                lines.append(f"Risk {reference}: not alerted by the high-recall layer-1 rule on the case day{cite}")
-                continue
-            drivers = "; ".join(f"{d['feature']}={d['value']:g} ({d['position'] or 'n/a'}, {'+' if d['score_effect'] >= 0 else ''}{d['score_effect']})"
-                                for d in item["drivers"][:3])
-            lines.append(f"Risk {reference}: tier {item['tier']} score {item['score']}; drivers {drivers}{cite}")
+            lines.append(f"Risk {risk_line(reference, item)}{cite}")
     elif tool == "compare_account_baseline":
         comparison = result.get("comparison") or {}
         notable = sorted(

@@ -11,12 +11,11 @@ import json
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
-from .dashboard import OUTPUT, SNAPSHOT
+from .dashboard import data_path
 from .live import NEEDS_SETUP
 from .settings import ROOT
 
 APP = ROOT / "apps/dashboard"
-DB: dict = {}
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -25,8 +24,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path in ("/", "/dashboard", "/dashboard/"):
             return self.file(APP / "index.html", "text/html; charset=utf-8")
         if path == "/dashboard/data.json":
-            data = OUTPUT / "data.json" if (OUTPUT / "data.json").exists() else SNAPSHOT
-            return self.file(data, "application/json")
+            return self.file(data_path(), "application/json")
         if path.startswith("/dashboard/static/"):
             target = (APP / path.removeprefix("/dashboard/static/")).resolve()
             if APP.resolve() in target.parents and target.is_file():
@@ -34,8 +32,6 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.file(target, kind + "; charset=utf-8")
         if path in ("/dashboard/api/alerts", "/dashboard/api/alerts/summary"):
             return self.alerts(path)
-        if path.startswith("/dashboard/api/live/for"):
-            return self.reply(200, {"run_id": None})
         if path.startswith("/dashboard/api/"):
             return self.reply(503, {"detail": NEEDS_SETUP})
         self.reply(404, {"detail": "Not found"})
@@ -48,16 +44,13 @@ class Handler(SimpleHTTPRequestHandler):
 
         from . import alert_index
 
-        if DB.get("db") is None:  # only an opened index is cached
-            DB["db"] = alert_index.connect()
-        db = DB["db"]
+        db = alert_index.connect()
         if db is None:
             return self.reply(404, {"detail": "No alert index; run: python -m aml_agent.cli alert-index"})
         if path.endswith("/summary"):
             return self.reply(200, alert_index.summary(db))
         query = {k: v[0] for k, v in parse_qs(urlparse(self.path).query).items()}
-        data = OUTPUT / "data.json" if (OUTPUT / "data.json").exists() else SNAPSHOT
-        self.reply(200, alert_index.page(db, alert_index.investigated(data), query))
+        self.reply(200, alert_index.page(db, alert_index.investigated(data_path()), query))
 
     def file(self, path, kind: str) -> None:
         if not path.exists():
@@ -83,6 +76,5 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 def serve(port: int = 8020) -> None:
-    source = OUTPUT / "data.json" if (OUTPUT / "data.json").exists() else SNAPSHOT
-    print(f"Dashboard: http://127.0.0.1:{port}/dashboard  (data: {source.relative_to(ROOT)})", flush=True)
+    print(f"Dashboard: http://127.0.0.1:{port}/dashboard  (data: {data_path().relative_to(ROOT)})", flush=True)
     ThreadingHTTPServer(("127.0.0.1", port), Handler).serve_forever()

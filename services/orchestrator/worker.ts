@@ -5,9 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { Markovian } from '../../vendor/meterless/markovian/src/index.ts';
 import { HMEM } from '../../vendor/meterless/hmem/src/index.ts';
-import { apiClient } from './http.ts';
+import { API_BASE, apiClient, apiToken, root } from './http.ts';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const terminal = new Set(['completed', 'insufficient_evidence', 'budget_exhausted', 'model_unavailable', 'tool_failed', 'cancelled']);
 
 interface Observation { evidence_ref: string; question_id?: number | null; digest?: string[] }
@@ -31,15 +30,12 @@ export function checkpoint(state: {status: string; state_version: number; observ
 
 export async function runCase(runId: string): Promise<void> {
   if (!/^[a-f0-9-]{36}$/.test(runId)) throw new Error('Expected run UUID');
-  const token = process.env.AML_INTERNAL_TOKEN || fs.readFileSync(path.join(root, '.runtime/api-token'), 'utf8').trim();
-  const base = process.env.AML_API_BASE_URL || 'http://127.0.0.1:8010';
-  if (base !== 'http://127.0.0.1:8010') throw new Error('This first release only supports the loopback API');
   const workerId = randomUUID();
   const profile = JSON.parse(fs.readFileSync(path.join(root, 'docs/architecture/AML_Agent_Config_v1.0.json'), 'utf8'));
   // One step may hold a model call plus repair and two SQL requests; wait for all of them.
   const stepTimeoutMs = (2 * profile.provider.timeout_seconds
     + 2 * profile.tools.sql_client_response_timeout_seconds_not_server_cancellation + 60) * 1000;
-  const request = apiClient(base, token, stepTimeoutMs);
+  const request = apiClient(API_BASE, apiToken(), stepTimeoutMs);
   const lease = await request<{fence: number}>(`/internal/jobs/${runId}/claim`, { worker_id: workerId });
   let state = await request<RunState>(`/v1/runs/${runId}`);
   // Per-run and per-split isolation is enforced by separate persistent stores.
@@ -89,7 +85,7 @@ export async function runCase(runId: string): Promise<void> {
   try {
     const result = await engine.run({
       goal: 'Investigate this case using bounded observations and produce an evidence-bound conclusion.',
-      reflect: false,
+      reflect: profile.markovian.reflect,
       stepFn: async () => {
         if (leaseError) throw leaseError;
         state = await request<RunState>(`/v1/runs/${runId}`);

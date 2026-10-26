@@ -21,7 +21,7 @@ window.AMLViews = (() => {
   const MEMBER = ["#2563EB", "#7C3AED", "#0E9F8E", "#C27C0E"];
   const TIER = { high: ["高风险", "High"], mid: ["中风险", "Medium"], low: ["低风险", "Low"] };
   const DECISION = { report: ["上报", "Report"], review: ["复核", "Review"], dismiss: ["排除", "Dismiss"] };
-  const VERDICT = { suspicious: ["可疑", "Suspicious"], not_supported: ["不支持", "Not supported"], insufficient_evidence: ["证据不足", "Insufficient"], cleared: ["排除", "Cleared"], unknown: ["未定", "Unknown"] };
+  const VERDICT = { suspicious: ["可疑", "Suspicious"], not_supported: ["不支持", "Not supported"], insufficient_evidence: ["证据不足", "Insufficient"] };
   const FLAG = {
     onward_within_24h: ["24h 内转出", "Onward within 24h"], to_new_counterparty: ["转给新对手方", "To new counterparty"], currency_switch_on_chain: ["链上换币", "Currency switch"],
     convergence_from_sources: ["多源汇聚", "Convergence"], round_trip: ["资金回流", "Round trip"], counterparty_alerted: ["对手方也被告警", "Counterparty alerted"],
@@ -139,7 +139,7 @@ window.AMLViews = (() => {
       rules: row.rules, tier: { ...grade, tier: row.tier }, decision: null, chain_accounts: null,
       detail: { hit_rules: hits }, evaluation: { new_chain_accounts: [] } };
   }
-  const asCase = c => ({ ...c, run: c.run || c.key, key: `${c.account}|${c.day}`, investigated: true, status: "investigated" });
+  const asCase = c => ({ ...c, run: c.key, key: `${c.account}|${c.day}`, investigated: true, status: "investigated" });
   const STATUS = { investigated: ["已初步调查", "Investigated"], running: ["调查中", "Investigating"], failed: ["调查失败", "Failed"], pending: ["未初步调查", "Not investigated"] };
   const statusPill = c => { const st = c.status || (c.investigated ? "investigated" : "pending");
     return `<i class="status ${st}"${c.error ? ` title="${H.esc(failure(c.error))}"` : ""}>${tr(STATUS[st])}</i>`; };
@@ -179,7 +179,7 @@ window.AMLViews = (() => {
     H.$("#side-scope").innerHTML = `<span>${L("验证期", "Validation")} · ${H.esc((v.period || "").replace(/2022-/g, ""))}</span><small>${L("规则", "Rules")} ${H.esc(v.rule_version || "")} · ${L("风险分级 agent", "Risk grading agent")} ${H.esc(DATA.showcase?.tier_agent?.label || "")}</small>`;
     const summary = await fetch("/dashboard/api/alerts/summary").then(r => r.ok ? r.json() : null).catch(() => null);
     served = !!summary;
-    const local = [...DATA.trace.cases, ...(DATA.trace.alerts || [])];
+    const local = DATA.trace.cases;
     const days = summary?.days || [...new Set(local.map(c => c.day))].sort(), rules = summary?.rules || [...new Set(local.flatMap(c => c.rules))].sort();
     const sel = (name, icon, label, list, show = x => x) => `<label class="t-sel"><i>${icon}</i><select data-f="${name}"><option value="">${label}</option>${list.map(x => `<option value="${H.esc(x)}"${filters[name] === x ? " selected" : ""}>${H.esc(show(x))}</option>`).join("")}</select></label>`;
     H.$("#t-filters").innerHTML = `<label class="t-search"><i>⌕</i><input data-f="q" value="${H.esc(filters.q)}" placeholder="${L("搜索账户", "Search account")}"></label>
@@ -203,12 +203,12 @@ window.AMLViews = (() => {
       if (body) return { total: body.total, pages: body.pages, rows: body.rows.map(rowCase) };
       served = false;
     }
-    // No alert index on this server: the investigated cases and alerts exported in data.json.
+    // No alert index on this server (static hosting): only the investigated cases exported in data.json.
     const rank = { high: 0, mid: 1, low: 2 };
-    const all = [...DATA.trace.cases.map(asCase), ...(DATA.trace.alerts || []).map(a => ({ ...a, key: `${a.account}|${a.day}`, investigated: false }))]
+    const all = DATA.trace.cases.map(asCase)
       .filter(c => (!filters.q || c.account.includes(filters.q)) && (!filters.day || c.day === filters.day) && (!filters.tier || c.tier.tier === filters.tier)
-        && (!filters.rule || c.rules.includes(filters.rule)) && (!filters.status || (c.status || "pending") === filters.status))
-      .sort((a, b) => (rank[a.tier.tier] ?? 3) - (rank[b.tier.tier] ?? 3) || (b.investigated - a.investigated) || (b.priority ?? 0) - (a.priority ?? 0));
+        && (!filters.rule || c.rules.includes(filters.rule)) && (!filters.status || filters.status === "investigated"))
+      .sort((a, b) => (rank[a.tier.tier] ?? 3) - (rank[b.tier.tier] ?? 3));
     return { total: all.length, pages: Math.max(1, Math.ceil(all.length / PAGE)), rows: all.slice(page * PAGE, (page + 1) * PAGE) };
   }
 

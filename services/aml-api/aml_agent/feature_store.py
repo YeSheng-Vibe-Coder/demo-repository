@@ -19,7 +19,6 @@ from datetime import datetime, timedelta
 
 import httpx
 
-from .feature_registry import FEATURES
 from .settings import Settings
 from .zetaris import SCOPE, DataError, timestamp
 
@@ -33,7 +32,6 @@ SHARDS = {
     "history": ("agent_day_history", ROOT_PATH + "/day_history_v1"),
 }
 HISTORY_DAYS = 7
-FEATURE_COLUMNS = list(FEATURES)
 AGGREGATE_COLUMNS = [
     "fan_in_24h", "fan_in_48h", "fan_out_24h", "fan_out_48h", "in_count_24h", "out_count_24h",
     "in_banks_24h", "out_banks_24h", "pass_through_ratio_24h", "currency_count_24h", "activity_change_24h",
@@ -227,10 +225,7 @@ class FeatureStore:
     def label_sql(day: str) -> str:
         start = datetime.fromisoformat(day)
         end = start + timedelta(hours=24)
-        scope = (
-            f"transaction_time >= {timestamp(start.isoformat())} AND transaction_time < {timestamp(end.isoformat())} "
-            "AND payment_format IN ('ACH','Wire') AND (from_bank <> to_bank OR from_account <> to_account)"
-        )
+        scope = SCOPE.format(p="", start=timestamp(start.isoformat()), end=timestamp(end.isoformat()))
         # Literal side table: Spark cannot resolve a UNION that reads one table twice.
         return (
             f"SELECT CASE WHEN s.side = 'to' THEN to_bank ELSE from_bank END AS bank, "
@@ -263,9 +258,11 @@ class FeatureStore:
     def register(self) -> None:
         """(Re)register the day-partitioned shard sets as Lightning tables."""
         for table, path in SHARDS.values():
-            try:
-                self.run(
-                    f'CREATE LIGHTNING FILESTORE TABLE {table} FROM IBM_AML FORMAT PARQUET OPTIONS (PATH "{path}", mergeSchema "false")'
-                )
-            except DataError:
-                self.run(f"REFRESH TABLE IBM_AML.{table}")
+            self.register_table(table, path)
+
+    def register_table(self, table: str, path: str, database: str = "IBM_AML") -> None:
+        """A parquet directory as a Lightning filestore table; refreshed when it already exists."""
+        try:
+            self.run(f'CREATE LIGHTNING FILESTORE TABLE {table} FROM {database} FORMAT PARQUET OPTIONS (PATH "{path}", mergeSchema "false")')
+        except DataError:
+            self.run(f"REFRESH TABLE {database}.{table}")

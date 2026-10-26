@@ -19,7 +19,7 @@ from .evaluation import validate_partition
 from .profile import PROFILE
 from .providers import ModelError, Nvidia
 from .rule_program import load_program
-from .settings import ROOT, Settings
+from .settings import ROOT, Settings, team_command
 from .store import Conflict, Store
 from .tools import Tools
 from .zetaris import DataError
@@ -101,9 +101,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/dashboard/data.json")
     def dashboard_data():
-        from .dashboard import OUTPUT, SNAPSHOT
+        from .dashboard import data_path
 
-        path = OUTPUT / "data.json" if (OUTPUT / "data.json").exists() else SNAPSHOT
+        path = data_path()
         if not path.exists():
             raise HTTPException(404, "Run: python -m aml_agent.cli dashboard")
         return FileResponse(path, media_type="application/json")
@@ -111,12 +111,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Live investigation from the dashboard: only stored layer-1 alerts of the development or validation
     # partition, at most LIVE_SLOTS at once; the token stays on the server (the browser holds no secret).
     live: dict[str, subprocess.Popen] = {}
-
-    @app.get("/dashboard/api/live/alerts")
-    def live_alerts():
-        from .live import candidates
-
-        return JSONResponse(candidates(store))
 
     def launch(alert_id: str, attempt: int = 1, retry_of: str | None = None) -> str:
         """Create a team case for an alert and start its worker; remembered per alert for the dashboard."""
@@ -129,8 +123,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             store.annotate(run_id, "retry_of", retry_of)
         remember(f"{request.account.bank}:{request.account.account}", request.start.date().isoformat(), run_id)
         log = (ROOT / ".runtime/logs" / f"worker-{run_id}.log").open("w")
-        live[run_id] = subprocess.Popen(["node", "--experimental-transform-types", str(ROOT / "services/orchestrator/team.ts"), run_id],
-                                        cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+        live[run_id] = subprocess.Popen(team_command(run_id), cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
         return run_id
 
     def supervise() -> None:
@@ -182,7 +175,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
         try:
             result = progress(store, run_id)
-            result["detail"] = run_detail(store, run_id)
+            result["detail"] = run_detail(store, store.get(run_id))
         except KeyError as error:
             raise HTTPException(404, "Unknown run") from error
         process = live.get(run_id)
@@ -200,29 +193,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
         return {"run_id": latest(account, day)}
 
-    alert_db = {}
-
-    def alert_index_db():
-        from . import alert_index
-
-        if alert_db.get("db") is None:  # only an opened index is cached; it may be built while the API runs
-            alert_db["db"] = alert_index.connect()
-        return alert_db["db"]
-
     @app.get("/dashboard/api/alerts")
     def alerts_page(page: int = 0, q: str = "", day: str = "", tier: str = "", rule: str = "", status: str = ""):
         from . import alert_index
-        from .dashboard import OUTPUT, SNAPSHOT
-
-        db = alert_index_db()
-        if db is None:
-            raise HTTPException(404, "Run: python -m aml_agent.cli alert-index")
-        data = OUTPUT / "data.json" if (OUTPUT / "data.json").exists() else SNAPSHOT
         from .alert_trace import live_case
+        from .dashboard import data_path
         from .live import primary_policy, statuses
 
+        db = alert_index.connect()
+        if db is None:
+            raise HTTPException(404, "Run: python -m aml_agent.cli alert-index")
         live_states = statuses(store)
-        result = alert_index.page(db, alert_index.investigated(data), {"page": page, "q": q, "day": day, "tier": tier, "rule": rule, "status": status},
+        result = alert_index.page(db, alert_index.investigated(data_path()), {"page": page, "q": q, "day": day, "tier": tier, "rule": rule, "status": status},
                                   live_states)
         # A decided live investigation is shown with the same case builder as the recorded rounds (latest investigation wins).
         policy = None
@@ -237,7 +219,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def alerts_summary():
         from . import alert_index
 
-        db = alert_index_db()
+        db = alert_index.connect()
         if db is None:
             raise HTTPException(404, "Run: python -m aml_agent.cli alert-index")
         return alert_index.summary(db)

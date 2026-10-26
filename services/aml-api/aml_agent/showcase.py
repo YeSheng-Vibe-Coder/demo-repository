@@ -2,8 +2,7 @@
 
 - tier agent: how it tiers alerts (its rules with reasons, the patterns and investigated cases it learned from,
   its revisions round by round) and which rule places a given alert;
-- investigation team: cases where it found chain accounts the layer-1 rule never alerted on, with the
-  specialists' work, the evidence and the senior investigator's reasoning;
+- investigation team: what changed between the investigation rounds and how often each tool found laundering;
 - rule-update agent: the data it saw, its reasoning, the rule change and its effect per version.
 """
 
@@ -14,21 +13,24 @@ import time
 from datetime import date, timedelta
 
 from .rule_versions import history
-from .settings import ROOT
-from .store import Store
+from .settings import SHOWCASE
+from .store import RULES_POINTER, Store
 
-ROUNDS = ROOT / ".runtime/investigator-rounds"
-# Alerts listed on the alert tracing page besides the investigated cases (highest priority per tier).
-ALERT_QUOTA = {"high": 600, "mid": 250, "low": 150}
-SHOWCASE = ROOT / ".runtime/showcase"
+
+def version_metrics() -> dict:
+    """Chain-based validation metrics of every published rule version, by label (from showcase-metrics)."""
+    path = SHOWCASE / "versions.json"
+    return json.loads(path.read_text()) if path.exists() else {}
 
 
 def matched_segment(policy: dict, features: dict) -> dict | None:
-    """The first policy segment whose conditions all hold for the alert (the policy is an ordered list)."""
-    for segment in policy.get("segments", []):
+    """The segment that grades an alert: the highest-priority one whose conditions all hold (as compile_policy in SQL)."""
+    from .rule_learning import value
+
+    for segment in sorted(policy.get("segments", []), key=lambda s: -s["priority"]):
         values = [features.get(c["feature"]) for c in segment["conditions"]]
-        if all(v is not None and (v >= c["value"] if c["op"] == "ge" else v <= c["value"])
-               for v, c in zip(values, segment["conditions"])):
+        if all(value(features, c["feature"]) >= c["value"] if c["op"] == "ge" else value(features, c["feature"]) <= c["value"]
+               for c in segment["conditions"]):
             return {"name": segment["name"], "tier": segment["tier"], "priority": segment["priority"], "reason": segment["reason"],
                     "conditions": [{**c, "actual": v} for c, v in zip(segment["conditions"], values)]}
     return None
@@ -95,63 +97,13 @@ def investigation_learning(evaluation: dict) -> dict:
                             key=lambda x: -(x["rate"] or 0))}
 
 
-def investigation_highlights(store: Store, primary: dict, rounds: tuple[str, ...] = ("val-r3-adj", "val-r3", "val-r2")) -> list[dict]:
-    """Validation cases where the team named chain accounts the layer-1 rule never alerted on."""
-    policy = (primary or {}).get("policy") or {}
-    out, seen = [], set()
-    for name in rounds:
-        path = ROUNDS / f"{name}.json"
-        if not path.exists():
-            continue
-        for case in json.loads(path.read_text()).get("cases", []):
-            if not case.get("new_chain_accounts_found") or case["run_id"] in seen:
-                continue
-            seen.add(case["run_id"])
-            state = store.get(case["run_id"])
-            team = state.get("team") or {}
-            members = []
-            for assignment, child in zip(team.get("assignments", []), team.get("children", [])):
-                member = store.get(child)
-                members.append({
-                    "role": assignment["role"], "question": assignment["question"], "accounts": assignment.get("accounts"),
-                    "steps": [{"tool": o["tool"], "arguments": o["arguments"], "found": (o.get("digest") or [])[:4]}
-                              for o in member.get("observations", [])],
-                    "conclusion": (member.get("conclusion") or {}).get("conclusion"),
-                    "reason": (member.get("conclusion") or {}).get("brief_reason"),
-                })
-            conclusion = state.get("conclusion") or {}
-            adjudication = state.get("adjudication") or {}
-            new = set(case["new_chain_accounts_found"])
-            out.append({
-                "round": name, "run_id": case["run_id"], "account": case["account"], "day": case["day"],
-                "tier": tier_of(policy, case["features"]) if policy else {"tier": case.get("tier")},
-                "triggered_rules": len(case["triggered_rule_ids"]),
-                "team_plan": team.get("rationale"), "members": members,
-                "chain": conclusion.get("chain", []),
-                "findings": conclusion.get("supported_findings", []), "counterevidence": conclusion.get("counterevidence", []),
-                "team_conclusion": conclusion.get("conclusion"), "team_reason": conclusion.get("brief_reason"),
-                "suspect_transactions": conclusion.get("suspect_transaction_ids", []),
-                "new_accounts": [{"account_ref": v["account_ref"], "why_found": v["reason"], "evidence_refs": v.get("evidence_refs", [])}
-                                 for v in case.get("account_verdicts", []) if v["account_ref"] in new],
-                "chain_accounts_found": case["chain_accounts_found"],
-                "senior_investigator": {k: adjudication.get(k) for k in ("prior_level", "adjustment", "risk_level", "decision", "rationale",
-                                                                          "evidence_flags", "key_evidence", "account_risks", "linked_alerts")},
-                "model_calls": case.get("model_calls"), "sql_requests": case.get("sql_requests"),
-            })
-    # Strongest first: higher tier, reported, more red flags cited.
-    order = {"high": 0, "mid": 1, "low": 2}
-    out.sort(key=lambda h: (order.get(h["tier"].get("tier"), 3), h["senior_investigator"].get("decision") != "report",
-                            -len(h["senior_investigator"].get("evidence_flags") or [])))
-    return out
-
-
 def rule_update_reasoning(store: Store, versions: list[dict]) -> list[dict]:
     """Every agent-made rule version: what the agent saw, what it concluded, what changed and the effect."""
     from .learning_cycle import feature_contrast
 
     cycles = {(body.get("publication") or {}).get("active_version"): body
               for _, body in store.artifacts("learning_cycle") if body.get("kind") == "rule_update_from_investigations"}
-    metrics = json.loads((SHOWCASE / "versions.json").read_text()) if (SHOWCASE / "versions.json").exists() else {}
+    metrics = version_metrics()
     out = []
     for version in versions:
         if version.get("trigger") != "rule_update_agent" or version.get("status") != "published":
@@ -194,18 +146,14 @@ def tier_versions(store: Store, versions: list[dict], primary_id: str | None) ->
 
 
 def view(store: Store, versions: list[dict]) -> dict:
-    from .tier_agent import ALIAS
-
-    pointer = store.program_pointer(ALIAS)
-    primary = store.read_artifact(pointer, "tier_policy_version") if pointer else {}
-    metrics = json.loads((SHOWCASE / "versions.json").read_text()) if (SHOWCASE / "versions.json").exists() else {}
+    pointer, primary = store.primary_policy()
+    metrics = version_metrics()
     return {
         "rule_versions": [{"label": label, **{k: m.get(k) for k in ("chain_recall", "full_chain_account_recall", "chain_precision",
                                                                     "window_precision", "flagged_per_day", "flagged_accounts")}}
                           for label, m in sorted(metrics.items(), key=lambda item: int(item[0].lstrip("v")))],
-        "tier_agent": tier_reasoning(store, primary),
+        "tier_agent": tier_reasoning(store, primary or {}),
         "tier_versions": tier_versions(store, versions, pointer),
-        "investigation_highlights": investigation_highlights(store, primary),
         "rule_updates": rule_update_reasoning(store, versions),
     }
 
@@ -215,12 +163,13 @@ def refresh_metrics(cycle, log=print) -> dict:
 
     - versions.json: layer-1 metrics of every published rule version (cached per version),
     - metrics.json: the active version's layer 1, the primary risk grading policy and the tier model reference,
+    - tier_versions.json: every grading policy on the rule version it was learned on,
     - validation_volume.json: transactions and laundering transactions in the validation period.
     """
-    from .chains import IN_SCOPE
     from .rule_program import load_program, program_of
-    from .tier_agent import ALIAS, Evaluator, TierPolicy, compile_policy
+    from .tier_agent import Evaluator, TierPolicy, compile_policy
     from .tiering import score_sql, tier_sql
+    from .zetaris import IN_SCOPE
 
     SHOWCASE.mkdir(parents=True, exist_ok=True)
     store, learner = cycle.store, cycle.learner
@@ -231,22 +180,19 @@ def refresh_metrics(cycle, log=print) -> dict:
             versions[entry["label"]] = {"id": entry["id"], **learner.chain_metrics(program_of(load_program(store, entry["id"])), "validation")}
             path.write_text(json.dumps(versions, indent=2, default=str))
             log(json.dumps({"version_metrics": entry["label"]}))
-    version = store.program_pointer("learned-current")
+    version = store.program_pointer(RULES_POINTER)
     program = program_of(load_program(store, version))
     metrics = {"rule_version": version, "created": time.time(), "layer1_validation": learner.chain_metrics(program, "validation")}
     _, stored = cycle.tier_model(version)
     model = stored["model"]
     evaluator = Evaluator(learner, program)
     metrics["tier_model_validation"] = evaluator.evaluate("validation", tier_sql(model), score_sql(model))
-    pointer, primary_tiering = store.program_pointer(ALIAS), None
-    if pointer:
-        primary = store.read_artifact(pointer, "tier_policy_version")
-        if primary["rule_version"] == version:
-            tier, priority = compile_policy(TierPolicy.model_validate(primary["policy"]), score_sql(model))
-            primary_tiering = {"tier": tier, "priority": priority}
-            metrics[f"tier_agent_{primary['label']}_validation"] = evaluator.evaluate("validation", tier, priority)
-            metrics[f"tier_agent_{primary['label']}_policy"] = primary["policy"]
-            metrics["primary_tier_policy"] = primary["label"]
+    _, primary = store.primary_policy()
+    if primary and primary["rule_version"] == version:
+        tier, priority = compile_policy(TierPolicy.model_validate(primary["policy"]), score_sql(model))
+        metrics[f"tier_agent_{primary['label']}_validation"] = evaluator.evaluate("validation", tier, priority)
+        metrics[f"tier_agent_{primary['label']}_policy"] = primary["policy"]
+        metrics["primary_tier_policy"] = primary["label"]
     (SHOWCASE / "metrics.json").write_text(json.dumps(metrics, indent=2, default=str))
     # Every grading policy keeps its own record (evaluated on the rule version it was learned on): nothing is overwritten.
     tiers_path = SHOWCASE / "tier_versions.json"
@@ -261,18 +207,11 @@ def refresh_metrics(cycle, log=print) -> dict:
                                 "validation": Evaluator(learner, own).evaluate("validation", own_tier, own_priority)}
         tiers_path.write_text(json.dumps(tiers, indent=2, default=str))
         log(json.dumps({"tier_version_metrics": body["label"]}))
-    # The alert list: the highest-priority validation alerts of each tier under the primary grading policy.
-    if primary_tiering:
-        from .tier_agent import ranked
-
-        rows = ranked(learner, program, primary_tiering, "validation", ALERT_QUOTA)
-        (SHOWCASE / "alerts.json").write_text(json.dumps({"rule_version": version, "policy": primary["label"], "alerts": rows}, default=str))
-        log(json.dumps({"ranked_alerts": len(rows)}))
     if not (SHOWCASE / "validation_volume.json").exists():
         from .evaluation import split_plan
 
         plan = split_plan()["validation"]
-        scope = f"payment_format IN {IN_SCOPE} AND (from_bank <> to_bank OR from_account <> to_account)"
+        scope = IN_SCOPE.format(p="")
         row = learner.zetaris.run(
             f"SELECT COUNT(*), SUM(CASE WHEN is_laundering = 1 THEN 1 ELSE 0 END), SUM(CASE WHEN {scope} THEN 1 ELSE 0 END), "
             f"SUM(CASE WHEN is_laundering = 1 AND {scope} THEN 1 ELSE 0 END) FROM IBM_AML.hi_large_transactions "

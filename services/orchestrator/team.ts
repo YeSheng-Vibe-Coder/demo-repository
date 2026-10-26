@@ -10,10 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WorldModel } from '../../vendor/meterless/world-model/src/index.ts';
 import { runCase } from './worker.ts';
-import { apiClient } from './http.ts';
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const base = 'http://127.0.0.1:8010';
+import { API_BASE, apiClient, apiToken, root } from './http.ts';
 
 interface Row { transaction_id: string | number; transaction_time: string; from_bank: string; from_account: string;
   to_bank: string; to_account: string; amount_paid: string; payment_currency: string }
@@ -27,9 +24,8 @@ const accountId = (ref: string) => `account:acct:${ref}`;
 const transactionId = (id: string) => `transaction:tx:${id}`;
 
 export async function investigateTeam(parentId: string): Promise<void> {
-  const token = process.env.AML_INTERNAL_TOKEN || fs.readFileSync(path.join(root, '.runtime/api-token'), 'utf8').trim();
   // Coordinator and aggregator calls go to Ultra, which can queue for minutes under the shared rate limit.
-  const request = apiClient(base, token, 2_400_000);
+  const request = apiClient(API_BASE, apiToken(), 2_400_000);
 
   const team = await request<{ children: string[]; assignments: { role: string }[]; plan_source: string }>(`/internal/runs/${parentId}/team`, {});
   console.log(JSON.stringify({ team: parentId, plan_source: team.plan_source, roles: team.assignments.map(a => a.role) }));
@@ -119,14 +115,19 @@ export async function investigateTeam(parentId: string): Promise<void> {
     risk_level: adjudication.risk_level ?? null, world_events: world.events().length }));
 }
 
+// Who paid and who received a transaction in the merged case graph.
+type Graph = ReturnType<WorldModel['view']>;
+const payerOf = (graph: Graph, txId: string) => graph.incoming(txId, { via: 'paid' })[0];
+const payeeOf = (graph: Graph, txId: string) => graph.neighborsOf(txId, { via: 'credited' }).find(e => e.type === 'account');
+
 /** Directed, time-ordered views over the merged World Model, within a line budget. */
 export function buildContext(world: WorldModel, focus: string, reportedBy: Map<string, Set<string>>,
   suspectedBy: Map<string, Set<string>> = new Map()): string {
   const graph = world.view('graph');
   const facts = world.view('facts');
   const tx = (id: string) => graph.entity(id);
-  const payee = (txId: string) => graph.neighborsOf(txId, { via: 'credited' }).find(e => e.type === 'account');
-  const payer = (txId: string) => graph.incoming(txId, { via: 'paid' })[0];
+  const payee = (txId: string) => payeeOf(graph, txId);
+  const payer = (txId: string) => payerOf(graph, txId);
   const sent = (acct: string) => graph.neighborsOf(acct, { via: 'paid' }).filter(e => e.type === 'transaction');
   const received = (acct: string) => graph.incoming(acct, { via: 'credited' }).filter(e => e.type === 'transaction');
   const time = (id: string) => String(tx(id)?.attrs.time ?? '');
@@ -189,8 +190,8 @@ export function mermaid(world: WorldModel, focus: string, suspectedBy: Map<strin
     .sort((a, b) => String(a.attrs.time).localeCompare(String(b.attrs.time)))
     .forEach(t => {
       const id = t.id.replace('transaction:tx:', '');
-      const from = graph.incoming(t.id, { via: 'paid' })[0]?.id.replace('account:acct:', '');
-      const to = graph.neighborsOf(t.id, { via: 'credited' }).find(e => e.type === 'account')?.id.replace('account:acct:', '');
+      const from = payerOf(graph, t.id)?.id.replace('account:acct:', '');
+      const to = payeeOf(graph, t.id)?.id.replace('account:acct:', '');
       if (!from || !to) return;
       const by = [...(suspectedBy.get(id) ?? [])];
       const tag = confirmed.has(id) ? ' SUSPECT' : by.length ? ` flagged by ${by.join('+')}` : '';

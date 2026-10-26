@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from .contracts import FinishDecision
-from .harness import content_hash
+from .contracts import FinishDecision, account_ref
 
 
 class EvidenceConflict(ValueError):
@@ -42,16 +41,14 @@ def transaction_ledger(state: dict) -> dict:
                 unique[transaction_id] = {**fact, "evidence_refs": [ref]}
     rows = sorted(unique.values(), key=lambda x: (x["time"], x["transaction_id"]))
     focus = state["request"]["account"]
-    focus_ref = focus["bank"] + ":" + focus["account"]
+    focus_ref = account_ref(focus)
     return {
         "unique_count": len(rows),
         "transactions": rows,
-        "focus_account_ref": focus_ref,
         "observed_incoming_count": sum(r["to_account_ref"] == focus_ref for r in rows),
         "observed_outgoing_count": sum(
             r["from_account_ref"] == focus_ref for r in rows
         ),
-        "fact_sha256": content_hash(rows),
         "scope": "Union of retained evidence only; unknown/unqueried activity is not zero; never proves complete network absence.",
     }
 

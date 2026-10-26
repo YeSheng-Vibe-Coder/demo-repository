@@ -26,7 +26,7 @@ Zetaris 特征库（按天分片） → 规则学习 agent（决策树，开发�
 |---|---|
 | `status` | 配置检查 + NVIDIA / Zetaris / 本地 API 实际连通性（不打印凭据） |
 | `serve` | 启动业务 API（仅 127.0.0.1:8010） |
-| `materialize-features` | 在 Zetaris 上按天物化特征与评估标签分片（开发、验证、监控） |
+| `materialize-features` | 在 Zetaris 上按天物化特征与评估标签分片（开发、验证、监控），再构建各分区的洗钱链路表（评估用）和开发集总体分位数校准（`.runtime/calibration/development.json`） |
 | `learning-cycle --fresh --cases 30 --parallel 3` | 完整闭环（`--fresh` 重新学习初始规则；每个开发日取最高优先级告警做团队调查）；`--resume CYCLE` 从已评分的调查续跑；`--rerun CYCLE` 用同一批告警重新调查并逐案对比 |
 | `investigate CASE.json` / `run RUN_ID` | 单案调查（团队模式：协调员 + 并行专项调查员 + World Model 汇总员） |
 | `show RUN_ID` / `trace RUN_ID` | 查看案件状态 / 执行时间线 |

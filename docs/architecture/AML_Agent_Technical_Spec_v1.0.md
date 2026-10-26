@@ -500,7 +500,7 @@ Nightshift M1–M4 实测会用应用绑定的 Auto 模式覆盖具体模型，�
 
 ### 9.2 本项目内部接口与数据契约
 
-本节是项目业务接口契约，不是 Zetaris/NVIDIA 原生接口；已实现路由以 FastAPI /docs 为准。Python 提供 `AML_API_BASE_URL`，默认 loopback `http://127.0.0.1:8010`。实现可配置端口，不自动占用外部端口。内部请求携带 `Authorization: Bearer <AML_INTERNAL_TOKEN>`。
+本节是项目业务接口契约，不是 Zetaris/NVIDIA 原生接口；已实现路由以 FastAPI /docs 为准。API 只监听 loopback `http://127.0.0.1:8010`，不占用外部端口。内部请求携带 `Authorization: Bearer <AML_INTERNAL_TOKEN>`。
 
 #### 9.2.1 公开业务 API
 

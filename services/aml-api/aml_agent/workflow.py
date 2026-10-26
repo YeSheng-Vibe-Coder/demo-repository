@@ -21,6 +21,7 @@ from .contracts import (
     Action,
     Decision,
     StepRequest,
+    account_ref,
 )
 from . import calibration as calibration_data
 from . import investigator_training as training
@@ -29,7 +30,7 @@ from .candidates import candidate_transactions
 from .digest import account_line, digest
 from .digest import flags as digest_flags
 from .evidence import transaction_ledger, verify_claims
-from .harness import ExecutionHarness, GuardBlocked, content_hash
+from .harness import ExecutionHarness, content_hash
 from .profile import EVIDENCE, MARKOVIAN, PLANNER, TOOLS
 from .providers import (
     ContextBudgetError,
@@ -154,7 +155,6 @@ class Cancelled(RuntimeError):
 
 
 # Above this size the provider grammar becomes a large enum; the host validates instead.
-SCHEMA_ENUM_LIMIT = 200
 # Bounded formats, not enums, for references: an enum dead-ends the grammar when the
 # model wants an unlisted value, and it then emits whitespace until max_tokens. The
 # host validates membership and returns a repairable error naming the valid values.
@@ -265,11 +265,7 @@ def planner_schema(state: dict) -> dict:
             }
         else:
             branch["properties"].pop("initial_plan", None)
-    if not state["plan"]:
-        schema["oneOf"] = [
-            entry for entry in schema["oneOf"] if "ReplanDecision" not in entry["$ref"]
-        ]
-    if state["budget"]["replans"] >= PLANNER["max_replans"] or state.get(
+    if not state["plan"] or state["budget"]["replans"] >= PLANNER["max_replans"] or state.get(
         "last_replan_observation_count"
     ) == len(state["observations"]):
         schema["oneOf"] = [
@@ -499,6 +495,15 @@ def output_bound(schema: dict) -> int:
 
     return max(size(option) for option in schema["oneOf"])
 
+
+
+def record_finish(state: dict, decision, meaning: str) -> None:
+    """Record a model's final decision as the case conclusion; labels are never consulted."""
+    state["status"] = "insufficient_evidence" if decision.conclusion == "insufficient_evidence" else "completed"
+    state["conclusion"] = decision.model_dump()
+    state["validation"] = {"validation_kind": "schema_reference_scope_only", "label_access": False,
+                           "label_evaluation": "not_run_independent_evaluation_required", "production_eligible": False,
+                           "meaning": meaning + "; no LLM case approval and no claim of label-confirmed laundering"}
 
 class Workflow:
     def __init__(self, store: Store, provider: Nvidia, tools: Tools, senior: Nvidia | None = None):
@@ -846,7 +851,7 @@ class Workflow:
                                 policy_version=verdict.policy_version,
                             )
                             self.harness.blocked(state, verdict)
-                            raise GuardBlocked(verdict)
+                            raise ValueError(verdict.reason)
                     break
                 except (ValueError, ValidationError) as error:
                     # Do not persist/echo arbitrary invalid provider output or hidden reasoning.
@@ -934,19 +939,7 @@ class Workflow:
                 status = update.status if update.status != "answered" or refs else "open"
                 question.update(status=status, evidence_refs=list(refs), note=update.note)
             if decision.decision == "finish":
-                state["status"] = (
-                    "insufficient_evidence"
-                    if decision.conclusion == "insufficient_evidence"
-                    else "completed"
-                )
-                state["conclusion"] = decision.model_dump()
-                state["validation"] = {
-                    "validation_kind": "schema_reference_scope_only",
-                    "label_access": False,
-                    "label_evaluation": "not_run_independent_evaluation_required",
-                    "production_eligible": False,
-                    "meaning": "Investigation output; no LLM case approval and no claim of label-confirmed laundering",
-                }
+                record_finish(state, decision, "Investigation output")
             elif decision.next_action:
                 self.run_action(
                     decision.next_action, state, step_span, save, reserve_sql
@@ -955,9 +948,7 @@ class Workflow:
             pass
         except Cancelled as error:
             state["status"], state["error"] = "cancelled", str(error)
-        except BudgetError as error:
-            state["status"], state["error"] = "budget_exhausted", str(error)
-        except ContextBudgetError as error:
+        except (BudgetError, ContextBudgetError) as error:
             state["status"], state["error"] = "budget_exhausted", str(error)
         except ModelError as error:
             state["status"], state["error"] = "model_unavailable", str(error)
@@ -997,7 +988,8 @@ class Workflow:
             try:
                 raw, usage = self.senior.generate(system, packet, schema)
             except TransientModelError as error:
-                time.sleep(max(min(error.retry_after, 60), 15 * 2 ** attempt if attempt < 2 else 60))
+                if attempt < 3:
+                    time.sleep(max(min(error.retry_after, 60), (15, 30, 60)[attempt]))
                 continue
             state["budget"]["input_tokens"] += usage["prompt_tokens"] - PLANNER["input_hard_tokens_per_request"]
             state["budget"]["output_tokens"] += usage["completion_tokens"] - PLANNER["output_hard_tokens_per_request_including_reasoning"]
@@ -1081,7 +1073,7 @@ class Workflow:
                 state.setdefault("contract_errors", []).append({"role": "coordinator", "attempt": attempt + 1, "error": str(error)[:400]})
                 plan = None
         if plan is None:
-            focus = f"{state['request']['account']['bank']}:{state['request']['account']['account']}"
+            focus = account_ref(state["request"]["account"])
             plan = TeamPlan(rationale="Fallback: coordinator plan unavailable; one generalist assignment",
                             assignments=[Assignment(role="generalist", question=state["request"]["investigation_question"][:240],
                                                     accounts=[focus], tools=list(INVESTIGATION_TOOLS), max_actions=6)])
@@ -1203,12 +1195,7 @@ class Workflow:
             state["status"], state["error"] = "model_unavailable", "Aggregator decision invalid after one repair"
         else:
             state["decisions"].append(decision.model_dump())
-            state["status"] = "insufficient_evidence" if decision.conclusion == "insufficient_evidence" else "completed"
-            state["conclusion"] = decision.model_dump()
-            state["conclusion"]["screening"] = self.screening(state, decision)
-            state["validation"] = {"validation_kind": "schema_reference_scope_only", "label_access": False,
-                                   "label_evaluation": "not_run_independent_evaluation_required", "production_eligible": False,
-                                   "meaning": "Team investigation output; no LLM case approval and no claim of label-confirmed laundering"}
+            record_finish(state, decision, "Team investigation output")
         save()
         return state
 
@@ -1221,7 +1208,7 @@ class Workflow:
         are 'unknown'. Contradictions about evidence (suspects vs conclusion) are still rejected.
         """
         notes = []
-        focus = f"{state['request']['account']['bank']}:{state['request']['account']['account']}"
+        focus = account_ref(state["request"]["account"])
         verdicts, seen = [], set()
         for item in decision.account_verdicts:
             if item.account_ref not in state["accounts"] or item.account_ref in seen:
@@ -1257,18 +1244,6 @@ class Workflow:
         if notes:
             state.setdefault("normalisations", []).extend(notes[:20])
         return decision.model_copy(update={"account_verdicts": verdicts[:12], "candidate_decisions": decisions, "suspect_transaction_ids": suspects[:20]})
-
-    def screening(self, state: dict, decision) -> dict:
-        """Host-side report decision: the aggregator's suspicion against the trained tier standard."""
-        tier = ((state.get("rule_context") or {}).get("tier") or {}).get("tier")
-        standard = ((self.investigator_config or {}).get("thresholds") or {}).get(tier, {}).get("chosen")
-        if not standard:
-            return {"report": decision.conclusion == "suspicious", "basis": "no trained tier standard; the conclusion decides",
-                    "config": None}
-        levels = ("low", "medium", "high")
-        report = levels.index(decision.suspicion) >= levels.index(standard["report_at_or_above"])
-        return {"report": report, "tier": tier, "report_at_or_above": standard["report_at_or_above"],
-                "config": self.investigator_config["version"], "basis": "aggregator suspicion against the trained tier standard"}
 
     def run_action(self, action, state: dict, step_span: str, save, reserve_sql) -> None:
         """Execute one business action: guard, budget, tool or stored redirect, observation."""
@@ -1423,7 +1398,7 @@ class Workflow:
             if any(not set(item.evidence_refs) <= set(state["evidence"]) for item in decision.account_verdicts):
                 raise ValueError("Unknown evidence reference in account_verdicts")
             if decision.account_verdicts:
-                focus = f"{state['request']['account']['bank']}:{state['request']['account']['account']}"
+                focus = account_ref(state["request"]["account"])
                 if focus not in judged_accounts:
                     raise ValueError(f"account_verdicts must include the alerted account {focus}")
                 own = next(item.verdict for item in decision.account_verdicts if item.account_ref == focus)

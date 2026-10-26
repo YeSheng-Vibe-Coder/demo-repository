@@ -133,10 +133,7 @@ def install(pack: Path, settings: Settings | None = None, log=print) -> dict:
         (SHARDS[part][0], "IBM_AML", SHARDS[part][1]) for part in FEATURE_SHARDS
     ]
     for table, database, path in tables:
-        try:
-            store.run(f'CREATE LIGHTNING FILESTORE TABLE {table} FROM {database} FORMAT PARQUET OPTIONS (PATH "{path}", mergeSchema "false")')
-        except DataError:
-            store.run(f"REFRESH TABLE {database}.{table}")
+        store.register_table(table, path, database)
         log(json.dumps({"registered": f"{database}.{table}"}))
     merged = merge_state(pack / "runtime", settings.database)
     found = {name: [str(v) for v in store.run(sql)[0]] for name, sql in checks().items()}

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from .contracts import endpoint_ref
+
 MAX_CANDIDATES = 12
 
 
@@ -41,8 +43,8 @@ def candidate_transactions(state: dict) -> list[dict]:
         {
             "transaction_id": identifier,
             "signals": sorted(found),
-            "from": f"{rows[identifier]['from_bank']}:{rows[identifier]['from_account']}",
-            "to": f"{rows[identifier]['to_bank']}:{rows[identifier]['to_account']}",
+            "from": endpoint_ref(rows[identifier], "from"),
+            "to": endpoint_ref(rows[identifier], "to"),
             "amount_paid": str(rows[identifier]["amount_paid"]),
             "currency": rows[identifier]["payment_currency"],
             "time": rows[identifier]["transaction_time"],

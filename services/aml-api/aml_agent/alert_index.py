@@ -11,30 +11,31 @@ import gzip
 import json
 import shutil
 import sqlite3
-from datetime import date, timedelta
 
 from .dashboard import OUTPUT, SNAPSHOT
 from .feature_registry import FEATURES
+from .store import RULES_POINTER
 
 DB = OUTPUT / "alerts.sqlite"
 SNAPSHOT_DB = SNAPSHOT.parent / "alerts.sqlite.gz"
 TIER_RANK = {"high": 0, "mid": 1, "low": 2}
 PAGE = 20
+OPENED: dict = {}  # the read-only connection, once the index exists (it may be built while a server runs)
 
 
 def build(cycle, log=print) -> dict:
     from .alert_trace import rule_hits
-    from .rule_learning import condition_sql, day_range
+    from .rule_learning import alert_row, condition_sql, partition_days
     from .rule_program import load_program, program_of
     from .showcase import tier_of
-    from .tier_agent import ALIAS, TierPolicy, compile_policy
+    from .tier_agent import TierPolicy, compile_policy
     from .tiering import score_sql
 
     store, learner = cycle.store, cycle.learner
-    version = store.program_pointer("learned-current")
+    version = store.program_pointer(RULES_POINTER)
     program = program_of(load_program(store, version))
-    primary = store.read_artifact(store.program_pointer(ALIAS), "tier_policy_version")
-    if primary["rule_version"] != version:
+    _, primary = store.primary_policy()
+    if primary is None or primary["rule_version"] != version:
         raise ValueError("The primary grading policy belongs to another rule version; publish one for the active version first")
     _, stored = cycle.tier_model(version)
     tier_expr, priority_expr = compile_policy(TierPolicy.model_validate(primary["policy"]), score_sql(stored["model"]))
@@ -46,25 +47,22 @@ def build(cycle, log=print) -> dict:
     db.execute("CREATE TABLE alerts (account TEXT, day TEXT, tier TEXT, tier_rank INTEGER, tier_rule TEXT, priority REAL, rules TEXT, "
                + ", ".join(f"{name} REAL" for name in FEATURES) + ")")
     columns = ["bank", "account", "day", *FEATURES]
-    start, end = (date.fromisoformat(d) for d in day_range("validation"))
-    total, day = 0, start
-    while day < end:
+    total = 0
+    for day in partition_days("validation"):
         sql = (f"SELECT {', '.join(columns)}, {tier_expr} AS tier, {priority_expr} AS priority "
-               f"FROM ({learner.features('validation', condition_sql(program), day.isoformat())}) f")
-        rows = learner.zetaris.run(sql, 200_000)
+               f"FROM ({learner.features('validation', condition_sql(program), day)}) f")
         batch = []
-        for row in rows:
-            record = dict(zip(columns + ["tier", "priority"], row))
-            features = {n: None if record[n] is None else float(record[n]) for n in FEATURES}
-            grading = tier_of(primary["policy"], features)
+        for row in learner.zetaris.run(sql, 200_000):
+            alert, tier, priority = alert_row(columns, row), row[-2], float(row[-1])
+            features = alert["features"]
             hits = [h["group"] for h in rule_hits(program, features) if h["hit"]]
-            batch.append((f"{record['bank']}:{record['account']}", str(record["day"]), record["tier"], TIER_RANK.get(record["tier"], 3),
-                          grading.get("name"), float(record["priority"]), "," + ",".join(hits) + ",", *[features[n] for n in FEATURES]))
+            batch.append((f"{alert['bank']}:{alert['account']}", alert["day"], tier, TIER_RANK.get(tier, 3),
+                          tier_of(primary["policy"], features).get("name"), priority, "," + ",".join(hits) + ",",
+                          *[features[n] for n in FEATURES]))
         db.executemany(f"INSERT INTO alerts VALUES ({', '.join('?' * (7 + len(FEATURES)))})", batch)
         db.commit()
         total += len(batch)
-        log(json.dumps({"day": day.isoformat(), "alerts": len(batch), "total": total}))
-        day += timedelta(days=1)
+        log(json.dumps({"day": day, "alerts": len(batch), "total": total}))
     db.execute("CREATE INDEX by_rank ON alerts (tier_rank, priority DESC)")
     db.execute("CREATE INDEX by_account ON alerts (account, day)")
     db.executemany("INSERT INTO meta VALUES (?, ?)", [("rule_version", version), ("policy", primary["label"]), ("alerts", str(total))])
@@ -72,6 +70,7 @@ def build(cycle, log=print) -> dict:
     db.execute("VACUUM")
     db.close()
     partial.replace(DB)
+    OPENED.pop("db", None)  # servers reopen the rebuilt file
     return {"alerts": total, "rule_version": version, "policy": primary["label"]}
 
 
@@ -84,7 +83,9 @@ def snapshot() -> int:
 
 
 def connect() -> sqlite3.Connection | None:
-    """The local index, unpacked from the committed snapshot on first use."""
+    """The local index (read-only, shared), unpacked from the committed snapshot on first use; None when there is none."""
+    if OPENED.get("db") is not None:
+        return OPENED["db"]
     if not DB.exists() and SNAPSHOT_DB.exists():
         OUTPUT.mkdir(parents=True, exist_ok=True)
         partial = DB.with_suffix(".unpacking")
@@ -95,6 +96,7 @@ def connect() -> sqlite3.Connection | None:
         return None
     db = sqlite3.connect(f"file:{DB}?mode=ro", uri=True, check_same_thread=False)
     db.row_factory = sqlite3.Row
+    OPENED["db"] = db
     return db
 
 
@@ -124,8 +126,6 @@ def page(db: sqlite3.Connection, done: set, query: dict, live: dict | None = Non
     done = set(done) | {k for k, v in live.items() if v["status"] == "investigated"}
     running = {k for k, v in live.items() if v["status"] == "running"} - done
     failed = {k for k, v in live.items() if v["status"] == "failed"} - done
-    keys = sorted(done)
-
     def among(pairs: set) -> tuple[str, list]:
         return ("(account || '|' || day) IN (" + ",".join("?" * len(pairs)) + ")" if pairs else "0"), [f"{a}|{d}" for a, d in sorted(pairs)]
 
@@ -140,14 +140,13 @@ def page(db: sqlite3.Connection, done: set, query: dict, live: dict | None = Non
     total = db.execute(f"SELECT COUNT(*) FROM alerts{sql_where}", args).fetchone()[0]
     number = max(0, int(query.get("page") or 0))
     # Within a tier, investigated alerts come first so their recorded cases are easy to reach.
-    first = "(account || '|' || day) IN (" + ",".join("?" * len(keys)) + ")" if keys else "0"
+    first, first_args = among(done)
     rows = db.execute(f"SELECT * FROM alerts{sql_where} ORDER BY tier_rank, {first} DESC, priority DESC LIMIT ? OFFSET ?",
-                      args + [f"{a}|{d}" for a, d in keys] + [PAGE, number * PAGE]).fetchall()
+                      args + first_args + [PAGE, number * PAGE]).fetchall()
     return {
         "total": total, "page": number, "pages": max(1, -(-total // PAGE)), "size": PAGE,
         "rows": [{"account": r["account"], "day": r["day"], "tier": r["tier"], "tier_rule": r["tier_rule"], "priority": r["priority"],
                   "rules": [g for g in r["rules"].split(",") if g], "features": {n: r[n] for n in FEATURES},
-                  "investigated": (r["account"], r["day"]) in done,
                   "status": "investigated" if (r["account"], r["day"]) in done else "running" if (r["account"], r["day"]) in running
                   else "failed" if (r["account"], r["day"]) in failed else "pending",
                   "error": (live.get((r["account"], r["day"])) or {}).get("error") if (r["account"], r["day"]) in failed else None}

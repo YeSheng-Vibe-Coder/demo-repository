@@ -12,16 +12,14 @@ rate, never a label.
 from __future__ import annotations
 
 import json
-from datetime import date
 
 import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier
 
 from .chains import Chains
 from .feature_registry import FEATURES
-from .feature_store import LABEL_TABLE
 from .profile import PROFILE
-from .rule_learning import MISSING, RuleLearner, atom_true, condition_sql, day_range
+from .rule_learning import RuleLearner, column_sql, condition_sql, partition_days, program_true, value
 from .rule_program import RuleProgram
 
 SETTINGS = PROFILE["risk_tiers"]
@@ -53,9 +51,7 @@ def score_rows(model: dict, rows: list[dict]) -> np.ndarray:
         for tree in model["trees"]:
             node = 0
             while tree["left"][node] != -1:
-                name = tree["feature"][node]
-                raw = row.get(name)
-                current = float(MISSING.get(name, 0.0) if raw is None else raw)
+                current = value(row, tree["feature"][node])
                 node = tree["left"][node] if current <= tree["threshold"][node] else tree["right"][node]
             out[index] += model["rate"] * tree["value"][node]
     return out
@@ -66,7 +62,7 @@ def score_sql(model: dict) -> str:
         if tree["left"][node] == -1:
             return repr(tree["value"][node])
         name = tree["feature"][node]
-        column = f"COALESCE(CAST({name} AS DOUBLE), {MISSING.get(name, 0.0)})"
+        column = column_sql(name)
         return (f"CASE WHEN {column} <= {tree['threshold'][node]!r} THEN {node_sql(tree, tree['left'][node])} "
                 f"ELSE {node_sql(tree, tree['right'][node])} END")
 
@@ -132,7 +128,7 @@ class Tiering:
 
     def fit(self, program: RuleProgram, rows: list[dict]) -> dict:
         """Fit on the development sample rows that layer 1 alerts on."""
-        flagged = [r for r in rows if any(all(atom_true(a, r) for a in program.rules if a.rule_id in g.rule_ids) for g in program.groups)]
+        flagged = [r for r in rows if program_true(program, r)]
         features = list(FEATURES)
         x = RuleLearner.matrix(flagged, features)
         y = np.array([r["label"] for r in flagged])
@@ -157,7 +153,7 @@ class Tiering:
     def cutoffs(self, program: RuleProgram, model: dict) -> dict:
         """Development score cut-offs at the configured chain-coverage shares."""
         scored = self.scored(program, model, "development")
-        members = f"(SELECT chain, account FROM {self.chains.members('development')} x WHERE in_scope = 1)"
+        members = self.chains.scoped_members("development")
         # Each chain is reached at the best score among its alerted member accounts.
         best = self.learner.zetaris.run(
             f"SELECT MAX(q.score) FROM {members} m JOIN (SELECT CONCAT(bank, ':', account) AS account, MAX(score) AS score "
@@ -168,40 +164,19 @@ class Tiering:
         return {"high": high, "mid": mid, "basis": "Development chain coverage: high reaches the first "
                 f"{SETTINGS['high_chain_share']:.0%} of caught chains, high+mid {SETTINGS['mid_chain_share']:.0%}"}
 
-    def sample(self, program: RuleProgram, model: dict, split: str, per_cell: int) -> list[dict]:
-        """Evaluation side: `per_cell` alerts per (tier, window label), in label-blind hash order."""
-        columns = ["bank", "account", "day", *FEATURES]
-        tiered = (f"SELECT f.*, {tier_sql(model)} AS tier, {score_sql(model)} AS score, COALESCE(l.label, 0) AS label FROM "
-                  f"({self.learner.features(split, condition_sql(program))}) f LEFT JOIN {LABEL_TABLE} l "
-                  "ON l.bank = f.bank AND l.account = f.account AND l.day = f.day")
-        rows = self.learner.zetaris.run(
-            "SELECT " + ", ".join(columns) + ", tier, score, label FROM (SELECT t.*, ROW_NUMBER() OVER (PARTITION BY tier, label "
-            "ORDER BY MD5(CONCAT(bank, ':', account, ':', CAST(day AS STRING)))) AS r FROM (" + tiered + f") t) s WHERE r <= {per_cell}",
-            6 * per_cell + 1,
-        )
-        out = []
-        for row in rows:
-            record = dict(zip(columns + ["tier", "score", "label"], row))
-            out.append({"bank": str(record["bank"]), "account": str(record["account"]), "day": str(record["day"]),
-                        "features": {n: None if record[n] is None else float(record[n]) for n in FEATURES},
-                        "tier": record["tier"], "tier_score": float(record["score"]), "label": int(record["label"])})
-        return out
-
     def metrics(self, program: RuleProgram, model: dict, split: str) -> dict:
         """Per tier: alerts, alerts per day, window precision and chains first reached in that tier."""
-        tiered = (f"SELECT f.bank, f.account, f.day, {tier_sql(model)} AS tier, COALESCE(l.label, 0) AS label FROM "
-                  f"({self.learner.features(split, condition_sql(program))}) f LEFT JOIN {LABEL_TABLE} l "
-                  "ON l.bank = f.bank AND l.account = f.account AND l.day = f.day")
+        tiered = (f"SELECT bank, account, day, {tier_sql(model)} AS tier, label "
+                  f"FROM ({self.learner.labelled(split, condition_sql(program))}) f")
         rows = self.learner.zetaris.run(f"SELECT tier, COUNT(*), SUM(label) FROM ({tiered}) t GROUP BY tier", 10)
-        members = f"(SELECT chain, account FROM {self.chains.members(split)} x WHERE in_scope = 1)"
+        members = self.chains.scoped_members(split)
         rank = "CASE tier WHEN 'high' THEN 3 WHEN 'mid' THEN 2 ELSE 1 END"
         reach = self.learner.zetaris.run(
             f"SELECT best, COUNT(*) FROM (SELECT m.chain, MAX({rank}) AS best FROM {members} m "
             f"JOIN (SELECT DISTINCT CONCAT(bank, ':', account) AS account, tier FROM ({tiered}) t) q ON q.account = m.account "
             "GROUP BY m.chain) c GROUP BY best", 10)
-        total = int(self.learner.zetaris.run(f"SELECT COUNT(DISTINCT chain) FROM {members} m", 2)[0][0])
-        start, end = day_range(split)
-        days = (date.fromisoformat(end) - date.fromisoformat(start)).days
+        total = self.chains.total(split)
+        days = len(partition_days(split))
         by_rank = {int(r[0]): int(r[1]) for r in reach}
         result = {"split": split, "days": days, "chains": total}
         cumulative = 0

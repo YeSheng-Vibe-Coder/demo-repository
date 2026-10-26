@@ -13,7 +13,7 @@ from pathlib import Path
 import httpx
 
 from .contracts import CaseRequest
-from .settings import ROOT, Settings
+from .settings import ROOT, Settings, team_command
 
 API = "http://127.0.0.1:8010"
 
@@ -69,12 +69,16 @@ def model_check(settings: Settings) -> dict:
                 if "_invalid_response" in raw:
                     raise ValueError(raw["_invalid_response"])
                 outcome = f"valid adjudication ({Adjudication.model_validate(raw).adjustment})"
-            checks[name] = {"ok": True, "model": role.model, "endpoint": "nvidia" if "integrate.api.nvidia.com" in role.model_base_url else "self_hosted",
+            checks[name] = {"ok": True, "model": role.model, "endpoint": endpoint_kind(role),
                             "seconds": round(time.time() - started, 1), "result": outcome, "completion_tokens": usage.get("completion_tokens")}
         except Exception as error:
             checks[name] = {"ok": False, "model": role.model, "error": f"{type(error).__name__}: {str(error)[:300]}",
                             "seconds": round(time.time() - started, 1)}
     return checks
+
+
+def endpoint_kind(role: Settings) -> str:
+    return "nvidia" if "integrate.api.nvidia.com" in role.model_base_url else "self_hosted"
 
 
 def preflight(settings: Settings) -> dict:
@@ -103,7 +107,7 @@ def preflight(settings: Settings) -> dict:
             code = httpx.get(role.model_base_url + "/models", headers={"Authorization": "Bearer " + role.nvidia_key}, timeout=15).status_code
         except httpx.HTTPError as error:
             code = type(error).__name__
-        roles[name] = {"model": role.model, "endpoint": "nvidia" if "integrate.api.nvidia.com" in role.model_base_url else "self_hosted",
+        roles[name] = {"model": role.model, "endpoint": endpoint_kind(role),
                        "reachable": code}
     return {"roles": roles, **checks, "credentials_printed": False}
 
@@ -125,12 +129,7 @@ def exported_schemas() -> dict[str, dict]:
 
 def run_team(run_id: str) -> int:
     """Every case runs as a team: coordinator, parallel specialists, World Model aggregator."""
-    completed = subprocess.run(
-        ["node", "--experimental-transform-types", str(ROOT / "services/orchestrator/team.ts"), run_id],
-        cwd=ROOT,
-        check=False,
-    )
-    return completed.returncode
+    return subprocess.run(team_command(run_id), cwd=ROOT, check=False).returncode
 
 
 def main() -> None:
@@ -170,8 +169,6 @@ def main() -> None:
     learning.add_argument("--tier-patterns", action="store_true", help="Give the tier agent laundering patterns mined from development positives and the case library")
     learning.add_argument("--tier-feedback", default=None, help="Comma-separated development rounds whose tier disagreements revise the policy")
     learning.add_argument("--retry-round", default=None, help="Re-investigate a round's unfinished cases and re-grade it")
-    learning.add_argument("--adjudicate-round", default=None, help="Adjudicate a stored round's finished cases; graded as <name>-adj")
-    learning.add_argument("--model", default=None, help="Model for --adjudicate-round (default: config adjudication.model)")
     learning.add_argument("--regrade-round", default=None, help="Re-score a stored round under the current evaluation")
     learning.add_argument("--update-from", default=None, help="Comma-separated graded development rounds driving a rule update")
     investigate = sub.add_parser("investigate")
@@ -234,23 +231,34 @@ def main() -> None:
         folder = ROOT / "schemas"
         for old in folder.glob("*.schema.json"):
             old.unlink()
-        for name, schema in exported_schemas().items():
+        schemas = exported_schemas()
+        for name, schema in schemas.items():
             (folder / f"{name}.schema.json").write_text(json.dumps(schema, indent=2, sort_keys=True) + "\n")
-        print(json.dumps(sorted(exported_schemas())))
+        print(json.dumps(sorted(schemas)))
     elif args.command == "status":
         print(json.dumps(preflight(Settings.load()), indent=2))
     elif args.command == "materialize-features":
+        from . import calibration
+        from .chains import Chains
         from .evaluation import split_plan
         from .feature_store import FeatureStore
+        from .rule_learning import RuleLearner
+        from .store import Store
 
         store, plan = FeatureStore(), split_plan()
         # The test partition is never materialised: it stays closed.
-        for split in ("development", "validation", "monitor"):
+        splits = ("development", "validation", "monitor")
+        for split in splits:
             day, end = date.fromisoformat(plan[split]["start"][:10]), date.fromisoformat(plan[split]["end"][:10])
             while day < end:
                 print(json.dumps({"split": split, **store.write_day(day.isoformat())}), flush=True)
                 day += timedelta(days=1)
         store.register()
+        # Evaluation side: laundering chains per partition (chain recall and precision), then the population
+        # calibration investigators read (feature quantiles over development account-days, no labels).
+        for split in splits:
+            print(json.dumps(Chains(store).build(split, plan[split]["start"][:10], plan[split]["end"][:10])), flush=True)
+        calibration.build(RuleLearner(Store(Settings.load().database), None, store))
     elif args.command == "learning-cycle":
         from .learning_cycle import LearningCycle
 
@@ -259,15 +267,11 @@ def main() -> None:
             from .evaluation import TransactionLabelReader
             from .investigator_training import build
 
-            def development(name: str) -> dict:
-                graded = json.loads((ROOT / ".runtime/investigator-rounds" / f"{name}.json").read_text())
-                if graded["split"] != "development":
-                    raise SystemExit("Investigators are trained on development rounds only")
-                return graded
+            from .learning_cycle import development_round
 
             names = args.train_investigators.split(",")
-            library = [case for name in names for case in development(name)["cases"]]
-            standard = development(args.threshold_round)["cases"] if args.threshold_round else None
+            library = [case for name in names for case in development_round(name)["cases"]]
+            standard = development_round(args.threshold_round)["cases"] if args.threshold_round else None
             config = build(cycle.store, TransactionLabelReader(cycle.learner.zetaris), library, "+".join(names), standard)
             print(json.dumps({k: config[k] for k in ("version", "id", "cases", "thresholds")}, indent=2, default=str))
             return
@@ -288,10 +292,6 @@ def main() -> None:
         if args.tier_agent:
             result = cycle.tier_agent(args.tier_feedback.split(",") if args.tier_feedback else None, args.tier_patterns)
             print(json.dumps({k: result.get(k) for k in ("label", "status", "decision", "reason", "best_round")}, indent=2))
-            return
-        if args.adjudicate_round:
-            result = cycle.adjudicate_round(args.adjudicate_round, f"{args.adjudicate_round}-adj", min(args.parallel, 2), args.model)
-            print(json.dumps(result.get("summary"), indent=2))
             return
         if args.retry_round:
             result = cycle.retry_round(args.retry_round, args.parallel)

@@ -1,7 +1,18 @@
 // Loopback business-API client on node:http. Built-in fetch (undici) aborts any response
 // whose headers take longer than 300 s, below our step budgets under Zetaris load, so the
 // only timeout here is the caller's.
+import fs from 'node:fs';
 import http from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+export const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+// Loopback only: the business API never listens beyond 127.0.0.1.
+export const API_BASE = 'http://127.0.0.1:8010';
+
+export function apiToken(): string {
+  return process.env.AML_INTERNAL_TOKEN || fs.readFileSync(path.join(root, '.runtime/api-token'), 'utf8').trim();
+}
 
 export function apiClient(base: string, token: string, timeoutMs: number) {
   return function request<T>(route: string, body?: object): Promise<T> {

@@ -23,7 +23,7 @@ from pathlib import Path
 
 import httpx
 
-from .contracts import CaseRequest
+from .contracts import ALERT_QUESTION, CaseRequest, account_ref
 from .evaluation import TransactionLabelReader, grade_samples, has_model_finish
 from .evidence import transaction_ledger
 from .feature_registry import DESCRIPTIONS, FEATURES
@@ -33,11 +33,30 @@ from .providers import Nvidia
 from .rule_learning import SETTINGS, RuleLearner, condition_sql, training_days_note, triggered
 from .rule_program import compile_program, load_program, program_of, reference_program
 from .rule_versions import diff
-from .settings import ROOT, Settings
-from .store import Store
+from .settings import ROOT, ROUNDS, Settings, team_command
+from .store import RULES_POINTER, Store
 
 API = "http://127.0.0.1:8010"
-ALIAS = SETTINGS["alias"]
+ALIAS = RULES_POINTER
+
+
+def development_round(name: str) -> dict:
+    """A stored investigation round that may teach the agents: labels are development ground truth only."""
+    graded = json.loads((ROUNDS / f"{name}.json").read_text())
+    if graded["split"] != "development":
+        raise ValueError(f"Round {name} is a {graded['split']} round; agents learn from development rounds only")
+    return graded
+
+
+def store_alert(store: Store, version: str, package: dict, item: dict, **extra) -> str:
+    """Record one rule alert (account-day with its features) for investigation; extra carries scope, tier and split."""
+    alert = {"base_version": version, "program_sha256": package["program_sha256"],
+             "account": {"bank": item["bank"], "account": item["account"]}, "start": item["day"] + "T00:00:00",
+             "as_of": (date.fromisoformat(item["day"]) + timedelta(days=1)).isoformat() + "T00:00:00",
+             "triggered_rule_ids": triggered(program_of(package), item["features"]), "features": item["features"],
+             "day": item["day"], **extra}
+    alert["alert_sha256"] = content_hash(alert)
+    return store.artifact("rule_alert", alert)
 
 
 def feature_contrast(cases: list[dict]) -> dict:
@@ -96,8 +115,8 @@ def round_summary(cases: list[dict]) -> dict:
         "evaluation": evaluation,
         "by_tier": summary,
         "adjudicated_risk": risk,
-        "transaction_tp": sum(c["sample_check"]["tp"] for c in cases),
-        "transaction_fp": sum(c["sample_check"]["fp"] for c in cases),
+        "transaction_tp": tp,
+        "transaction_fp": fp,
         "accounts_judged": len(verdicts),
         "accounts_flagged": len(flagged),
         "accounts_flagged_in_chain": sum(v["in_laundering_chain"] for v in flagged),
@@ -143,10 +162,9 @@ class LearningCycle:
     # ---- phases -----------------------------------------------------------------------
 
     def reference_version(self) -> str:
+        if version := self.store.program_pointer("research-reference"):
+            return version
         compiled = compile_program(reference_program())
-        for version in [self.store.program_pointer("research-reference")]:
-            if version:
-                return version
         source = json.loads((ROOT / "sources/ibm_hi_large_manifest.json").read_text())
         version = self.store.artifact(
             "rule_program_version",
@@ -159,10 +177,11 @@ class LearningCycle:
     def learn(self, plan: dict, base_version: str, extra_rows: list[dict] | None = None, trigger: str = "initial_training") -> dict:
         rows, population = self.learner.sample("development", SETTINGS["development_negative_ratio"])
         weights = {}
+        sampled = {(r["bank"], r["account"], str(r["day"])) for r in rows}
         for extra in extra_rows or []:
             key = (extra["bank"], extra["account"], extra["day"])
             weights[key] = SETTINGS["investigated_window_weight"]
-            if not any((r["bank"], r["account"], str(r["day"])) == key for r in rows):
+            if key not in sampled:
                 rows.append(extra)
         features = list(plan["features"])
         tree = self.learner.fit(rows, features, plan["max_leaf_nodes"], plan["min_samples_leaf"], plan["positive_weight"], weights)
@@ -201,20 +220,18 @@ class LearningCycle:
 
     def alerts(self, version: str, count: int) -> list[dict]:
         body = load_program(self.store, version)
-        program = program_of(body)
-        found = self.learner.scan_alerts(program, "development", count, body.get("group_scores"), SETTINGS["investigation_alerts_per_day"])
-        alerts = []
-        for item in found:
-            start = item["day"] + "T00:00:00"
-            as_of = (date.fromisoformat(item["day"]) + timedelta(days=1)).isoformat() + "T00:00:00"
-            alert = {"base_version": version, "program_sha256": body["program_sha256"],
-                     "account": {"bank": item["bank"], "account": item["account"]}, "start": start, "as_of": as_of,
-                     "triggered_rule_ids": triggered(program, item["features"]), "features": item["features"],
-                     "scope": "development_full_scan", "day": item["day"]}
-            alert["alert_sha256"] = content_hash(alert)
-            alert["alert_id"] = self.store.artifact("rule_alert", alert)
-            alerts.append(alert)
-        return alerts
+        found = self.learner.scan_alerts(program_of(body), "development", count, SETTINGS["investigation_alerts_per_day"],
+                                         body.get("group_scores"))
+        return [self.alert(store_alert(self.store, version, body, item, scope="development_full_scan")) for item in found]
+
+    def alert(self, alert_id: str) -> dict:
+        return {**self.store.read_artifact(alert_id, "rule_alert"), "alert_id": alert_id}
+
+    def investigated(self, record: dict) -> list[dict]:
+        """A stored round's cases as investigated alerts, ready to grade again."""
+        alerts = {(a["account"]["bank"], a["account"]["account"], a["day"]): a for a in record["alerts"]}
+        return [{"alert": self.alert(alerts[(c["account"]["bank"], c["account"]["account"], c["day"])]["alert_id"]),
+                 "run_id": c["run_id"], "worker_exit": c.get("worker_exit", 0)} for c in record.get("cases", [])]
 
     def tier_model(self, version: str) -> tuple[str, dict]:
         """The latest layer-2 model fitted for a rule version."""
@@ -235,20 +252,11 @@ class LearningCycle:
         program = program_of(body)
         tiering = active_tiering(self.store, version, self)
         model_id, rates = tiering["model_id"], tiering["rates"]
-        sampled = sample(self.learner, program, tiering, split, per_cell)
-        alerts = []
-        for item in sampled:
-            start = item["day"] + "T00:00:00"
-            as_of = (date.fromisoformat(item["day"]) + timedelta(days=1)).isoformat() + "T00:00:00"
-            alert = {"base_version": version, "program_sha256": body["program_sha256"],
-                     "account": {"bank": item["bank"], "account": item["account"]}, "start": start, "as_of": as_of,
-                     "triggered_rule_ids": triggered(program, item["features"]), "features": item["features"],
-                     "scope": f"{split}_tier_sample", "day": item["day"], "split": split,
-                     "tier": item["tier"], "tier_score": round(item["priority"], 4), "tier_model": model_id,
-                     "tier_base_rate": rates[item["tier"]], "tier_source": tiering["source"], "priority": round(item["priority"], 4)}
-            alert["alert_sha256"] = content_hash(alert)
-            alert["alert_id"] = self.store.artifact("rule_alert", alert)
-            alerts.append(alert)
+        alerts = [self.alert(store_alert(
+            self.store, version, body, item, scope=f"{split}_tier_sample", split=split, tier=item["tier"],
+            tier_score=round(item["priority"], 4), tier_model=model_id, tier_base_rate=rates[item["tier"]],
+            tier_source=tiering["source"], priority=round(item["priority"], 4)))
+            for item in sample(self.learner, program, tiering, split, per_cell)]
         self.say(json.dumps({"tiered_alerts": len(alerts), "split": split}))
         return alerts
 
@@ -257,7 +265,7 @@ class LearningCycle:
         for alert in alerts:
             request = CaseRequest(account=alert["account"], start=alert["start"], as_of=alert["as_of"], split=alert.get("split", "development"),
                                   rule_version=alert["base_version"], alert_id=alert["alert_id"],
-                                  investigation_question="Investigate this rule alert: which transactions, if any, are suspicious, and what upstream/downstream evidence supports or contradicts that?")
+                                  investigation_question=ALERT_QUESTION)
             response = httpx.post(API + "/v1/cases", json=request.model_dump(mode="json"),
                                   headers={"Authorization": "Bearer " + self.token}, timeout=30)
             response.raise_for_status()
@@ -268,8 +276,7 @@ class LearningCycle:
             while pending and len(active) < parallel:
                 alert, run_id = pending.pop(0)
                 log = (logs / f"worker-{run_id}.log").open("w")
-                process = subprocess.Popen(["node", "--experimental-transform-types", str(ROOT / "services/orchestrator/team.ts"), run_id],
-                                           cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+                process = subprocess.Popen(team_command(run_id), cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
                 active.append((alert, run_id, process, log))
                 self.say(json.dumps({"investigator_started": run_id, "account": alert["account"], "day": alert["day"]}))
             time.sleep(5)
@@ -295,7 +302,7 @@ class LearningCycle:
         refs = ", ".join(f"'{a}'" for a in sorted(accounts) if a.replace(":", "").isalnum())
         if not refs:
             return set()
-        rows = self.learner.zetaris.run(f"SELECT DISTINCT account FROM {Chains(self.learner.zetaris).members(split)} m WHERE account IN ({refs})", 5000)
+        rows = self.learner.zetaris.run(f"SELECT account FROM {Chains(self.learner.zetaris).member_accounts(split)} m WHERE account IN ({refs})", 5000)
         return {str(r[0]) for r in rows}
 
     def alerted_accounts(self, split: str, accounts: set[str]) -> set[str]:
@@ -319,31 +326,32 @@ class LearningCycle:
 
     def grade(self, investigated: list[dict]) -> list[dict]:
         windows = self.window_labels([item["alert"] for item in investigated])
+        states = {item["run_id"]: self.store.get(item["run_id"]) for item in investigated}
+        ledgers = {run_id: transaction_ledger(state)["transactions"] for run_id, state in states.items()}
         # One membership and one alert lookup per split for every account the cases touch.
         touched: dict[str, set] = {}
         for item in investigated:
-            state = self.store.get(item["run_id"])
-            split = item["alert"].get("split", "development")
-            accounts = touched.setdefault(split, set())
-            accounts.add(f"{item['alert']['account']['bank']}:{item['alert']['account']['account']}")
+            state = states[item["run_id"]]
+            accounts = touched.setdefault(item["alert"].get("split", "development"), set())
+            accounts.add(account_ref(item["alert"]["account"]))
             accounts |= {v["account_ref"] for v in (state.get("conclusion") or {}).get("account_verdicts", [])}
             accounts |= self.identified(state)
-            for row in transaction_ledger(state)["transactions"]:
+            for row in ledgers[item["run_id"]]:
                 accounts |= {row["from_account_ref"], row["to_account_ref"]}
-        laundering = set().union(*(self.chain_accounts(split, accounts) for split, accounts in touched.items())) if touched else set()
-        alerted = set().union(*(self.alerted_accounts(split, accounts) for split, accounts in touched.items())) if touched else set()
+        laundering = set().union(*(self.chain_accounts(split, accounts) for split, accounts in touched.items()))
+        alerted = set().union(*(self.alerted_accounts(split, accounts) for split, accounts in touched.items()))
         graded = []
         for item in investigated:
-            state = self.store.get(item["run_id"])
-            ids = [row["transaction_id"] for row in transaction_ledger(state)["transactions"]]
+            state = states[item["run_id"]]
+            ids = [row["transaction_id"] for row in ledgers[item["run_id"]]]
             labels = TransactionLabelReader(self.learner.zetaris).read(ids) if ids else {}
             check = grade_samples(state, labels)
             decisions = (state.get("conclusion") or {}).get("candidate_decisions", [])
             alert = item["alert"]
             team = state.get("team") or {}
             members = [self.store.get(child) for child in team.get("children", [])]
-            focus = f"{alert['account']['bank']}:{alert['account']['account']}"
-            ledger_accounts = {a for row in transaction_ledger(state)["transactions"] for a in (row["from_account_ref"], row["to_account_ref"])}
+            focus = account_ref(alert["account"])
+            ledger_accounts = {a for row in ledgers[item["run_id"]] for a in (row["from_account_ref"], row["to_account_ref"])}
             found = self.identified(state)
             graded.append({
                 "run_id": item["run_id"], "status": state["status"], "worker_exit": item["worker_exit"],
@@ -405,7 +413,7 @@ class LearningCycle:
         self.output = folder / f"{cycle_id}-rerun-{uuid.uuid4().hex[:8]}.json"
         self.record = {"baseline_cycle": cycle_id, "phases": [], "created": time.time(),
                        "mode": "team", "labels_given_to_investigators": False}
-        alerts = [{**self.store.read_artifact(a["alert_id"], "rule_alert"), "alert_id": a["alert_id"]} for a in baseline["alerts"]]
+        alerts = [self.alert(a["alert_id"]) for a in baseline["alerts"]]
         self.checkpoint("rerun_start", alert_count=len(alerts))
         graded = self.grade(self.investigate(alerts, parallel))
         before = {(c["account"]["bank"], c["account"]["account"], c["day"]): c for c in baseline["cases"]}
@@ -425,7 +433,7 @@ class LearningCycle:
 
     def recover(self, parallel: int) -> list[dict]:
         """Keep each alert's finished team run; re-investigate alerts whose run never finished."""
-        alerts = [{**self.store.read_artifact(a["alert_id"], "rule_alert"), "alert_id": a["alert_id"]} for a in self.record["alerts"]]
+        alerts = [self.alert(a["alert_id"]) for a in self.record["alerts"]]
         finished, missing = [], []
         with self.store.connect() as db:
             rows = db.execute("SELECT id, state FROM runs ORDER BY rowid DESC").fetchall()
@@ -485,10 +493,7 @@ class LearningCycle:
         """Development cases whose tier disagreed with the outcome, with the senior investigator's evidence (labels: development only)."""
         lines = []
         for name in names:
-            graded = json.loads((ROOT / ".runtime/investigator-rounds" / f"{name}.json").read_text())
-            if graded["split"] != "development":
-                raise ValueError("Tier feedback uses development rounds only")
-            for case in graded["cases"]:
+            for case in development_round(name)["cases"]:
                 if not case["usable"]:
                     continue
                 missed = case["window_label"] and case.get("tier") == "low"
@@ -504,8 +509,7 @@ class LearningCycle:
 
     def tier_agent(self, feedback_rounds: list[str] | None = None, patterns: bool = False) -> dict:
         """Run the tier agent on development aggregates (optionally revising the current policy with
-        investigation feedback) and gate its policy on validation."""
-        from .providers import Nvidia
+        investigation feedback); a policy replaces the current one when it scores better on development."""
         from .tier_agent import ALIAS as TIER_ALIAS
         from .tier_agent import TierAgent
 
@@ -528,9 +532,7 @@ class LearningCycle:
         from .tier_agent import ALIAS as TIER_ALIAS, Evaluator, TierPolicy, compile_policy
         from .tiering import score_sql, tier_sql
 
-        source_id, source = next(((aid, body) for aid, body in self.store.artifacts("tier_policy_version") if body.get("label") == label), (None, None))
-        if source is None or not source.get("policy"):
-            raise ValueError(f"No tier policy {label}")
+        source_id, source = self.tier_policy(label)
         version = self.store.program_pointer(ALIAS)
         rules_label = next((e["label"] for e in history(self.store) if e["id"] == version), version[:8])
         program = program_of(load_program(self.store, version))
@@ -553,17 +555,22 @@ class LearningCycle:
         """Make a recorded tier-agent policy the primary tiering (the tier model stays its reference input)."""
         from .tier_agent import ALIAS as TIER_ALIAS
 
+        policy_id, _ = self.tier_policy(label)
+        self.store.set_program_pointer_any(TIER_ALIAS, policy_id)
+        self.store.artifact("tier_policy_publication", {"label": label, "policy_id": policy_id, "at": time.time(),
+                                                         "basis": "tier agent is the primary tiering; tier model is a reference input"})
+        return {"published": label, "policy_id": policy_id}
+
+    def tier_policy(self, label: str) -> tuple[str, dict]:
+        """A recorded grading policy by label (e.g. T3)."""
         found = next(((aid, body) for aid, body in self.store.artifacts("tier_policy_version") if body.get("label") == label), None)
         if found is None or not found[1].get("policy"):
             raise ValueError(f"No tier policy {label}")
-        self.store.set_program_pointer_any(TIER_ALIAS, found[0])
-        self.store.artifact("tier_policy_publication", {"label": label, "policy_id": found[0], "at": time.time(),
-                                                         "basis": "tier agent is the primary tiering; tier model is a reference input"})
-        return {"published": label, "policy_id": found[0]}
+        return found
 
     def investigator_round(self, name: str, split: str, per_cell: int, parallel: int) -> dict:
         """Team investigations of a tier x label sample, graded per tier (training or evaluation round)."""
-        folder = ROOT / ".runtime/investigator-rounds"
+        folder = ROUNDS
         folder.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.output = folder / f"{name}.json"
         version = self.store.program_pointer(ALIAS)
@@ -581,12 +588,7 @@ class LearningCycle:
         folder = ROOT / ".runtime/learning-cycles"
         identifier = uuid.uuid4().hex
         self.output = folder / f"update-{identifier}.json"
-        cases = []
-        for name in names:
-            graded = json.loads((ROOT / ".runtime/investigator-rounds" / f"{name}.json").read_text())
-            if graded["split"] != "development":
-                raise ValueError("Rule updates learn from development rounds only")
-            cases += graded["cases"]
+        cases = [case for name in names for case in development_round(name)["cases"]]
         current = self.store.program_pointer(ALIAS)
         self.record = {"cycle_id": identifier, "kind": "rule_update_from_investigations", "rounds": names, "phases": [],
                        "created": time.time(), "test_partition_opened": False, "training": training_days_note(), "cases": cases}
@@ -597,62 +599,20 @@ class LearningCycle:
             self.checkpoint("risk_tiers_fitted", tiers=self.tiers(active), status="completed")
         return record
 
-    def adjudicate_round(self, name: str, out: str, parallel: int, model: str | None = None) -> dict:
-        """Adjudicate every finished case of a stored round (no re-investigation) and re-grade it as a new round."""
-        from concurrent.futures import ThreadPoolExecutor
-
-        from .adjudication import adjudicate
-        from .tools import Tools
-        from .zetaris import Zetaris
-
-        source = json.loads((ROOT / ".runtime/investigator-rounds" / f"{name}.json").read_text())
-        tools = Tools(Zetaris(self.settings))
-        finished = [c for c in source["cases"] if c["status"] in ("completed", "insufficient_evidence")]
-
-        def one(case: dict):
-            try:
-                result = adjudicate(self.store, tools, case["run_id"], model)
-                self.say(json.dumps({"adjudicated": case["run_id"][:8], "tier": case.get("tier"), "label": case["window_label"],
-                                     "risk": result.get("risk_level"), "decision": result.get("decision")}))
-            except Exception as error:  # one failed case never stops the round
-                self.say(json.dumps({"adjudication_failed": case["run_id"][:8], "error": str(error)[:200]}))
-
-        with ThreadPoolExecutor(parallel) as pool:
-            list(pool.map(one, finished))
-        alerts = {(a["account"]["bank"], a["account"]["account"], a["day"]): a for a in source["alerts"]}
-        investigated = []
-        for case in source["cases"]:
-            alert = alerts[(case["account"]["bank"], case["account"]["account"], case["day"])]
-            investigated.append({"alert": {**self.store.read_artifact(alert["alert_id"], "rule_alert"), "alert_id": alert["alert_id"]},
-                                 "run_id": case["run_id"], "worker_exit": case.get("worker_exit", 0)})
-        self.output = ROOT / ".runtime/investigator-rounds" / f"{out}.json"
-        self.record = {"round": out, "split": source["split"], "rule_version": source.get("rule_version"), "phases": [],
-                       "created": time.time(), "adjudicated_from": name, "alerts": source["alerts"],
-                       "labels_given_to_investigators": False}
-        graded = self.grade(investigated)
-        self.checkpoint("graded", cases=graded, summary=round_summary(graded), status="completed")
-        return self.record
-
     def regrade_round(self, name: str) -> dict:
         """Re-score a stored round's cases under the current evaluation (no new investigation or adjudication)."""
-        path = ROOT / ".runtime/investigator-rounds" / f"{name}.json"
+        path = ROUNDS / f"{name}.json"
         self.output, self.record = path, json.loads(path.read_text())
-        alerts = {(a["account"]["bank"], a["account"]["account"], a["day"]): a for a in self.record["alerts"]}
-        investigated = []
-        for case in self.record.get("cases", []):
-            alert = alerts[(case["account"]["bank"], case["account"]["account"], case["day"])]
-            investigated.append({"alert": {**self.store.read_artifact(alert["alert_id"], "rule_alert"), "alert_id": alert["alert_id"]},
-                                 "run_id": case["run_id"], "worker_exit": case.get("worker_exit", 0)})
-        graded = self.grade(investigated)
+        graded = self.grade(self.investigated(self.record))
         self.checkpoint("regraded", cases=graded, summary=round_summary(graded))
         return self.record
 
     def retry_round(self, name: str, parallel: int) -> dict:
         """Re-investigate a round's alerts whose case did not finish (infrastructure), then re-grade the round."""
-        self.output = ROOT / ".runtime/investigator-rounds" / f"{name}.json"
+        self.output = ROUNDS / f"{name}.json"
         self.record = json.loads(self.output.read_text())
         failed = {c["run_id"] for c in self.record["cases"] if c["status"] not in ("completed", "insufficient_evidence")}
-        alerts = [{**self.store.read_artifact(a["alert_id"], "rule_alert"), "alert_id": a["alert_id"]}
+        alerts = [self.alert(a["alert_id"])
                   for a, c in zip(self.record["alerts"], self.record["cases"]) if c["run_id"] in failed]
         self.say(json.dumps({"retrying": len(alerts), "round": name}))
         retried = {(r["account"]["bank"], r["account"]["account"], r["day"]): r for r in self.grade(self.investigate(alerts, parallel))}

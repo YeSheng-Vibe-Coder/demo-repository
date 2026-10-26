@@ -26,7 +26,7 @@ Labels are used only for evaluation after the fact; no agent sees them. Rates ar
 ## `trace`
 
 `validation`: `period`, `days`, `transactions`, `laundering_transactions`, `in_scope_*` (ACH/Wire), `rule_version`,
-`alerts_per_day`, `chain_recall`, `chain_precision`.
+`alerts_per_day`, `chain_recall`.
 
 `cases[]` — one per finished validation investigation:
 
@@ -35,15 +35,16 @@ Labels are used only for evaluation after the fact; no agent sees them. Rates ar
 | `key`, `round`, `account`, `day` | Run id, investigation round, alerted account, alert day |
 | `rules[]` | Rule groups that hit |
 | `tier` | Risk grading agent's verdict: `tier`, `name`, `priority`, `reason`, `conditions[]` (`feature`, `op`, `value`, `actual`) |
-| `decision`, `risk_level` | Senior investigator's decision (report / review / dismiss) and final risk level |
+| `decision` | Senior investigator's decision (report / review / dismiss); the final risk level is `detail.senior.risk_level` |
 | `chain_accounts` | Accounts judged suspicious on the reconstructed chain |
 | `detail.hit_rules[]` | Hit groups with each atom's threshold and value |
 | `detail.team_plan`, `detail.members[]` | Senior investigator's split; each investigator's `role`, `question`, `conclusion`, `brief_reason` |
 | `detail.steps[]` | Every investigator action in time order: `step`, `member`, `tool`, `reasoning`, `expected`, `found[]`, `transactions[]` (drawn at this step) |
-| `detail.nodes[]`, `detail.edges[]` | Network: edges carry `step` and `member` (who found them; step 0 = prefetched alert context) |
+| `detail.nodes[]`, `detail.edges[]` | Network: nodes carry `role` (focus / upstream / downstream / peer); edges carry `step` and `member` (who found them; step 0 = prefetched alert context) |
+| `detail.accounts[]` | Account verdicts: `verdict` (suspicious / cleared / insufficient / not_examined; unresolved / flagged / observed before the team concludes), `reason`, `found_by`, `tools` |
 | `detail.merge` | Merged verdict: `conclusion`, `brief_reason`, `chain`, `suspect_transaction_ids` |
 | `detail.senior` | `prior_level`, `adjustment`, `risk_level`, `decision`, `rationale`, `evidence_flags[]` (flag, account, transaction id), `key_evidence`, `account_risks` |
-| `evaluation` | After the fact: `new_chain_accounts` (chain accounts the rules never alerted on), `chain_accounts_found`, `focus_in_chain` |
+| `evaluation` | After the fact: `new_chain_accounts` (chain accounts the rules never alerted on) |
 
 ## `showcase`
 
@@ -52,7 +53,6 @@ Labels are used only for evaluation after the fact; no agent sees them. Rates ar
 | `rule_versions[]` | Chain-based validation metrics per published version: `chain_recall`, `chain_precision`, `full_chain_account_recall`, `window_precision`, `flagged_per_day` |
 | `tier_agent` | Primary grading policy: `label`, `rationale`, `segments[]`, `patterns[]`, `investigation_evidence`, `rounds[]` (`analysis`, `rationale`, `high_rules`, `high`, `capacity`, `chosen`) |
 | `investigation_agent` | `rounds[]` (`change`/`change_en`, `exclusion_rate`, `chain_accounts_found`, `chain_accounts_in_files`, …) and `tools[]` (`uses`, `found`, `rate` in laundering cases) |
-| `investigation_highlights[]` | Cases where the team found un-alerted chain accounts |
 | `rule_updates[]` | Per agent-made version: `inputs` (cases, per-rule outcomes, feature contrast), `reasoning`, `diff_counts`, `effect.before/after` |
 
 ## Alert list (`/dashboard/api/alerts`)
@@ -61,14 +61,16 @@ Every validation alert of the active rule version, graded by the primary policy,
 (`cli alert-index`; committed as `apps/dashboard/snapshot/alerts.sqlite.gz`, unpacked on first use). Served by both
 the full API and `serve-dashboard`.
 
-`GET /dashboard/api/alerts?page=&q=&day=&tier=&rule=&status=` (status: `investigated` / `pending`) returns
+`GET /dashboard/api/alerts?page=&q=&day=&tier=&rule=&status=` (status: `investigated` / `running` / `failed` / `pending`) returns
 `total`, `page`, `pages`, `size` (20) and `rows[]`: `account`, `day`, `tier`, `tier_rule`, `priority`, `rules[]`, `features{}`,
-`investigated`. Highest risk first; within a tier, investigated alerts first. `GET /dashboard/api/alerts/summary`:
+`status`, `error` (why a live investigation failed) and, on the full API, `case` for an alert decided by a live investigation.
+Highest risk first; within a tier, investigated alerts first. `GET /dashboard/api/alerts/summary`:
 alerts per tier, days, rule groups and the index metadata (rule version, grading policy).
 
 ## Live investigation (full API only)
 
 `POST /dashboard/api/live/investigate {alert_id}` (a stored alert id, or `alert:<bank>:<account>:<day>` from the alert list),
-`GET /dashboard/api/live/runs/{run_id}` (progress plus `detail` in the shape of a case's detail), `GET /dashboard/api/live/for?account=&day=`
+`GET /dashboard/api/live/runs/{run_id}` (`phase`, `outcome` investigated / running / failed, `attempt` of `max_attempts`,
+`retried_by`, `setup_log`, `error`, `elapsed_seconds`, plus `detail` in the shape of a case's detail), `GET /dashboard/api/live/for?account=&day=`
 (the latest live run of an alert, so reopening it resumes). Validation alerts only, at most two live runs at once; decided live runs
 join `trace.cases` on the next export. The API token never reaches the browser.
