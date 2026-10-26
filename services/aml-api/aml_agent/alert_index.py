@@ -106,8 +106,11 @@ def investigated(data_path) -> set[tuple[str, str]]:
     return {(c["account"], c["day"]) for c in trace.get("cases", [])}
 
 
-def page(db: sqlite3.Connection, done: set, query: dict, running: set = frozenset()) -> dict:
-    """One page of alerts, highest risk first; filters: q (account), day, tier, rule, status (investigated / running / pending)."""
+def page(db: sqlite3.Connection, done: set, query: dict, live: dict | None = None) -> dict:
+    """One page of alerts, highest risk first; filters: q (account), day, tier, rule, status (investigated / running / failed / pending).
+
+    `live` maps (account, day) to the status of its latest live investigation (from the full API).
+    """
     where, args = [], []
     if query.get("q"):
         where.append("account LIKE ?"); args.append(f"%{query['q']}%")
@@ -117,18 +120,21 @@ def page(db: sqlite3.Connection, done: set, query: dict, running: set = frozense
         where.append("tier = ?"); args.append(query["tier"])
     if query.get("rule"):
         where.append("rules LIKE ?"); args.append(f"%,{query['rule']},%")
-    running = set(running) - set(done)
+    live = live or {}
+    done = set(done) | {k for k, v in live.items() if v["status"] == "investigated"}
+    running = {k for k, v in live.items() if v["status"] == "running"} - done
+    failed = {k for k, v in live.items() if v["status"] == "failed"} - done
     keys = sorted(done)
 
     def among(pairs: set) -> tuple[str, list]:
         return ("(account || '|' || day) IN (" + ",".join("?" * len(pairs)) + ")" if pairs else "0"), [f"{a}|{d}" for a, d in sorted(pairs)]
 
     status = query.get("status")
-    if status in ("investigated", "running"):
-        clause, values = among(done if status == "investigated" else running)
+    if status in ("investigated", "running", "failed"):
+        clause, values = among({"investigated": done, "running": running, "failed": failed}[status])
         where.append(clause); args += values
     elif status == "pending":
-        clause, values = among(done | running)
+        clause, values = among(done | running | failed)
         where.append(f"NOT {clause}"); args += values
     sql_where = " WHERE " + " AND ".join(where) if where else ""
     total = db.execute(f"SELECT COUNT(*) FROM alerts{sql_where}", args).fetchone()[0]
@@ -142,7 +148,9 @@ def page(db: sqlite3.Connection, done: set, query: dict, running: set = frozense
         "rows": [{"account": r["account"], "day": r["day"], "tier": r["tier"], "tier_rule": r["tier_rule"], "priority": r["priority"],
                   "rules": [g for g in r["rules"].split(",") if g], "features": {n: r[n] for n in FEATURES},
                   "investigated": (r["account"], r["day"]) in done,
-                  "status": "investigated" if (r["account"], r["day"]) in done else "running" if (r["account"], r["day"]) in running else "pending"}
+                  "status": "investigated" if (r["account"], r["day"]) in done else "running" if (r["account"], r["day"]) in running
+                  else "failed" if (r["account"], r["day"]) in failed else "pending",
+                  "error": (live.get((r["account"], r["day"])) or {}).get("error") if (r["account"], r["day"]) in failed else None}
                  for r in rows],
     }
 

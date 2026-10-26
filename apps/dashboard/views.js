@@ -31,7 +31,7 @@ window.AMLViews = (() => {
   const ORDINARY = new Set(["long_standing_counterparties", "consistent_with_history", "no_onward_movement"]);
   const tr = pair => pair ? L(pair[0], pair[1]) : "";
   const ROLE_KEYS = [
-    [/follow.?up/, "追问", "Follow-up"], [/upstream|inbound/, "上游追踪", null], [/downstream|outbound/, "下游追踪", null],
+    [/follow.?up/, "追问", "Follow-up"], [/benign|legit|innocent|explanation/, "正常解释检验", null], [/upstream|inbound/, "上游追踪", null], [/downstream|outbound/, "下游追踪", null],
     [/baseline/, "基线对比", null], [/counterparty/, "对手方分析", null], [/structure|round.?trip/, "路径结构", null],
     [/risk/, "风险评估", null], [/flow|traffic|route|routing|mapper|transaction/, "资金流向", null], [/lead|generalist/, "主调查员", null],
   ];
@@ -124,13 +124,30 @@ window.AMLViews = (() => {
       hit: row.features[a.feature] != null && (a.operator === "ge" ? row.features[a.feature] >= a.threshold : row.features[a.feature] <= a.threshold) })) }))
       .filter(g => g.atoms.every(a => a.hit));
     const grade = gradeOf(row.features) || { name: row.tier_rule || "default", tier: row.tier };
-    return { key: `${row.account}|${row.day}`, investigated: false, status: row.status || "pending", account: row.account, day: row.day, priority: row.priority,
+    return { key: `${row.account}|${row.day}`, investigated: false, status: row.status || "pending", error: row.error, account: row.account, day: row.day, priority: row.priority,
       rules: row.rules, tier: { ...grade, tier: row.tier }, decision: null, chain_accounts: null,
       detail: { hit_rules: hits }, evaluation: { new_chain_accounts: [] } };
   }
   const asCase = c => ({ ...c, key: `${c.account}|${c.day}`, investigated: true, status: "investigated" });
-  const STATUS = { investigated: ["已初步调查", "Investigated"], running: ["调查中", "Investigating"], pending: ["未初步调查", "Not investigated"] };
-  const statusPill = c => `<i class="status ${c.status || (c.investigated ? "investigated" : "pending")}">${tr(STATUS[c.status || (c.investigated ? "investigated" : "pending")])}</i>`;
+  const STATUS = { investigated: ["已初步调查", "Investigated"], running: ["调查中", "Investigating"], failed: ["调查失败", "Failed"], pending: ["未初步调查", "Not investigated"] };
+  const statusPill = c => { const st = c.status || (c.investigated ? "investigated" : "pending");
+    return `<i class="status ${st}"${c.error ? ` title="${H.esc(failure(c.error))}"` : ""}>${tr(STATUS[st])}</i>`; };
+  // Plain-language reasons for the failures a live run can end with (the raw error follows).
+  const FAILURES = [
+    [/Aggregator decision invalid/i, ["合并判决阶段模型输出格式无效", "the merged verdict from the model was invalid"]],
+    [/Planner contract invalid/i, ["调查员连续两步输出格式无效", "an investigator's output was invalid twice in a row"]],
+    [/Team setup failed/i, ["组队阶段出错", "team setup failed"]],
+    [/DataError|Zetaris/i, ["数据查询失败", "a data query failed"]],
+    [/Worker exited/i, ["调查进程意外退出", "the investigation process exited"]],
+    [/budget/i, ["超出调查预算", "the investigation budget ran out"]],
+    [/stalled|no recorded progress/i, ["调查进程中断（30 分钟无进展）", "stalled (no progress for 30 minutes)"]],
+  ];
+  const failure = error => { const hit = FAILURES.find(([re]) => re.test(error || "")); return hit ? `${tr(hit[1])}（${error}）` : (error || L("原因未知", "unknown reason")); };
+  function toast(text, kind = "") {
+    const box = H.$("#toasts") || document.body.appendChild(H.el("div", "toasts")); box.id = "toasts";
+    const item = H.el("div", "toast " + kind, H.esc(text)); box.appendChild(item);
+    setTimeout(() => item.classList.add("out"), 7000); setTimeout(() => item.remove(), 7600);
+  }
   const rowCase = row => { const c = caseOf(row.account, row.day); return c ? asCase(c) : pendingCase(row); };
 
   async function renderTrace() {
@@ -157,7 +174,7 @@ window.AMLViews = (() => {
     H.$("#t-filters").innerHTML = `<label class="t-search"><i>⌕</i><input data-f="q" value="${H.esc(filters.q)}" placeholder="${L("搜索账户", "Search account")}"></label>
       ${sel("day", "▦", L(`日期：${days[0]?.slice(5)} — ${days[days.length - 1]?.slice(5)}`, `Date: ${days[0]?.slice(5)} — ${days[days.length - 1]?.slice(5)}`), days)}
       ${sel("tier", "≡", L("风险等级：全部", "Risk level: all"), ["high", "mid", "low"], x => tr(TIER[x]))}
-      ${sel("status", "◐", L("调查状态：全部", "Status: all"), ["investigated", "running", "pending"], x => tr(STATUS[x]))}
+      ${sel("status", "◐", L("调查状态：全部", "Status: all"), ["investigated", "running", "failed", "pending"], x => tr(STATUS[x]))}
       ${sel("rule", "⑂", L("命中规则：全部", "Hit rule: all"), rules)}
       <span class="t-count" id="t-count"></span>`;
     let typing = null;
@@ -567,10 +584,25 @@ window.AMLViews = (() => {
     if (current !== c) return;
     const p = await fetch(`/dashboard/api/live/runs/${runId}`).then(r => r.ok ? r.json() : null).catch(() => null);
     if (!p || current !== c) return;
+    // A failed attempt that the server retried: say so once and follow the new run.
+    if (p.retried_by) {
+      const note = L(`第 ${p.attempt} 次尝试失败：${failure(p.error)}。已自动重试（第 ${p.attempt + 1}/${p.max_attempts} 次）。`,
+                     `Attempt ${p.attempt} failed: ${failure(p.error)}. Retrying automatically (${p.attempt + 1}/${p.max_attempts}).`);
+      (c._notes = c._notes || []).push(note); toast(note, "warn");
+      c._live = null; H.$("#d-live-sec").innerHTML = "";
+      return pollLive(c, p.retried_by);
+    }
     const m = Math.floor(p.elapsed_seconds / 60), s = p.elapsed_seconds % 60;
     const finished = ["decided", "stopped"].includes(p.phase) && !p.worker_running;
-    liveSection(c, `${tr(PHASE[p.phase]) || p.phase} · ${finished ? L("调查记录", "record") : L(`已用时 ${m} 分 ${s} 秒`, `${m} min ${s} s`)} · run ${p.run_id.slice(0, 8)}`
-      + (p.phase === "stopped" ? L(" · 可点击「立刻调查此告警」重新发起", " · start again with “Investigate this alert now”") : ""));
+    const failedNow = p.outcome === "failed" && !p.worker_running;
+    const retrying = failedNow && p.retry_pending;  // the server starts the retry within ~15 s
+    liveSection(c, `${failedNow ? (retrying ? L("本次失败，正在自动重试…", "failed, retrying…") : L("调查失败", "failed")) : tr(PHASE[p.phase]) || p.phase} · `
+      + `${finished ? L("调查记录", "record") : L(`已用时 ${m} 分 ${s} 秒`, `${m} min ${s} s`)} · ${L(`第 ${p.attempt}/${p.max_attempts} 次尝试`, `attempt ${p.attempt}/${p.max_attempts}`)} · run ${p.run_id.slice(0, 8)}`
+      + (failedNow && !retrying ? L(" · 可点击「立刻调查此告警」重新发起", " · start again with “Investigate this alert now”") : ""));
+    const notes = H.$("#l-notes") || H.$("#d-live-sec").insertBefore(H.el("div", "l-notes"), H.$("#l-setup")); notes.id = "l-notes";
+    notes.innerHTML = (c._notes || []).map(n => `<div>⟳ ${H.esc(n)}</div>`).join("")
+      + (failedNow && !retrying ? `<div class="final">✕ ${H.esc(L(`调查失败：${failure(p.error)}`, `Failed: ${failure(p.error)}`))}</div>` : "");
+    if (failedNow && !c._toasted?.[p.run_id]) { (c._toasted = c._toasted || {})[p.run_id] = true; if (!retrying) toast(L(`调查失败：${failure(p.error)}`, `Investigation failed: ${failure(p.error)}`), "bad"); }
     // Preparation before the team exists: each host step with its start time and duration.
     const fmtT = sec => `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(Math.round(sec % 60)).padStart(2, "0")}`;
     const log = p.setup_log || [], now = p.created + p.elapsed_seconds;
@@ -578,8 +610,12 @@ window.AMLViews = (() => {
       const next = all[i + 1], open = !next && !finished && !p.error && !(p.detail?.members || []).length;
       const took = (next ? next.at : open ? now : x.at) - x.at;
       return `<li class="${open ? "open" : "done"}"><span class="mono">${fmtT(x.at - p.created)}</span><b>${H.esc(L(x.zh, x.en))}</b><small class="mono">${open ? L(`进行中 ${fmtT(took)}`, `running ${fmtT(took)}`) : next ? fmtT(took) : ""}</small></li>`;
-    }).join("") + (p.error ? `<li class="failed"><span class="mono">!</span><b>${H.esc(p.error)}</b><small></small></li>` : "");
-    if (c.status !== "investigated") { c.status = finished ? (p.senior_investigator?.decision ? "investigated" : "pending") : "running"; const pill = H.$("#d-status"); if (pill) pill.innerHTML = statusPill(c); }
+    }).join("") + (p.error ? `<li class="failed"><span class="mono">!</span><b>${H.esc(failure(p.error))}</b><small></small></li>` : "");
+    if (c.status !== "investigated") {
+      c.status = p.outcome === "investigated" ? "investigated" : failedNow && !retrying ? "failed" : "running";
+      c.error = c.status === "failed" ? p.error : null;
+      const pill = H.$("#d-status"); if (pill) pill.innerHTML = statusPill(c);
+    }
     const lc = c._live?.run === runId ? c._live : (c._live = { run: runId, key: "live:" + runId, account: c.account, evaluation: { new_chain_accounts: [] }, _svg: "#l-net", _tabs: "#l-tabs", _filter: null, _count: 0 });
     lc.detail = { hit_rules: [], ...p.detail };
     lc._layout = null;
@@ -597,7 +633,7 @@ window.AMLViews = (() => {
       if (tw) typewrite(tw, tw.dataset.text, () => { feed.scrollTop = feed.scrollHeight; });
       feed.scrollTo({ top: feed.scrollHeight, behavior: "smooth" });
     }
-    if (!finished) liveTimer = setTimeout(() => pollLive(c, runId), 5000);
+    if (!finished || retrying) liveTimer = setTimeout(() => pollLive(c, runId), 5000);
   }
 
   function rerender() {

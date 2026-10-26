@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hmac
 import subprocess
+import time
 import threading
 from contextlib import contextmanager
 from typing import Annotated
@@ -117,29 +118,61 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
         return JSONResponse(candidates(store))
 
-    @app.post("/dashboard/api/live/investigate")
-    def live_investigate(body: LiveRequest):
-        from .live import LIVE_SLOTS, NEEDS_SETUP, missing_setup, request_for
+    def launch(alert_id: str, attempt: int = 1, retry_of: str | None = None) -> str:
+        """Create a team case for an alert and start its worker; remembered per alert for the dashboard."""
+        from .live import remember, request_for
 
-        missing = missing_setup(settings)
-        if missing:
-            raise HTTPException(503, {**NEEDS_SETUP, "missing": missing})
-
-        running = [run_id for run_id, process in live.items() if process.poll() is None]
-        if len(running) >= LIVE_SLOTS:
-            raise HTTPException(429, f"{len(running)} live investigations are running; wait for one to finish")
-        try:
-            request = request_for(store, body.alert_id)
-        except (KeyError, ValueError) as error:
-            raise HTTPException(422, str(error)) from error
-        created = create_case(request)
-        run_id = created["id"]
-        from .live import remember
-
+        request = request_for(store, alert_id)
+        run_id = create_case(request)["id"]
+        if attempt > 1:
+            store.annotate(run_id, "attempt", attempt)
+            store.annotate(run_id, "retry_of", retry_of)
         remember(f"{request.account.bank}:{request.account.account}", request.start.date().isoformat(), run_id)
         log = (ROOT / ".runtime/logs" / f"worker-{run_id}.log").open("w")
         live[run_id] = subprocess.Popen(["node", "--experimental-transform-types", str(ROOT / "services/orchestrator/team.ts"), run_id],
                                         cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+        return run_id
+
+    def supervise() -> None:
+        """A live run whose worker ended without the senior investigator's decision is marked failed and retried."""
+        from .live import MAX_RETRIES
+
+        while True:
+            time.sleep(15)
+            for run_id, process in list(live.items()):
+                if process.poll() is None:
+                    continue
+                live.pop(run_id, None)
+                try:
+                    state = store.get(run_id)
+                    if (state.get("adjudication") or {}).get("decision"):
+                        continue
+                    if state["status"] in ("pending", "running"):  # the worker died mid-run
+                        store.annotate(run_id, "status", "failed")
+                        store.annotate(run_id, "error", state.get("error") or f"Worker exited (code {process.returncode}) without a decision")
+                    attempt = state.get("attempt", 1)
+                    if attempt <= MAX_RETRIES:
+                        retry = launch(state["request"]["alert_id"], attempt + 1, run_id)
+                        store.annotate(run_id, "retried_by", retry)
+                except Exception:  # supervision must never stop
+                    continue
+
+    threading.Thread(target=supervise, daemon=True).start()
+
+    @app.post("/dashboard/api/live/investigate")
+    def live_investigate(body: LiveRequest):
+        from .live import LIVE_SLOTS, NEEDS_SETUP, missing_setup
+
+        missing = missing_setup(settings)
+        if missing:
+            raise HTTPException(503, {**NEEDS_SETUP, "missing": missing})
+        running = [run_id for run_id, process in live.items() if process.poll() is None]
+        if len(running) >= LIVE_SLOTS:
+            raise HTTPException(429, f"{len(running)} live investigations are running; wait for one to finish")
+        try:
+            run_id = launch(body.alert_id)
+        except (KeyError, ValueError) as error:
+            raise HTTPException(422, str(error)) from error
         return {"run_id": run_id}
 
     @app.get("/dashboard/api/live/runs/{run_id}")
@@ -154,6 +187,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(404, "Unknown run") from error
         process = live.get(run_id)
         result["worker_running"] = bool(process and process.poll() is None)
+        # Ended without a decision and not yet handled by the supervisor: a retry is about to start.
+        from .live import MAX_RETRIES
+
+        result["retry_pending"] = bool(process and process.poll() is not None and result["outcome"] != "investigated"
+                                       and result["attempt"] <= MAX_RETRIES)
         return JSONResponse(result)
 
     @app.get("/dashboard/api/live/for")
@@ -180,10 +218,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if db is None:
             raise HTTPException(404, "Run: python -m aml_agent.cli alert-index")
         data = OUTPUT / "data.json" if (OUTPUT / "data.json").exists() else SNAPSHOT
-        from .live import running
+        from .live import statuses
 
         return alert_index.page(db, alert_index.investigated(data), {"page": page, "q": q, "day": day, "tier": tier, "rule": rule, "status": status},
-                                running(store))
+                                statuses(store))
 
     @app.get("/dashboard/api/alerts/summary")
     def alerts_summary():

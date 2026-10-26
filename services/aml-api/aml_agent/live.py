@@ -137,17 +137,29 @@ def stalled(store: Store, state: dict) -> bool:
     return time.time() - max(times + [state["created"]]) > STALE_SECONDS
 
 
-def running(store: Store) -> set[tuple[str, str]]:
-    """Alerts whose latest live run has not reached the senior investigator's decision and has not failed."""
-    out = set()
+MAX_RETRIES = 2
+
+
+def outcome(store: Store, state: dict) -> str:
+    """investigated (the senior investigator decided), running, or failed (ended or stalled without a decision)."""
+    if (state.get("adjudication") or {}).get("decision"):
+        return "investigated"
+    if state["status"] in ("pending", "running") and not stalled(store, state):
+        return "running"
+    return "failed"
+
+
+def statuses(store: Store) -> dict[tuple[str, str], dict]:
+    """Status of every alert with a live investigation, from its latest run (a retry replaces a failed attempt)."""
+    out = {}
     for key, runs in (json.loads(RUNS.read_text()) if RUNS.exists() else {}).items():
         try:
             state = store.get(runs[-1])
         except KeyError:
             continue
-        if state["status"] in ("pending", "running") and not (state.get("adjudication") or {}).get("decision") and not stalled(store, state):
-            account, day = key.split("|")
-            out.add((account, day))
+        account, day = key.split("|")
+        out[(account, day)] = {"status": outcome(store, state), "error": state.get("error"), "attempt": state.get("attempt", 1),
+                               "run_id": runs[-1]}
     return out
 
 
@@ -186,6 +198,8 @@ def progress(store: Store, run_id: str) -> dict:
         phase = "stopped"
     return {
         "run_id": run_id, "status": state["status"], "phase": phase, "created": state["created"],
+        "outcome": outcome(store, state), "attempt": state.get("attempt", 1), "max_attempts": MAX_RETRIES + 1,
+        "retry_of": state.get("retry_of"), "retried_by": state.get("retried_by"),
         "setup_log": state.get("setup_log", []),
         "account": state["request"]["account"], "day": state["request"]["start"][:10],
         "elapsed_seconds": round(time.time() - state["created"]),
