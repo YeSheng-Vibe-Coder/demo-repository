@@ -87,7 +87,8 @@ STALE_SECONDS = 1800
 
 def stalled(store: Store, state: dict) -> bool:
     """A run still marked running with no recorded progress for half an hour (its worker is gone)."""
-    if state["status"] not in ("pending", "running") or (state.get("adjudication") or {}).get("decision"):
+    if (state.get("adjudication") or {}).get("decision") or not (
+            state["status"] in ("pending", "running") or (state["status"] in ("completed", "insufficient_evidence") and state.get("conclusion"))):
         return False
     times = [e["at"] for e in store.trace_events(state["id"])] + [n["at"] for n in state.get("setup_log", [])]
     for child in (state.get("team") or {}).get("children", []):
@@ -99,10 +100,16 @@ MAX_RETRIES = 2
 
 
 def outcome(store: Store, state: dict) -> str:
-    """investigated (the senior investigator decided), running, or failed (ended or stalled without a decision)."""
+    """investigated (the senior investigator decided), running, or failed (ended or stalled without a decision).
+
+    A merged team conclusion is still running: the senior investigator decides after it. It fails only when the
+    worker has exited without that decision (recorded by the API's supervisor) or nothing has moved for half an hour.
+    """
     if (state.get("adjudication") or {}).get("decision"):
         return "investigated"
-    if state["status"] in ("pending", "running") and not stalled(store, state):
+    if state.get("worker_exited") or stalled(store, state):
+        return "failed"
+    if state["status"] in ("pending", "running") or (state["status"] in ("completed", "insufficient_evidence") and state.get("conclusion")):
         return "running"
     return "failed"
 

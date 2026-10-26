@@ -228,3 +228,22 @@ def test_local_pack_seed_carries_only_live_investigation_state(tmp_path, monkeyp
     assert target.artifacts("rule_alert") == [] and target.artifacts("investigation_grades") == []
     # Installing twice changes nothing.
     assert local_pack.merge_state(runtime, target.path)["artifacts_added"] == 0
+
+
+def test_live_outcome_waits_for_the_senior_investigator(tmp_path):
+    import time
+
+    from aml_agent.live import outcome
+    from aml_agent.store import Store
+
+    from aml_agent.contracts import CaseRequest
+
+    store = Store(tmp_path / "db.sqlite")
+    request = CaseRequest(account={"bank": "01", "account": "0002"}, start="2022-09-05T00:00:00", as_of="2022-09-06T00:00:00", split="validation")
+    state = store.create(request.model_dump(mode="json"))
+    merged = {**state, "status": "completed", "conclusion": {"conclusion": "suspicious"}, "created": time.time()}
+    # Merged by the team, senior decision pending: still running, not failed.
+    assert outcome(store, merged) == "running"
+    assert outcome(store, {**merged, "adjudication": {"decision": "report"}}) == "investigated"
+    # The worker exited without the decision.
+    assert outcome(store, {**merged, "worker_exited": True}) == "failed"

@@ -140,9 +140,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     state = store.get(run_id)
                     if (state.get("adjudication") or {}).get("decision"):
                         continue
+                    store.annotate(run_id, "worker_exited", True)
                     if state["status"] in ("pending", "running"):  # the worker died mid-run
                         store.annotate(run_id, "status", "failed")
-                        store.annotate(run_id, "error", state.get("error") or f"Worker exited (code {process.returncode}) without a decision")
+                    if not state.get("error"):
+                        store.annotate(run_id, "error", f"Worker exited (code {process.returncode}) without the senior investigator's decision")
                     attempt = state.get("attempt", 1)
                     if attempt <= MAX_RETRIES:
                         retry = launch(state["request"]["alert_id"], attempt + 1, run_id)
