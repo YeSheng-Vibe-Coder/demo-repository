@@ -16,7 +16,7 @@
 仓库里提交了看板数据快照：`apps/dashboard/snapshot/data.json`（规则版本、已调查案件的命中规则、风险分级原因、关系网和调查回放、规则进化页面的数据）和 `alerts.sqlite.gz`（验证期全部 35 万条告警及其风险分级，首次启动时自动解压）。只需要 Python 3.11+：
 
 ```bash
-git clone -b hailee git@github.com:YeSheng-Vibe-Coder/demo-repository.git && cd demo-repository
+git clone -b open-source git@github.com:YeSheng-Vibe-Coder/demo-repository.git && cd demo-repository
 python3 -m venv .venv
 .venv/bin/pip install -e .
 .venv/bin/python -m aml_agent.cli serve-dashboard
