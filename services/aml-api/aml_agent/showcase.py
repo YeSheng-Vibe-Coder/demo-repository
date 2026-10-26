@@ -70,11 +70,13 @@ def tier_reasoning(store: Store, primary: dict) -> dict:
 
 
 # What changed between the investigation rounds (experiment log; the metrics come from the graded rounds).
+# Each round ran with the investigator configuration current at the time (investigator_config artifacts inv-v3..v5).
 ROUND_NOTES = {
-    "val-r0": ("严格判定提示词", "Strict verdict prompt"),
-    "val-r1": ("召回优先：宁可复核不漏放", "Recall first: review rather than miss"),
-    "val-r2": ("加入开发集案件库与分级判决标准", "Development case library and per-tier decision standard"),
-    "val-r3-adj": ("加入证据清单与告警联动", "Evidence checklist and alert linkage"),
+    "val-r0": ("严格判定提示词，无参考案件", "Strict verdict prompt, no reference cases"),
+    "val-r1": ("召回优先：宁可复核不漏放；开发集案件库 46 例", "Recall first: review rather than miss; 46 development reference cases"),
+    "val-r2": ("案件库扩到 68 例，加入分级判决标准", "68 reference cases and a per-tier verdict standard"),
+    "val-r3-adj": ("案件库 88 例，取消分级判决标准；改由高级调查员按证据清单研判，并联动其他告警",
+                   "88 reference cases, no per-tier verdict standard; the senior investigator decides from an evidence checklist and linked alerts"),
 }
 
 
@@ -128,32 +130,14 @@ def rule_update_reasoning(store: Store, versions: list[dict]) -> list[dict]:
     return out
 
 
-def tier_versions(store: Store, versions: list[dict], primary_id: str | None) -> list[dict]:
-    """Every grading policy with its validation result on the rule version it was learned on (from showcase-metrics)."""
-    path = SHOWCASE / "tier_versions.json"
-    metrics = json.loads(path.read_text()) if path.exists() else {}
-    label_of = {v["id"]: v["label"] for v in versions}
-    out = []
-    for policy_id, body in store.artifacts("tier_policy_version"):
-        validation = (metrics.get(body.get("label")) or {}).get("validation") or {}
-        out.append({
-            "label": body.get("label"), "primary": policy_id == primary_id, "rule_version": label_of.get(body.get("rule_version")),
-            "segments": len((body.get("policy") or {}).get("segments", [])), "best_round": body.get("best_round"), "source": body.get("source"),
-            "tiers": {t: {k: (validation.get(t) or {}).get(k) for k in ("alerts_per_day", "chain_precision")} for t in ("high", "mid", "low")},
-            "capacity": [{k: b.get(k) for k in ("alerts_per_day", "chain_recall", "chain_precision")} for b in validation.get("budgets", [])],
-        })
-    return out
-
-
 def view(store: Store, versions: list[dict]) -> dict:
-    pointer, primary = store.primary_policy()
+    _, primary = store.primary_policy()
     metrics = version_metrics()
     return {
         "rule_versions": [{"label": label, **{k: m.get(k) for k in ("chain_recall", "full_chain_account_recall", "chain_precision",
                                                                     "window_precision", "flagged_per_day", "flagged_accounts")}}
                           for label, m in sorted(metrics.items(), key=lambda item: int(item[0].lstrip("v")))],
         "tier_agent": tier_reasoning(store, primary or {}),
-        "tier_versions": tier_versions(store, versions, pointer),
         "rule_updates": rule_update_reasoning(store, versions),
     }
 
@@ -163,7 +147,6 @@ def refresh_metrics(cycle, log=print) -> dict:
 
     - versions.json: layer-1 metrics of every published rule version (cached per version),
     - metrics.json: the active version's layer 1, the primary risk grading policy and the tier model reference,
-    - tier_versions.json: every grading policy on the rule version it was learned on,
     - validation_volume.json: transactions and laundering transactions in the validation period.
     """
     from .rule_program import load_program, program_of
@@ -194,19 +177,6 @@ def refresh_metrics(cycle, log=print) -> dict:
         metrics[f"tier_agent_{primary['label']}_policy"] = primary["policy"]
         metrics["primary_tier_policy"] = primary["label"]
     (SHOWCASE / "metrics.json").write_text(json.dumps(metrics, indent=2, default=str))
-    # Every grading policy keeps its own record (evaluated on the rule version it was learned on): nothing is overwritten.
-    tiers_path = SHOWCASE / "tier_versions.json"
-    tiers = json.loads(tiers_path.read_text()) if tiers_path.exists() else {}
-    for policy_id, body in store.artifacts("tier_policy_version"):
-        if body.get("label") in tiers or not body.get("policy"):
-            continue
-        own = program_of(load_program(store, body["rule_version"]))
-        _, own_model = cycle.tier_model(body["rule_version"])
-        own_tier, own_priority = compile_policy(TierPolicy.model_validate(body["policy"]), score_sql(own_model["model"]))
-        tiers[body["label"]] = {"policy_id": policy_id, "rule_version": body["rule_version"],
-                                "validation": Evaluator(learner, own).evaluate("validation", own_tier, own_priority)}
-        tiers_path.write_text(json.dumps(tiers, indent=2, default=str))
-        log(json.dumps({"tier_version_metrics": body["label"]}))
     if not (SHOWCASE / "validation_volume.json").exists():
         from .evaluation import split_plan
 

@@ -1,4 +1,4 @@
-/* Alert tracing and rule evolution views (bilingual through L(zh, en) from i18n.js).
+/* Alert tracing and agent evolution views (bilingual through L(zh, en) from i18n.js).
  * Data: DATA.trace (validation cases with replay), DATA.showcase, DATA.evaluation. Helpers come from app.js.
  */
 window.AMLViews = (() => {
@@ -484,7 +484,7 @@ window.AMLViews = (() => {
     feed.scrollTo({ top: feed.scrollHeight, behavior: animate ? "smooth" : "auto" });
   }
 
-  /* =================== rule evolution =================== */
+  /* =================== agent evolution =================== */
   function renderEvolution() {
     const s = DATA.showcase || {}, ta = s.tier_agent || {}, ia = s.investigation_agent || {}, ev = DATA.evaluation || {};
     const loop = [["◉", L("告警", "Alert")], ["≡", L("风险分级", "Risk grading")], ["⌕", L("调查", "Investigation")], ["✓", L("证据", "Evidence")], ["✦", L("学习", "Learning")], ["⑂", L("新规则", "New rules")]];
@@ -508,33 +508,36 @@ window.AMLViews = (() => {
           <span class="mono">${pctx(cap(r).chain_recall)}</span></div>`).join("")}
       </div>
       ${ta.investigation_evidence?.case_library?.length ? `<div class="e-kicker">${L(`引用的调查证据 · 案件库 ${ta.investigation_evidence.case_library.length} 例`, `Investigation evidence used · ${ta.investigation_evidence.case_library.length} library cases`)}${ta.investigation_evidence.cited_in_segments.length ? L(` · 被 ${ta.investigation_evidence.cited_in_segments.length} 条分级规则引用`, ` · cited by ${ta.investigation_evidence.cited_in_segments.length} grading rules`) : ""}</div>` : ""}
-      <div class="e-reason"><span>REASONING · R${chosen.round ?? ""}</span><p>${H.esc(chosen.analysis || ta.rationale || "")}</p></div>
-      ${(s.tier_versions || []).length ? `<div class="e-kicker">${L("全部分级版本 · 验证期效果（每个版本在其学习时的规则版本上评估）", "All grading versions · validation (each on the rule version it was learned on)")}</div>
-      <div class="e-table tv"><div class="e-tr th"><span>${L("版本", "Version")}</span><span>${L("规则版本", "Rules")}</span><span>${L("分级规则", "Segments")}</span><span>${L("高风险 / 天", "High / day")}</span><span>${L("高风险链路准确率", "High chain precision")}</span><span>${L("前 2,000 召回", "Recall @2,000")}</span><span></span></div>
-        ${s.tier_versions.map(t => { const c2 = (t.capacity || []).find(b => b.alerts_per_day === 2000) || {};
-          return `<div class="e-tr${t.primary ? " on" : ""}"><b class="mono">${H.esc(t.label)}</b><span class="mono">${H.esc(t.rule_version || "—")}</span><span class="mono">${t.segments}</span>
-            <span class="mono">${t.tiers.high.alerts_per_day != null ? H.num(Math.round(t.tiers.high.alerts_per_day)) : "—"}</span><span class="mono">${pctx(t.tiers.high.chain_precision)}</span><span class="mono">${pctx(c2.chain_recall)}</span>
-            <span>${t.primary ? `<i class="pill tier-low">${L("生效", "live")}</i>` : ""}</span></div>`; }).join("")}</div>` : ""}`;
+      <div class="e-reason"><span>REASONING · R${chosen.round ?? ""}</span><p>${H.esc(chosen.analysis || ta.rationale || "")}</p></div>`;
 
     const ir = ia.rounds || [], tools = (ia.tools || []).filter(t => t.uses >= 5);
-    const best = ir.reduce((b, r) => (r.chain_accounts_found / (r.chain_accounts_in_files || 1)) > (b ? b.chain_accounts_found / (b.chain_accounts_in_files || 1) : -1) ? r : b, null);
+    // The latest round runs the team as it works today (live investigations use the same setup).
+    const current = ir[ir.length - 1], previous = ir[ir.length - 2];
+    const completion = r => r?.chain_accounts_in_files ? r.chain_accounts_found / r.chain_accounts_in_files : null;
+    const noTransfers = ["summarize_account", "compare_account_baseline", "assess_risk"];
+    const stricter = current && previous && current.exclusion_rate > previous.exclusion_rate && completion(current) < completion(previous);
     H.$("#evo-inv").innerHTML = `
-      <div class="e-head"><i style="background:${MEMBER[1]}">⌕</i><div><b>${L("调查 agent", "Investigation agent")}</b><small>${L("高级调查员分工 → 三名调查员 → 合并 → 研判", "Senior investigator assigns → three investigators → merge → decide")}</small></div></div>
-      <div class="e-kicker">${L(`${ir.length} 轮验证 · 每轮改了什么，误报排除与链路补全如何变化`, `${ir.length} validation rounds · what changed, false-alarm exclusion and chain completion`)}</div>
+      <div class="e-head"><i style="background:${MEMBER[1]}">⌕</i><div><b>${L("调查 agent", "Investigation agent")}</b><small>${L("高级调查员按案件分 1–4 名调查员 → 合并 → 高级调查员研判（可追加一名补查）", "Senior investigator assigns 1–4 investigators per case → merge → senior investigator decides (one follow-up allowed)")}</small></div></div>
+      <div class="e-kicker">${L(`${ir.length} 轮验证 · 每轮改了什么，误报排除、漏报与链路补全如何变化`, `${ir.length} validation rounds · what changed, false alarms cleared, misses and chain completion`)}</div>
       <div class="e-table inv">
-        <div class="e-tr th"><span>${L("轮", "Round")}</span><span>${L("这一轮改了什么", "What changed")}</span><span>${L("误报排除", "False alarms cleared")}</span><span>${L("链路补全率", "Chain completion")}</span></div>
-        ${ir.map((r, i) => { const cp = r.chain_accounts_in_files ? r.chain_accounts_found / r.chain_accounts_in_files : null; return `<div class="e-tr${r === best ? " on" : ""}" style="animation-delay:${i * 120}ms"><b class="mono">${H.esc(r.round.replace("-adj", ""))}</b><span>${H.esc(L(r.change, r.change_en))}</span>
+        <div class="e-tr th"><span>${L("轮", "Round")}</span><span>${L("这一轮改了什么", "What changed")}</span><span>${L("误报排除", "False alarms cleared")}</span><span>${L("漏报", "Missed")}</span><span>${L("链路补全率", "Chain completion")}</span></div>
+        ${ir.map((r, i) => { const cp = completion(r); return `<div class="e-tr${r === current ? " on" : ""}" style="animation-delay:${i * 120}ms"><b class="mono">${H.esc(r.round.replace("-adj", ""))}${r === current ? `<small>${L("当前", "current")}</small>` : ""}</b><span>${H.esc(L(r.change, r.change_en))}</span>
           <span class="e-mbar"><div><i data-w="${(r.exclusion_rate || 0) * 100}%" style="background:var(--primary)"></i></div><em class="mono">${pctx(r.exclusion_rate)}</em></span>
+          <span class="mono">${pctx(r.false_exclusion_rate)}</span>
           <span class="e-mbar"><div><i data-w="${(cp || 0) * 100}%"></i></div><em class="mono">${pctx(cp)} · ${r.chain_accounts_found}/${r.chain_accounts_in_files}</em></span></div>`; }).join("")}
       </div>
-      <div class="e-note">${L("链路补全率 = 团队找出的链路账户 / 案件文件中出现的链路账户（事后用标签核验）。", "Chain completion = chain accounts the team named / chain accounts present in the case files (checked against labels afterwards).")}</div>
+      <div class="e-note">${L("误报排除 = 不在洗钱链路上的告警中未被上报的比例；漏报 = 在链路上的告警中未被上报的比例；链路补全率 = 团队找出的链路账户 / 案件文件中出现的链路账户（均为事后用标签核验）。",
+        "False alarms cleared = alerts outside any laundering chain that were not reported; missed = alerts on a chain that were not reported; chain completion = chain accounts the team named / chain accounts in the case files (all checked against labels afterwards).")}</div>
+      ${current && previous ? `<div class="e-reason inv"><span>${L(`RESULT · ${current.round.replace("-adj", "")} 对比 ${previous.round.replace("-adj", "")}`, `RESULT · ${current.round.replace("-adj", "")} vs ${previous.round.replace("-adj", "")}`)}</span><p>${L(
+        `当前版本排除的误报 ${pctx(previous.exclusion_rate)} → ${pctx(current.exclusion_rate)}，漏报 ${pctx(previous.false_exclusion_rate)} → ${pctx(current.false_exclusion_rate)}，链路补全率从 ${pctx(completion(previous))} 变为 ${pctx(completion(current))}${stricter ? "：研判更严，少报了正常账户，也少认定了链路账户。" : "。"}`,
+        `Current setup: false alarms cleared ${pctx(previous.exclusion_rate)} → ${pctx(current.exclusion_rate)}, missed ${pctx(previous.false_exclusion_rate)} → ${pctx(current.false_exclusion_rate)}, chain completion goes ${pctx(completion(previous))} → ${pctx(completion(current))}${stricter ? ": stricter decisions report fewer normal accounts and also name fewer chain accounts." : "."}`)}</p></div>` : ""}
       <div class="e-kicker row">${L(`工具有效性 · 开发集洗钱案件中查到洗钱转账的比例${ia.trained_on ? `（${H.esc(ia.trained_on)}）` : ""}`, `Tool effectiveness · share of uses in laundering cases that found a laundering transfer${ia.trained_on ? ` (${H.esc(ia.trained_on)})` : ""}`)}
         <button class="e-toggle" id="tool-design">🔧 ${L("工具设计", "Tool design")} <b>▾</b></button></div>
       ${tools.map(t => `<div class="e-tool"><span>${H.esc(tool(t.tool))}</span><div><i data-w="${(t.rate || 0) * 100}%"></i></div><small class="mono">${t.found}/${t.uses}</small><b class="mono">${Math.round((t.rate || 0) * 100)}%</b></div>`).join("")}
       <div class="e-design" id="tool-design-pane">${Object.entries(TOOLS).map(([id, x]) => { const t = (ia.tools || []).find(y => y.tool === id);
         return `<div class="e-dtool"><div><b>${L(x[0], x[1])}</b><code>${id}</code><span>${t ? L("命中率 ", "hit rate ") + Math.round((t.rate || 0) * 100) + "%" : id === "get_alert_context" ? L("预取", "prefetched") : "—"}</span></div>
           <p>${L("问题：", "Question: ")}${H.esc(L(x[2], x[3]))}</p><small>${L("参数：", "Arguments: ")}${H.esc(L(x[4], x[5]))}　·　${L("返回：", "Returns: ")}${H.esc(L(x[6], x[7]))}</small></div>`; }).join("")}</div>
-      <div class="e-reason inv"><span>${L("LEARNED · 写回调查团队", "LEARNED · written back to the team")}</span><p>${tools.length > 1 ? L(`${tool(tools[0].tool)} 与 ${tool(tools[1].tool)} 最能找到洗钱转账；${tools.filter(t => !t.rate).map(t => tool(t.tool)).join("、") || "其余工具"} 单独使用时找不到，只作补充。这张表写回调查团队，作为选工具的依据。`, `${tool(tools[0].tool)} and ${tool(tools[1].tool)} find laundering transfers most often; ${tools.filter(t => !t.rate).map(t => tool(t.tool)).join(", ") || "the others"} find none on their own and only supplement. This table is written back to the team to guide tool choice.`) : ""}</p></div>`;
+      <div class="e-reason inv"><span>${L("LEARNED · 写回调查团队", "LEARNED · written back to the team")}</span><p>${tools.length > 1 ? L(`${tool(tools[0].tool)} 与 ${tool(tools[1].tool)} 最能找到洗钱转账；${tools.filter(t => noTransfers.includes(t.tool)).map(t => tool(t.tool)).join("、")} 不返回交易，用来判断账户是否异常，所以这里为 0。这张表按风险等级写进高级调查员和调查员的简报，作为选工具的依据。`, `${tool(tools[0].tool)} and ${tool(tools[1].tool)} find laundering transfers most often; ${tools.filter(t => noTransfers.includes(t.tool)).map(t => tool(t.tool)).join(", ")} return no transactions (they judge whether an account is unusual), hence 0 here. The table goes, per risk tier, into the briefs of the senior investigator and the investigators to guide tool choice.`) : ""}</p></div>`;
     H.$("#tool-design").addEventListener("click", () => { const p = H.$("#tool-design-pane"); p.classList.toggle("on"); H.$("#tool-design b").textContent = p.classList.contains("on") ? "▴" : "▾"; });
 
     const versions = (s.rule_versions || []).filter(v => v.chain_recall >= 0.97), updates = Object.fromEntries((s.rule_updates || []).map(u => [u.label, u]));
