@@ -28,6 +28,15 @@ window.AMLViews = (() => {
     dormant_then_active: ["沉寂后激活", "Dormant then active"], long_standing_counterparties: ["长期对手方", "Long-standing counterparties"],
     consistent_with_history: ["与历史一致", "Consistent with history"], no_onward_movement: ["无后续转出", "No onward movement"],
   };
+  // Per-account outcome of the investigation (see alert_trace.account_verdicts).
+  const ACCOUNT = {
+    suspicious: ["可疑", "Suspicious", "查过，认定有风险", "examined; judged risky"],
+    cleared: ["已排除", "Cleared", "查过，认为无风险", "examined; judged not risky"],
+    insufficient: ["证据不足", "Insufficient evidence", "查过，但证据不够下结论", "examined; not enough evidence to decide"],
+    not_examined: ["未调查", "Not examined", "出现在交易里，但没有专门查它", "seen in the transactions, not queried on its own"],
+    unresolved: ["未定", "Undecided", "", ""], flagged: ["调查员标记", "Flagged", "", ""], observed: ["仅出现", "Seen only", "", ""],
+  };
+  const POSITION = { focus: ["告警账户", "Alerted"], upstream: ["上游", "Upstream"], downstream: ["下游", "Downstream"], peer: ["关联", "Linked"] };
   const ORDINARY = new Set(["long_standing_counterparties", "consistent_with_history", "no_onward_movement"]);
   const tr = pair => pair ? L(pair[0], pair[1]) : "";
   const ROLE_KEYS = [
@@ -264,16 +273,32 @@ window.AMLViews = (() => {
         <section class="d-sec d-net-sec"><h4>③ ${L("关系网追查", "Network tracing")} <small>${L("跟随回放逐步追寻 · 每名调查员一种颜色，可单独查看", "Unfolds with the replay · one colour per investigator, view each alone")}</small></h4>
           <div class="d-tabs" id="d-tabs"></div><div class="d-net"><svg id="d-net"></svg></div></section>
         <section class="d-sec d-replay-sec"><h4>④ ${L("调查回放", "Investigation replay")} <small>${L("每一步同步点亮关系网 · reasoning 逐字展开", "Each step lights up the network · reasoning types out")}</small></h4><div id="d-replay"></div></section>
-      </div>` : ""}
+      </div>
+      <section class="d-sec"><h4>⑤ ${L("账户判定", "Account verdicts")} <small>${L("调查团队对案件中每个账户的结论：可疑、已排除、证据不足，或尚未专门调查", "The team's conclusion on every account in the case")}</small></h4><div id="d-accounts"></div></section>` : ""}
       <section class="d-live" id="d-live-sec"></section>`;
     H.$(".d-close", drawer).addEventListener("click", close);
     H.$("#d-live", drawer).addEventListener("click", () => startLive(c));
     drawer.classList.add("on"); H.$("#scrim").classList.add("on"); drawer.scrollTop = 0;
     renderHitRules(c); renderReason(c);
+    if (c.investigated) renderAccounts(c);
     resumeLive(c);
     if (!c.investigated) return;
     c._filter = null; renderTabs(c);
     startReplay(c);
+  }
+
+  function renderAccounts(c) {
+    const accounts = c.detail.accounts || [], fresh = new Set(c.evaluation.new_chain_accounts);
+    const kinds = ["suspicious", "cleared", "insufficient", "not_examined"].filter(k => accounts.some(a => a.verdict === k));
+    H.$("#d-accounts").innerHTML = `<div class="a-sum">${kinds.map(k => `<span class="av ${k}"><b>${accounts.filter(a => a.verdict === k).length}</b> ${tr(ACCOUNT[k])}<small>${H.esc(tr(ACCOUNT[k].slice(2)))}</small></span>`).join("")}</div>
+      <div class="a-table"><div class="a-row a-head"><span>${L("账户", "Account")}</span><span>${L("位置", "Position")}</span><span>${L("判定", "Verdict")}</span><span>${L("团队给出的理由", "Team's reason")}</span><span>${L("查过它的调查员 / 工具", "Examined by / tools")}</span></div>
+      ${accounts.map(a => `<div class="a-row">
+        <span class="mono">${H.esc(a.account)}${fresh.has(a.account) ? `<em class="t-new">${L("新发现", "found")}</em>` : ""}</span>
+        <span>${tr(POSITION[a.role]) || "—"}</span>
+        <span><i class="av ${a.verdict}">${tr(ACCOUNT[a.verdict]) || a.verdict}</i></span>
+        <span class="a-why">${H.esc(a.reason || (a.verdict === "not_examined" ? L("团队没有对它下结论", "no verdict from the team") : "—"))}</span>
+        <span class="a-tools">${a.found_by?.length ? H.esc([...new Set(a.found_by.map(r => r === "预取" ? L("告警上下文预取", "alert context prefetch") : role(r)))].join(L("、", ", "))) : "—"}${a.tools?.length ? `<small>${H.esc(a.tools.map(tool).join(" · "))}</small>` : ""}</span>
+      </div>`).join("")}</div>`;
   }
 
   function renderHitRules(c) {
@@ -381,7 +406,7 @@ window.AMLViews = (() => {
       const label = H.svgEl("text", { y: isFocus ? 36 : 28, "text-anchor": "middle", class: "net-label" + (isNew ? " new" : "") });
       label.textContent = short(id);
       const sub = H.svgEl("text", { y: isFocus ? 49 : 41, "text-anchor": "middle", class: "net-sub" });
-      sub.textContent = isFocus ? L("告警账户", "alerted") : isNew ? L("新发现 · 未告警", "found · never alerted") : verdict === "suspicious" ? L("可疑", "suspicious") : L("关联", "linked");
+      sub.textContent = isFocus ? L("告警账户", "alerted") : isNew ? L("新发现 · 未告警", "found · never alerted") : verdict ? tr(ACCOUNT[verdict]?.slice(0, 2)) || verdict : L("关联", "linked");
       g.appendChild(label); g.appendChild(sub);
       g.addEventListener("mousemove", ev => H.showTip(ev, `<b>${H.esc(id)}</b><br>${isFocus ? L("告警账户", "Alerted account") : isNew ? L("调查补全的链路账户（规则从未告警）", "Chain account found by the team (never alerted)") : L("关联账户", "Linked account")}`));
       g.addEventListener("mouseleave", H.hideTip);

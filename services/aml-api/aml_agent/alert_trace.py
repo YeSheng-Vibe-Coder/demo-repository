@@ -78,13 +78,17 @@ def account_verdicts(focus: str, edges: list[dict], members: list[dict], conclus
                     item["tools"].add(action["tool"])
     case_suspicious = conclusion.get("conclusion") == "suspicious"
     # The team's own per-account verdict decides when it gave one; inference from transactions is only for older runs.
-    team = {v["account_ref"]: v["verdict"] for v in conclusion.get("account_verdicts", [])}
+    # suspicious / cleared: examined and decided; insufficient: examined (a tool queried it) without a conclusion;
+    # not_examined: seen in the transactions but never queried on its own (team "unknown" without a query, or no verdict).
+    judged = {v["account_ref"]: v for v in conclusion.get("account_verdicts", [])}
+    team = {ref: v["verdict"] for ref, v in judged.items()}
     result = []
     for account, item in accounts.items():
         bank, number = account.split(":")
         in_chain = number in chain_text
         if team:
-            verdict = {"suspicious": "suspicious", "cleared": "cleared"}.get(team.get(account), "unresolved" if account in team else "observed")
+            verdict = {"suspicious": "suspicious", "cleared": "cleared"}.get(team.get(account)) \
+                or ("insufficient" if account in team and item["tools"] else "not_examined")
         elif account == focus:
             verdict = "suspicious" if case_suspicious else ("cleared" if conclusion.get("conclusion") == "not_supported" else "unresolved")
         elif item["confirmed"] or (in_chain and case_suspicious):
@@ -96,8 +100,9 @@ def account_verdicts(focus: str, edges: list[dict], members: list[dict], conclus
         else:
             verdict = "observed"
         result.append({**item, "role": None, "verdict": verdict, "in_chain": in_chain,
+                       "reason": (judged.get(account) or {}).get("reason"), "evidence_refs": (judged.get(account) or {}).get("evidence_refs", []),
                        "flagged_by": sorted(item["flagged_by"]), "found_by": sorted(item["found_by"]), "tools": sorted(item["tools"])})
-    order = {"suspicious": 0, "flagged": 1, "unresolved": 2, "cleared": 3, "observed": 4}
+    order = {"suspicious": 0, "flagged": 1, "unresolved": 2, "insufficient": 2, "cleared": 3, "not_examined": 4, "observed": 4}
     return sorted(result, key=lambda a: (a["account"] != focus, order[a["verdict"]], -a["transactions"]))
 
 
