@@ -1,0 +1,14 @@
+{
+  "runs_checked": 8000,
+  "unique_source_rows_checked": 48802,
+  "checks": [
+    "source row existence",
+    "as-of and lookback bounds",
+    "payment scope",
+    "tool account and directional bounds",
+    "seed conservation",
+    "call budget",
+    "no label key in tool trace"
+  ],
+  "passed": true
+}

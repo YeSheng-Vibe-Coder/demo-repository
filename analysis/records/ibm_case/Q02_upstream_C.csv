@@ -1,0 +1,3 @@
+row_id,event_time,src_bank,src_account,dst_bank,dst_account,amount_received,receiving_currency,amount_paid,payment_currency,payment_format
+3596549,2022/09/07 19:57,011107,80171C720,018200,803118000,8437.40,Yuan,8437.40,Yuan,ACH
+3596550,2022/09/07 19:57,011107,80171C720,018200,803118000,97428.60,Yuan,97428.60,Yuan,ACH

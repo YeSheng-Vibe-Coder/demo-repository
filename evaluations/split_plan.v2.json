@@ -1,0 +1,16 @@
+{
+  "version": "temporal-cohort/2.0",
+  "dataset": "IBM-HI-Large-v8",
+  "time_basis": "dataset_naive",
+  "supersedes": "temporal-cohort/1.0 (4/3/3-day partitions, too few labelled windows for rule learning)",
+  "label_usage": "Development labels train and calibrate rules; validation labels compare frozen versions; monitor labels drive rollback; test stays closed. Never an investigation feature.",
+  "unit": "account-day window: cutoff = day + 24h; features read only the prior 24h and the day itself",
+  "development": {"start": "2022-08-04T00:00:00", "end": "2022-09-03T00:00:00"},
+  "validation": {"start": "2022-09-05T00:00:00", "end": "2022-09-26T00:00:00"},
+  "test": {"start": "2022-09-28T00:00:00", "end": "2022-10-19T00:00:00"},
+  "monitor": {"start": "2022-10-21T00:00:00", "end": "2022-11-04T00:00:00"},
+  "embargo_hours": 48,
+  "excluded": ["2022-08-01..2022-08-03 (debug-era and warm-up)", "after 2022-11-05: publisher tail where ~60% of rows are labelled laundering, a time shortcut"],
+  "feature_store": "Zetaris day shards: IBM_AML.agent_day_aggregates, IBM_AML.agent_day_transit; labels in IBM_AML.agent_eval_account_day_label",
+  "account_disjoint": false
+}

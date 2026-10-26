@@ -1,0 +1,24 @@
+{
+  "sql": "SELECT from_bank, from_account, MIN(transaction_id) AS anchor_transaction_id,\nCOUNT(*) AS positive_transactions\nFROM IBM_AML.hi_large_transactions\nWHERE is_laundering=1 AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00'\nAND transaction_time < TIMESTAMP '2022-08-04 00:00:00'\nAND (from_bank <> to_bank OR from_account <> to_account)\nGROUP BY from_bank, from_account ORDER BY anchor_transaction_id LIMIT 3",
+  "rows": [
+    [
+      "0119211",
+      "814AB4F60",
+      "232651",
+      "1"
+    ],
+    [
+      "029",
+      "81A4AF9E0",
+      "959990",
+      "1"
+    ],
+    [
+      "01818",
+      "801E02DA0",
+      "1503743",
+      "1"
+    ]
+  ],
+  "selection_bias": "Uses ground truth to select positive accounts; not blind validation"
+}

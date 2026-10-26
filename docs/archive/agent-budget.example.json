@@ -1,0 +1,94 @@
+{
+  "status": "design_example_not_runtime_enforcement",
+  "provider": {
+    "id": "meterless",
+    "base_url_source": "Nightshift Console",
+    "runtime_token_source": "private environment or secret store",
+    "route_source": "GET /v1/models; Nemotron-backed lane must be verified",
+    "paid_fallback": false,
+    "fusion_enabled": false,
+    "max_concurrent_requests": 1,
+    "timeout_seconds": 180
+  },
+  "planner": {
+    "input_target_tokens": 8000,
+    "input_hard_tokens_per_request": 12000,
+    "output_hard_tokens_per_request_including_reasoning": 2048,
+    "visible_json_target_tokens": 800,
+    "max_model_http_requests_per_case_including_repairs": 10,
+    "max_input_tokens_per_case": 120000,
+    "max_output_tokens_per_case": 20480,
+    "max_total_tokens_per_case": 140480,
+    "max_replans": 2,
+    "max_repair_attempts_per_invalid_response": 1,
+    "case_wall_clock_seconds": 720
+  },
+  "tools": {
+    "max_business_actions": 8,
+    "max_physical_sql_requests_including_retries": 16,
+    "max_concurrent_sql_requests": 1,
+    "sql_latency_target_seconds_not_cancellation": 30,
+    "max_retries_per_action": 1,
+    "detail_rows_retained_per_query": 200,
+    "detail_overflow_probe_rows": 201,
+    "max_lookback_days": 7,
+    "max_graph_depth": 3,
+    "max_new_accounts_per_action": 5,
+    "max_accounts_per_case": 20,
+    "sql_client_response_timeout_seconds_not_server_cancellation": 180
+  },
+  "evidence_packet": {
+    "max_visible_transactions": 30,
+    "max_visible_nodes": 15,
+    "max_visible_summary_edges": 25,
+    "max_memory_tokens": 800,
+    "must_retain": [
+      "as_of",
+      "snapshot",
+      "budget",
+      "permissions",
+      "coverage",
+      "counterevidence",
+      "unresolved_questions"
+    ],
+    "limit_origin": "Project display defaults; not a free API/model entitlement; does not cap source aggregates",
+    "allow_retrieval_of_omitted_evidence": true
+  },
+  "markovian": {
+    "chunkSize": 16000,
+    "maxChunks": 10,
+    "carryoverTokens": 1024,
+    "overlapTokens": 0,
+    "reflect": false,
+    "provider_usage_is_separate_from_chunk_estimates": true,
+    "model_compressor_enabled_by_default": false,
+    "all_compressor_model_calls_share_request_budget": true
+  },
+  "evaluator": {
+    "online_validator": "deterministic_no_label_access",
+    "optional_llm_reviewer_enabled": false,
+    "optional_reviewer_max_requests_separate_budget": 2,
+    "minimum_validation_windows_for_experiment": 100,
+    "minimum_validation_positives_for_experiment": 10,
+    "production_promotion_implemented": false
+  },
+  "ownership": {
+    "markovian": "chunk orchestration, carryover compression and maxChunks; reuse official implementation",
+    "hmem": "memory storage and retrieval; host applies case/split/time scoping",
+    "nightshift": "model provider and routing; usage/budget capability requires actual version checks",
+    "project_adapter": "domain evidence selection, permissions, source completeness, exact usage reconciliation and tool budgets"
+  },
+  "initial_rule_builder": {
+    "status": "design_not_implemented",
+    "run_type": "bootstrap",
+    "max_model_http_requests_including_repairs_and_model_compression": 12,
+    "max_policy_indicators_per_generation_batch": 4,
+    "max_parameter_portfolios": 196,
+    "parameters_fitted_on": "development_only",
+    "validation": "frozen_independent_cohort",
+    "model_receives_ground_truth_labels": false,
+    "repeat_per_case": false,
+    "markovian_maxChunks": 12,
+    "reflect": false
+  }
+}

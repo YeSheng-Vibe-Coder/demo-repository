@@ -1,0 +1,17 @@
+{
+  "source_url": "https://www.kaggle.com/datasets/ealtman2019/ibm-transactions-for-anti-money-laundering-aml",
+  "source_version": 8,
+  "source_file": "HI-Large_Trans.csv",
+  "source_bytes": 17052760651,
+  "source_sha256": "d13635e297c64673826217631fb88d635c4f506052e1bde833895eda2a65c3f2",
+  "license": "CDLA-Sharing-1.0",
+  "csv_rows": 179702229,
+  "parquet_rows": 179702229,
+  "min_time": "2022-08-01 00:00:00",
+  "max_time": "2023-01-12 16:49:00",
+  "labelled_laundering_rows": 225546,
+  "parquet_bytes": 3840462057,
+  "parquet_files": 30,
+  "label_usage": "is_laundering is publisher ground truth for evaluation, not an investigation feature",
+  "transaction_id": "One-based row position in the original CSV, excluding header"
+}

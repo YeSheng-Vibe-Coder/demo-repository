@@ -1,0 +1,4 @@
+row_id,event_time,src_bank,src_account,dst_bank,dst_account,amount_received,receiving_currency,amount_paid,payment_currency,payment_format
+3596557,2022/09/08 19:19,0217125,8073CD950,0217125,8073CD950,15471.77,Euro,1410552.59,Ruble,ACH
+3596558,2022/09/08 19:19,0217125,8073CD950,0215803,806CBBE20,3057.54,Euro,3057.54,Euro,ACH
+3596559,2022/09/08 19:19,0217125,8073CD950,0215803,806CBBE20,12414.23,Euro,12414.23,Euro,ACH

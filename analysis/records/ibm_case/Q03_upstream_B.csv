@@ -1,0 +1,2 @@
+row_id,event_time,src_bank,src_account,dst_bank,dst_account,amount_received,receiving_currency,amount_paid,payment_currency,payment_format
+3596547,2022/09/07 16:53,0215803,806CBBE20,011107,80171C720,14546.79,US Dollar,14546.79,US Dollar,ACH

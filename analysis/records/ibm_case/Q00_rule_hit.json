@@ -1,0 +1,67 @@
+{
+  "query_id": "Q00_rule_hit",
+  "sql": "SELECT a.row_id AS incoming_row_id,b.row_id AS outgoing_row_id,\na.event_time AS incoming_time,b.event_time AS outgoing_time,\na.src_bank AS upstream_bank,a.src_account AS upstream_account,\na.dst_bank AS focal_bank,a.dst_account AS focal_account,\nb.dst_bank AS downstream_bank,b.dst_account AS downstream_account,\nROUND((julianday(replace(b.event_time,'/','-'))-julianday(replace(a.event_time,'/','-')))*24,6) AS gap_hours\nFROM transactions a JOIN transactions b ON a.dst_bank=b.src_bank AND a.dst_account=b.src_account\nWHERE b.src_bank=? AND b.src_account=?\nAND a.event_time>=? AND b.event_time>=? AND b.event_time<?\nAND b.event_time>a.event_time\nAND (julianday(replace(b.event_time,'/','-'))-julianday(replace(a.event_time,'/','-')))<=1\nAND a.payment_format IN ('ACH','Wire') AND b.payment_format IN ('ACH','Wire')\nAND NOT (a.src_bank=a.dst_bank AND a.src_account=a.dst_account)\nAND NOT (b.src_bank=b.dst_bank AND b.src_account=b.dst_account)\nORDER BY b.event_time,a.event_time,a.row_id,b.row_id",
+  "parameters": [
+    "002454",
+    "806E8ADD0",
+    "2022/09/07 00:00",
+    "2022/09/08 00:00",
+    "2022/09/09 00:00"
+  ],
+  "rows": [
+    {
+      "incoming_row_id": 3596552,
+      "outgoing_row_id": 3596555,
+      "incoming_time": "2022/09/08 12:38",
+      "outgoing_time": "2022/09/08 16:58",
+      "upstream_bank": "018200",
+      "upstream_account": "803118000",
+      "focal_bank": "002454",
+      "focal_account": "806E8ADD0",
+      "downstream_bank": "0217125",
+      "downstream_account": "8073CD950",
+      "gap_hours": 4.333333
+    },
+    {
+      "incoming_row_id": 3596552,
+      "outgoing_row_id": 3596556,
+      "incoming_time": "2022/09/08 12:38",
+      "outgoing_time": "2022/09/08 16:58",
+      "upstream_bank": "018200",
+      "upstream_account": "803118000",
+      "focal_bank": "002454",
+      "focal_account": "806E8ADD0",
+      "downstream_bank": "0217125",
+      "downstream_account": "8073CD950",
+      "gap_hours": 4.333333
+    },
+    {
+      "incoming_row_id": 3596553,
+      "outgoing_row_id": 3596555,
+      "incoming_time": "2022/09/08 12:38",
+      "outgoing_time": "2022/09/08 16:58",
+      "upstream_bank": "018200",
+      "upstream_account": "803118000",
+      "focal_bank": "002454",
+      "focal_account": "806E8ADD0",
+      "downstream_bank": "0217125",
+      "downstream_account": "8073CD950",
+      "gap_hours": 4.333333
+    },
+    {
+      "incoming_row_id": 3596553,
+      "outgoing_row_id": 3596556,
+      "incoming_time": "2022/09/08 12:38",
+      "outgoing_time": "2022/09/08 16:58",
+      "upstream_bank": "018200",
+      "upstream_account": "803118000",
+      "focal_bank": "002454",
+      "focal_account": "806E8ADD0",
+      "downstream_bank": "0217125",
+      "downstream_account": "8073CD950",
+      "gap_hours": 4.333333
+    }
+  ],
+  "complete": true,
+  "execution": "local SQLite against full official CSV; not Zetaris"
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "rule": "R01_large_amount_by_type_p99",
+    "evaluation_rows": 606500,
+    "alerts": 1878,
+    "labelled_fraud_captured": 839,
+    "precision_against_paysim_label": 0.44675186368477104,
+    "recall_against_paysim_label": 0.2236140724946695,
+    "note": "AML alerts are not equivalent to PaySim fraud labels."
+  },
+  {
+    "rule": "baseline_isFlaggedFraud",
+    "evaluation_rows": 606500,
+    "alerts": 12,
+    "labelled_fraud_captured": 12,
+    "precision_against_paysim_label": 1.0,
+    "recall_against_paysim_label": 0.0031982942430703624,
+    "note": "AML alerts are not equivalent to PaySim fraud labels."
+  },
+  {
+    "rule": "R02_transfer_fanin_5_senders_fixed_24h_bin",
+    "evaluation_rows": 606500,
+    "alerts": 0,
+    "labelled_fraud_captured": 0,
+    "precision_against_paysim_label": null,
+    "recall_against_paysim_label": 0.0,
+    "note": "AML alerts are not equivalent to PaySim fraud labels."
+  },
+  {
+    "rule": "R03_transfer_received_then_outgoing_1_to_24h",
+    "evaluation_rows": 606500,
+    "alerts": 1,
+    "labelled_fraud_captured": 0,
+    "precision_against_paysim_label": 0.0,
+    "recall_against_paysim_label": 0.0,
+    "note": "AML alerts are not equivalent to PaySim fraud labels."
+  }
+]

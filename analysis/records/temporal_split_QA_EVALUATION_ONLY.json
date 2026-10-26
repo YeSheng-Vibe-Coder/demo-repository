@@ -1,0 +1,30 @@
+{
+  "plan_sha256": "baf0339eb0bf4c0fcae1321592411d235122b8674b47d37db477b6ea96c9ea8f",
+  "plan_version": "temporal-cohort/1.0",
+  "query": "SELECT partition_name, COUNT(*) AS transactions, SUM(is_laundering) AS positives FROM (SELECT CASE WHEN transaction_time >= TIMESTAMP '2022-08-04 00:00:00' AND transaction_time < TIMESTAMP '2022-08-08 00:00:00' THEN 'development' WHEN transaction_time >= TIMESTAMP '2022-08-10 00:00:00' AND transaction_time < TIMESTAMP '2022-08-13 00:00:00' THEN 'validation' WHEN transaction_time >= TIMESTAMP '2022-08-15 00:00:00' AND transaction_time < TIMESTAMP '2022-08-18 00:00:00' THEN 'test' ELSE 'embargo' END AS partition_name, is_laundering FROM IBM_AML.hi_large_transactions WHERE transaction_time >= TIMESTAMP '2022-08-04 00:00:00' AND transaction_time < TIMESTAMP '2022-08-18 00:00:00') q GROUP BY partition_name ORDER BY partition_name",
+  "counts": {
+    "development": {
+      "transactions": 6605563,
+      "positives": 4184,
+      "positive_fraction": 0.0006334055098709981
+    },
+    "embargo": {
+      "transactions": 5517667,
+      "positives": 5000,
+      "positive_fraction": 0.0009061800938693835
+    },
+    "test": {
+      "transactions": 5788311,
+      "positives": 4685,
+      "positive_fraction": 0.0008093898202774523
+    },
+    "validation": {
+      "transactions": 6478471,
+      "positives": 4059,
+      "positive_fraction": 0.0006265367244832924
+    }
+  },
+  "partition_positive_minimum_pass": true,
+  "cost_scope": "Existing Azure VM compute; no LLM API, no new cloud resources",
+  "test_labels": "Aggregate enrollment QA only; no per-case test outcomes inspected"
+}

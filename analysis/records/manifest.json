@@ -1,0 +1,325 @@
+{
+  "purpose": "Preserved experiment records; hashes calculated during directory cleanup",
+  "files": [
+    {
+      "path": "CASE_CHAIN_transactions.csv",
+      "sha256": "c39728102ad65b5548d0e23e2626fb91b5bf1c9b84051f60df75ed38d897e588",
+      "bytes": 2182
+    },
+    {
+      "path": "CASE_FANIN_transactions.csv",
+      "sha256": "c9b41984e080e0f8cdd1824dd728260911cb9555107320510baeb0861ab7a0f8",
+      "bytes": 5274
+    },
+    {
+      "path": "CASE_LARGE_transactions.csv",
+      "sha256": "1844d7c9109345fc82fd1e6b33d8628e6e5146042e684d22317d0282d67e0ef6",
+      "bytes": 269
+    },
+    {
+      "path": "CASE_PRIORITY_transactions.csv",
+      "sha256": "6f96747c2fbfa0b1b1a07de35612400435e3e759c39fc75a09aeb6ec4b958283",
+      "bytes": 264
+    },
+    {
+      "path": "IMPLEMENTATION_VALIDATION_20261022.json",
+      "sha256": "0d4f1ef41110ed74858ef284bbe0a65841c9f78837e26d7a7dbc98ab0ca06ab4",
+      "bytes": 12222
+    },
+    {
+      "path": "PLANNER_VALIDATION_20261022.json",
+      "sha256": "ad909b252fb86aa04d21ae549111e116592b2469147b8c7611f49faa864add4d",
+      "bytes": 3884
+    },
+    {
+      "path": "RULE_CYCLE_VALIDATION_20261022.json",
+      "sha256": "94c8f339e7e4342544dbece227a5bcc4c081f6ee5c5b09c196c9344a0a3fd590",
+      "bytes": 3265
+    },
+    {
+      "path": "TARGETED_LEARNING_BENCHMARK_20261022.csv",
+      "sha256": "a18b712a51904cc6c63b063f58ec7f2c548f283b8ae045c4dee1bb80c044a026",
+      "bytes": 836
+    },
+    {
+      "path": "TARGETED_LEARNING_BENCHMARK_20261022.json",
+      "sha256": "02e7736899f1a5660cd53f088e3ccaa9a4319ef5176761dbaf744365f95ff502",
+      "bytes": 10751
+    },
+    {
+      "path": "amount_thresholds.json",
+      "sha256": "7ceaa6d993fd4a36c28443867b0cfdab712a4364aedbaf210abff55b73cc5dca",
+      "bytes": 139
+    },
+    {
+      "path": "data_manifest.json",
+      "sha256": "df4c32790aa3198d4de88e9bf5f0d1538dedc4a8d0fdc76b846cd1670a314070",
+      "bytes": 2110
+    },
+    {
+      "path": "demo_case_labels_EVALUATION_ONLY.json",
+      "sha256": "4886a0c93f45f084278c295f24afa91bba741b02843c51ce38846d8c3a223f9b",
+      "bytes": 424
+    },
+    {
+      "path": "demo_cases.json",
+      "sha256": "c17d28da6bf323c643d8d427fcae23e235889cc7e920d309bc62eeed746ce31f",
+      "bytes": 1405
+    },
+    {
+      "path": "fanin_top_groups.csv",
+      "sha256": "65d42295f09aa64c137996bfe3d61c555370d62094a3715a75e2479d6e9d0d43",
+      "bytes": 3774
+    },
+    {
+      "path": "hi_large_baseline_20261022_150632/result.json",
+      "sha256": "00a610bca09edeed0073a721ead3247f552f9b04da409e6c37ae58e93a113f35",
+      "bytes": 63595
+    },
+    {
+      "path": "hi_large_baseline_20261022_150632/queries.json",
+      "sha256": "324f903fc2e09e8fc9cdc88eea5d295e24504d5bc1fc74b4463dc97567c114b3",
+      "bytes": 16974
+    },
+    {
+      "path": "hi_large_baseline_20261022_150632/labels_EVALUATION_ONLY.json",
+      "sha256": "df5d9e6b14514a160878a7231cec614bf5dc0d765dd35f49be58e80305871c34",
+      "bytes": 367
+    },
+    {
+      "path": "hi_large_baseline_latest.json",
+      "sha256": "c40d13dcf7eff9f6f161177ced486b9138a9a3baa132ccfe63f3c55fa588c796",
+      "bytes": 112
+    },
+    {
+      "path": "hi_large_positive_check_20261022_151408/result.json",
+      "sha256": "5dfb261eed629c5acf34598b809e1e0989e36edcd4073ed53e8451aed4519e99",
+      "bytes": 42901
+    },
+    {
+      "path": "hi_large_positive_check_20261022_151408/queries.json",
+      "sha256": "a6390a1a55170b3c566cf3947f8b5351aca8933b0acb90e83843ccc9abca4673",
+      "bytes": 8158
+    },
+    {
+      "path": "hi_large_positive_check_20261022_151408/labels_EVALUATION_ONLY.json",
+      "sha256": "4b1a9eed1daa161401385123978aa38333e2742bd9110b437224a8868bba9781",
+      "bytes": 321
+    },
+    {
+      "path": "hi_large_positive_check_20261022_151408/cohort_selection_EVALUATION_ONLY.json",
+      "sha256": "d2b222997ce7c8c3abdaed2846c50e60902a6e15f0e99da1629e6fc80cdcb30e",
+      "bytes": 756
+    },
+    {
+      "path": "hi_large_positive_check_latest.json",
+      "sha256": "1209b0641b2bbd2a9157c06a110cb2de83f4e835738448a7acc7177335971804",
+      "bytes": 118
+    },
+    {
+      "path": "ibm_case/Q01_focus_D.csv",
+      "sha256": "4b2022abca66536a9e20bf283dbfcab3773a131e3c6b4988fc09c889ed8b2133",
+      "bytes": 638
+    },
+    {
+      "path": "ibm_case/Q01_focus_D.json",
+      "sha256": "58c8d159820b3c711169aeaab060d7666b282c3759a7f32e3e48970f2ffbb323",
+      "bytes": 2480
+    },
+    {
+      "path": "ibm_case/Q04_downstream_E.csv",
+      "sha256": "b20562a0e0f24b38603495d935e280bff65a6805d315d2dc91d9c00f841ef746",
+      "bytes": 423
+    },
+    {
+      "path": "ibm_case/Q05_all_five_accounts.json",
+      "sha256": "3cc03f38dbc227e482f6aed1bef157324c15d68bb425b0b51589c8b274cc95c8",
+      "bytes": 7168
+    },
+    {
+      "path": "ibm_case/pattern_row_mapping_EVALUATION_ONLY.json",
+      "sha256": "b672b1ebb5dc2b5f00a99aefe76a8e3df47c4c7e83791220f2354f3f21f95017",
+      "bytes": 854116
+    },
+    {
+      "path": "ibm_case/case_verification.json",
+      "sha256": "04a522aa674685462eeb68da4eed999e0b763d482d5d83ca83b4ecaaa4013be7",
+      "bytes": 8729
+    },
+    {
+      "path": "ibm_case/Q02_upstream_C.csv",
+      "sha256": "b2096dbe903c9928a4916d060ac0e5310f74181e53a7a3b009e4d642c9645158",
+      "bytes": 322
+    },
+    {
+      "path": "ibm_case/verified_cycle_transactions.csv",
+      "sha256": "c2236300c41ab3846e60e41f4e2e84c132a7328ba7ad0d48b4788aad1f7810ff",
+      "bytes": 630
+    },
+    {
+      "path": "ibm_case/Q03_upstream_B.json",
+      "sha256": "f332b25bde34b1502d0ddd1c7e458541c8363195e173a6593ac320bb117a2ff3",
+      "bytes": 898
+    },
+    {
+      "path": "ibm_case/Q00_rule_hit.json",
+      "sha256": "15b03981a59e66b7f17ac3a1bc5c07701fc49e394ebb2e574297027a3b736c28",
+      "bytes": 2925
+    },
+    {
+      "path": "ibm_case/Q00_rule_hit.csv",
+      "sha256": "0be8cb5ea856e10878368b5302f8dee21d26cf77d2c50fb189e053b84d862b67",
+      "bytes": 610
+    },
+    {
+      "path": "ibm_case/Q03_upstream_B.csv",
+      "sha256": "fae8250e919258a7ccd6d53f91347672c94d7287134394550986489c29b6aadd",
+      "bytes": 243
+    },
+    {
+      "path": "ibm_case/Q02_upstream_C.json",
+      "sha256": "23d1352ed8b30e335d0010c97fe05e2b93e9d734a076d4b1d8d2dee7a16a2898",
+      "bytes": 1257
+    },
+    {
+      "path": "ibm_case/Q05_all_five_accounts.csv",
+      "sha256": "ace108a3c900ee9e3140772c3f7a92c23834c7e95efa696a05f0e74dcd87e344",
+      "bytes": 1703
+    },
+    {
+      "path": "ibm_case/full_file_profile.json",
+      "sha256": "3afb13d99056e12ce1eb8107af466c111aaeeb173bcf851cb370277b0933f6a0",
+      "bytes": 1585
+    },
+    {
+      "path": "ibm_case/Q04_downstream_E.json",
+      "sha256": "d11022ae703d0429e0d12b07858c5c59bfc785a8121cfd87eda1e5c3b57fe652",
+      "bytes": 1640
+    },
+    {
+      "path": "ibm_comparison/full_cohort_adaptive_incident_counts.csv",
+      "sha256": "56354e12f2c78bf2e9ece5dac2d5297de734b972821579995f3a8c0cd425ef0f",
+      "bytes": 1462471
+    },
+    {
+      "path": "ibm_comparison/summary.json",
+      "sha256": "00194ad0a6b95fd8c87c7befcbaf59ff0f4598eaa88eec1e7df4c676f8601a15",
+      "bytes": 9238
+    },
+    {
+      "path": "ibm_comparison/full_cohort_fixed_incident_retrieved_ids.json",
+      "sha256": "452dfe638d36e9c3fe7165ed2e61e4cdf58b260b29cced35c9a0948853bdf2c4",
+      "bytes": 3252390
+    },
+    {
+      "path": "ibm_comparison/full_cohort_fixed_incident_counts.csv",
+      "sha256": "e833440997bd5b8fce21589bb6b1b3f4f0942060adf08eb8157669e45376a052",
+      "bytes": 1462652
+    },
+    {
+      "path": "ibm_comparison/per_case_metrics.csv",
+      "sha256": "07dd194693b6237b8d0c80af985ea6e56b08801e9501e783983ebd5dd1e9e39f",
+      "bytes": 521986
+    },
+    {
+      "path": "ibm_comparison/retrospective_pattern_runs_EVALUATION_ONLY.json",
+      "sha256": "ce4f6cf7ad65a97f6620a307acaca659bce37cee88221acaa475eaae8bd482ec",
+      "bytes": 6100711
+    },
+    {
+      "path": "ibm_comparison/full_cohort_adaptive_incident_retrieved_ids.json",
+      "sha256": "003e8fa7faa4cc91b47b77c09c1e8e8e99312106444e4685f85a639ba6aa133d",
+      "bytes": 3150148
+    },
+    {
+      "path": "ibm_comparison/full_cohort_coverage.json",
+      "sha256": "87d4dd0f56a9c41f517505b97f8b5d16b86da771be1925dd88a0a8daa95299c4",
+      "bytes": 2715
+    },
+    {
+      "path": "ibm_comparison/query_runs_LABEL_BLIND.json",
+      "sha256": "7a35057f7895dc984742b03d84b2495f768e05463934dd83382dcc02bfec5d03",
+      "bytes": 12609845
+    },
+    {
+      "path": "ibm_comparison/full_cohort_rule_only_retrieved_ids.json",
+      "sha256": "4f5cad8cf5aa89e926e9dbde351f32854d4fa977b80122ab5e33c7fbcbe2c214",
+      "bytes": 545028
+    },
+    {
+      "path": "ibm_comparison/representative_cases.json",
+      "sha256": "92905c71c73306a2a01941d12aa61732137b89fec5df854da9ecd14b1870df4c",
+      "bytes": 30581
+    },
+    {
+      "path": "ibm_comparison/full_cohort_rule_only_counts.csv",
+      "sha256": "da54217b2192c7cf08142fb73da4c7c2ccd3a2dc73cc6f289b45c4f1eb1bed7c",
+      "bytes": 1408052
+    },
+    {
+      "path": "ibm_comparison/validation.json",
+      "sha256": "59be03a3479f6bf034ae5c96a79796cf61ea1fbe111497176fc7fef03df419fc",
+      "bytes": 304
+    },
+    {
+      "path": "ibm_comparison/sample_manifest.json",
+      "sha256": "6ba31340c56ffb73eb003520c713824ab6206849cd7df16b20578de9c5f4a88e",
+      "bytes": 213931
+    },
+    {
+      "path": "ibm_comparison/threshold_diagnostics.json",
+      "sha256": "9ca188e513e5566cb243024599619a656834d4e0b81e1e7eb1d61a9fe2a38043",
+      "bytes": 2608
+    },
+    {
+      "path": "ibm_pattern_inspection_EVALUATION_ONLY.json",
+      "sha256": "372b73ed49a354713a36146ee6e050c3301ea87a0dac933fff2bf6fe26b0b0f5",
+      "bytes": 3024
+    },
+    {
+      "path": "profile.json",
+      "sha256": "678b013fe6575cb10fb944e56d87c7ace574e296aca0e56ea23b8291d016f576",
+      "bytes": 1641
+    },
+    {
+      "path": "prototype_fixture_run.json",
+      "sha256": "35db2320a9c9be37320246f6b308dd94ed106621d62e001d5b078c0210359d55",
+      "bytes": 42562
+    },
+    {
+      "path": "receive_then_send_pairs.csv",
+      "sha256": "1f438a1ecf5ba30ab7a7ea3b11593f98dd8a21cf7fa0a73ae9b8e60fa63ca8af",
+      "bytes": 3183
+    },
+    {
+      "path": "rule_metrics.json",
+      "sha256": "bd7e4ae8467933508187ce6128d6a1c944be9f84442f39be1960f588b7985601",
+      "bytes": 1228
+    },
+    {
+      "path": "rule_registry.json",
+      "sha256": "a2fd030eb99d0541283a2747b0d954e4a0cfeb217352b2ca612f353f1597b753",
+      "bytes": 3642
+    },
+    {
+      "path": "temporal_split_QA_EVALUATION_ONLY.json",
+      "sha256": "52877c653ff2731de826bda5c550d36e54b0ad635f96255158ce6f8795cc286c",
+      "bytes": 1625
+    },
+    {
+      "path": "temporal_type_counts.csv",
+      "sha256": "ab833708b184f6d60019e21c29299165c252ad491641d0700eea5b1a6ea89bb9",
+      "bytes": 319
+    },
+    {
+      "path": "transaction_types.csv",
+      "sha256": "9f50337ed1149f8ffbec1104e0c917d35f2b623507fc6e14bd6562232939ca1e",
+      "bytes": 198
+    },
+    {
+      "path": "workflow_html_validation.json",
+      "sha256": "181f2f8bd048c89dfc5a4a3c38afaf3b6b652ca901132a3f9aefc9b150b5aa73",
+      "bytes": 750
+    }
+  ]
+}

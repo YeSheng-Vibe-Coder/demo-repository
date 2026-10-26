@@ -1,0 +1,604 @@
+{
+  "$defs": {
+    "AccountVerdict": {
+      "additionalProperties": false,
+      "description": "Aggregator only: a verdict on one account of the reconstructed chain.",
+      "properties": {
+        "account_ref": {
+          "maxLength": 60,
+          "title": "Account Ref",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "maxItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "reason": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "suspicious",
+            "cleared",
+            "unknown"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        }
+      },
+      "required": [
+        "account_ref",
+        "verdict",
+        "reason"
+      ],
+      "title": "AccountVerdict",
+      "type": "object"
+    },
+    "Action": {
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "additionalProperties": true,
+          "title": "Arguments",
+          "type": "object"
+        },
+        "expected_observation": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Expected Observation",
+          "type": "string"
+        },
+        "question_id": {
+          "anyOf": [
+            {
+              "maximum": 4,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Question Id"
+        },
+        "tool": {
+          "enum": [
+            "get_alert_context",
+            "assess_risk",
+            "summarize_account",
+            "query_account_transactions",
+            "compare_account_baseline",
+            "query_between_accounts",
+            "check_structure",
+            "propose_rule_change"
+          ],
+          "title": "Tool",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool",
+        "arguments",
+        "expected_observation"
+      ],
+      "title": "Action",
+      "type": "object"
+    },
+    "ActionDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "based_on_state_version": {
+          "minimum": 0,
+          "title": "Based On State Version",
+          "type": "integer"
+        },
+        "brief_reason": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Brief Reason",
+          "type": "string"
+        },
+        "decision": {
+          "const": "action",
+          "title": "Decision",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "initial_plan": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 160,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 4,
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Initial Plan"
+        },
+        "next_action": {
+          "$ref": "#/$defs/Action"
+        },
+        "plan_version": {
+          "minimum": 1,
+          "title": "Plan Version",
+          "type": "integer"
+        },
+        "question_updates": {
+          "items": {
+            "$ref": "#/$defs/QuestionUpdate"
+          },
+          "maxItems": 3,
+          "title": "Question Updates",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "planner/1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "based_on_state_version",
+        "plan_version",
+        "brief_reason",
+        "evidence_refs",
+        "decision",
+        "next_action"
+      ],
+      "title": "ActionDecision",
+      "type": "object"
+    },
+    "CandidateDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "enum": [
+            "confirm",
+            "exclude",
+            "unknown"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "maxItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "reason": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        },
+        "transaction_id": {
+          "maxLength": 20,
+          "title": "Transaction Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "transaction_id",
+        "decision",
+        "reason"
+      ],
+      "title": "CandidateDecision",
+      "type": "object"
+    },
+    "FinishDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "account_verdicts": {
+          "items": {
+            "$ref": "#/$defs/AccountVerdict"
+          },
+          "maxItems": 12,
+          "title": "Account Verdicts",
+          "type": "array"
+        },
+        "based_on_state_version": {
+          "minimum": 0,
+          "title": "Based On State Version",
+          "type": "integer"
+        },
+        "brief_reason": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Brief Reason",
+          "type": "string"
+        },
+        "candidate_decisions": {
+          "items": {
+            "$ref": "#/$defs/CandidateDecision"
+          },
+          "maxItems": 12,
+          "title": "Candidate Decisions",
+          "type": "array"
+        },
+        "chain": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 6,
+          "title": "Chain",
+          "type": "array"
+        },
+        "conclusion": {
+          "enum": [
+            "suspicious",
+            "not_supported",
+            "insufficient_evidence"
+          ],
+          "title": "Conclusion",
+          "type": "string"
+        },
+        "counterevidence": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 2,
+          "title": "Counterevidence",
+          "type": "array"
+        },
+        "decision": {
+          "const": "finish",
+          "title": "Decision",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "initial_plan": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 160,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 4,
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Initial Plan"
+        },
+        "plan_version": {
+          "minimum": 1,
+          "title": "Plan Version",
+          "type": "integer"
+        },
+        "question_updates": {
+          "items": {
+            "$ref": "#/$defs/QuestionUpdate"
+          },
+          "maxItems": 3,
+          "title": "Question Updates",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "planner/1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stop_reason": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Stop Reason",
+          "type": "string"
+        },
+        "supported_findings": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Supported Findings",
+          "type": "array"
+        },
+        "suspect_transaction_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Suspect Transaction Ids",
+          "type": "array"
+        },
+        "suspicion": {
+          "default": "low",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "title": "Suspicion",
+          "type": "string"
+        },
+        "transaction_claims": {
+          "items": {
+            "$ref": "#/$defs/TransferClaim"
+          },
+          "maxItems": 3,
+          "title": "Transaction Claims",
+          "type": "array"
+        },
+        "unresolved_questions": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Unresolved Questions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "based_on_state_version",
+        "plan_version",
+        "brief_reason",
+        "evidence_refs",
+        "decision",
+        "conclusion",
+        "stop_reason"
+      ],
+      "title": "FinishDecision",
+      "type": "object"
+    },
+    "QuestionUpdate": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_refs": {
+          "items": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "maxItems": 2,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "note": {
+          "default": "",
+          "maxLength": 120,
+          "title": "Note",
+          "type": "string"
+        },
+        "question_id": {
+          "maximum": 4,
+          "minimum": 1,
+          "title": "Question Id",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "open",
+            "answered",
+            "unanswerable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "question_id",
+        "status"
+      ],
+      "title": "QuestionUpdate",
+      "type": "object"
+    },
+    "ReplanDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "based_on_state_version": {
+          "minimum": 0,
+          "title": "Based On State Version",
+          "type": "integer"
+        },
+        "brief_reason": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Brief Reason",
+          "type": "string"
+        },
+        "decision": {
+          "const": "replan",
+          "title": "Decision",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "initial_plan": {
+          "anyOf": [
+            {
+              "items": {
+                "maxLength": 160,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 4,
+              "minItems": 1,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Initial Plan"
+        },
+        "next_action": {
+          "$ref": "#/$defs/Action"
+        },
+        "plan_patch": {
+          "items": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 4,
+          "minItems": 1,
+          "title": "Plan Patch",
+          "type": "array"
+        },
+        "plan_version": {
+          "minimum": 1,
+          "title": "Plan Version",
+          "type": "integer"
+        },
+        "previous_plan_version": {
+          "minimum": 1,
+          "title": "Previous Plan Version",
+          "type": "integer"
+        },
+        "question_updates": {
+          "items": {
+            "$ref": "#/$defs/QuestionUpdate"
+          },
+          "maxItems": 3,
+          "title": "Question Updates",
+          "type": "array"
+        },
+        "reason": {
+          "enum": [
+            "hypothesis_refuted",
+            "new_branch",
+            "direction_exhausted",
+            "budget_low",
+            "other"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "planner/1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "based_on_state_version",
+        "plan_version",
+        "brief_reason",
+        "evidence_refs",
+        "decision",
+        "reason",
+        "previous_plan_version",
+        "plan_patch",
+        "next_action"
+      ],
+      "title": "ReplanDecision",
+      "type": "object"
+    },
+    "TransferClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_refs": {
+          "items": {
+            "maxLength": 40,
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "from_account_ref": {
+          "maxLength": 130,
+          "title": "From Account Ref",
+          "type": "string"
+        },
+        "to_account_ref": {
+          "maxLength": 130,
+          "title": "To Account Ref",
+          "type": "string"
+        },
+        "transaction_id": {
+          "maxLength": 20,
+          "title": "Transaction Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "transaction_id",
+        "from_account_ref",
+        "to_account_ref",
+        "evidence_refs"
+      ],
+      "title": "TransferClaim",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "action": "#/$defs/ActionDecision",
+      "finish": "#/$defs/FinishDecision",
+      "replan": "#/$defs/ReplanDecision"
+    },
+    "propertyName": "decision"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/ActionDecision"
+    },
+    {
+      "$ref": "#/$defs/ReplanDecision"
+    },
+    {
+      "$ref": "#/$defs/FinishDecision"
+    }
+  ]
+}

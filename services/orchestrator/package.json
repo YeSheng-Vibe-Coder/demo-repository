@@ -1,0 +1,13 @@
+{
+  "name": "aml-orchestrator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "run": "node --experimental-transform-types worker.ts",
+    "test": "node --experimental-transform-types --test worker.test.ts",
+    "check": "tsc --noEmit --allowImportingTsExtensions --module NodeNext --moduleResolution NodeNext --target ES2023 --esModuleInterop --strict --skipLibCheck worker.ts worker.test.ts"
+  },
+  "devDependencies": {"typescript": "5.9.3", "@types/node": "24.9.1"},
+  "engines": {"node": ">=22.7"}
+}
+

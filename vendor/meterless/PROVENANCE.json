@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/Meterless/Meterless",
+  "commit": "1742dec56a66e58eef9dda2d2b865823758ca8cd",
+  "license": "Apache-2.0",
+  "purpose": "Unmodified reference engines; not a production SDK",
+  "engines": {
+    "markovian": "engines/markovian/src",
+    "hmem": "engines/hmem/src",
+    "world-model": "engines/world-model/reference/src (+conformance, AGENTS.md); conformance 8/8 under node --experimental-transform-types"
+  }
+}

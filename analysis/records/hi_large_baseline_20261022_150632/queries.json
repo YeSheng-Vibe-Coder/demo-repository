@@ -1,0 +1,178 @@
+[
+  {
+    "purpose": "label_blind_account_selection",
+    "sql": "SELECT from_bank, from_account, COUNT(*) AS n FROM aml.transactions\nWHERE transaction_id <= 100000 AND transaction_time < TIMESTAMP '2022-08-02 00:00:00'\nAND payment_format IN ('ACH','Wire') AND (from_bank <> to_bank OR from_account <> to_account)\nGROUP BY from_bank, from_account ORDER BY n DESC, from_bank, from_account LIMIT 5",
+    "limit": 5,
+    "row_count": 5,
+    "elapsed_seconds": 1.346,
+    "response_sha256": "08a4006ca291b0fb6f1a2445468dd4bd6ff7335ced95c3785009096f325f6568"
+  },
+  {
+    "purpose": "011798/800EA1EB0 incoming 2022/08/02 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE to_bank='011798' AND to_account='800EA1EB0' AND transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 3,
+    "elapsed_seconds": 14.529,
+    "response_sha256": "b13cf72e2efe8d445151c00b919c8585354868d8ae98808863de6d57dfb0fcae"
+  },
+  {
+    "purpose": "011798/800EA1EB0 outgoing 2022/08/02 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE from_bank='011798' AND from_account='800EA1EB0' AND transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 10,
+    "elapsed_seconds": 13.682,
+    "response_sha256": "6efcf4ac955db15eb32996afe169e8952ecec36ccf8d9aab5162240697cfb3c8"
+  },
+  {
+    "purpose": "00214/80042CAE0 incoming 2022/08/02 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE to_bank='00214' AND to_account='80042CAE0' AND transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 4,
+    "elapsed_seconds": 13.492,
+    "response_sha256": "ec00c41ca27cd25842368a2214a068114fafc69d067bd82a54b917fe386c65cf"
+  },
+  {
+    "purpose": "00214/80042CAE0 outgoing 2022/08/02 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE from_bank='00214' AND from_account='80042CAE0' AND transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 28,
+    "elapsed_seconds": 13.411,
+    "response_sha256": "f0a1df136b37ba0e6cd94ff9283203e24e501609b59f9b9319ff3d2a36160df9"
+  },
+  {
+    "purpose": "004548/801E21880 incoming 2022/08/02 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE to_bank='004548' AND to_account='801E21880' AND transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 2,
+    "elapsed_seconds": 12.794,
+    "response_sha256": "75ef8fc55d2ef5f334a6aa63cae84bfff778f56f44ffe2449a6a06609376a954"
+  },
+  {
+    "purpose": "004548/801E21880 outgoing 2022/08/02 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE from_bank='004548' AND from_account='801E21880' AND transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 3,
+    "elapsed_seconds": 12.594,
+    "response_sha256": "cbb0779e091d135d0b402eb6d4f8062c01ec02c95e13ff66fb9e2a4e6bf2bc9c"
+  },
+  {
+    "purpose": "011032/8027C22F0 incoming 2022/08/02 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE to_bank='011032' AND to_account='8027C22F0' AND transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 5,
+    "elapsed_seconds": 12.508,
+    "response_sha256": "1be23579f652e11ee5ed1c96fe5cc78ec748b2d71e4193476b07025bc291c406"
+  },
+  {
+    "purpose": "011032/8027C22F0 outgoing 2022/08/02 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE from_bank='011032' AND from_account='8027C22F0' AND transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 9,
+    "elapsed_seconds": 12.47,
+    "response_sha256": "fdf11ad59ba898350b085f2b09d3666904618088188aebd681a95d0c8eb8081a"
+  },
+  {
+    "purpose": "0111736/804F0BAD0 incoming 2022/08/02 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE to_bank='0111736' AND to_account='804F0BAD0' AND transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 3,
+    "elapsed_seconds": 12.591,
+    "response_sha256": "d8d0fe244bc1f15fc0e657a0e1408fdc5f81e46c737dd0a5d16f91446631223d"
+  },
+  {
+    "purpose": "0111736/804F0BAD0 outgoing 2022/08/02 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE from_bank='0111736' AND from_account='804F0BAD0' AND transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 6,
+    "elapsed_seconds": 12.35,
+    "response_sha256": "9498c19dfe35af0c5d929ed319478d6e65069bd6a486b1b55be8410a8d89da8d"
+  },
+  {
+    "purpose": "011798/800EA1EB0 incoming 2022/08/03 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE to_bank='011798' AND to_account='800EA1EB0' AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 2,
+    "elapsed_seconds": 12.527,
+    "response_sha256": "0f1c59e4a2e5a19e83d6f1df7770e47593336356fa2f2004913aace1a5e8c33a"
+  },
+  {
+    "purpose": "011798/800EA1EB0 outgoing 2022/08/03 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE from_bank='011798' AND from_account='800EA1EB0' AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 10,
+    "elapsed_seconds": 12.492,
+    "response_sha256": "f8b1d87ac29038df98c984ee8995b0a443e6b7e54d4edb14214aa271cfee5d50"
+  },
+  {
+    "purpose": "00214/80042CAE0 incoming 2022/08/03 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE to_bank='00214' AND to_account='80042CAE0' AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 4,
+    "elapsed_seconds": 12.595,
+    "response_sha256": "0e64afe875ea07c8795ea97bcae966010643c2b35f5974d43e797224aecfbd36"
+  },
+  {
+    "purpose": "00214/80042CAE0 outgoing 2022/08/03 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE from_bank='00214' AND from_account='80042CAE0' AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 28,
+    "elapsed_seconds": 12.279,
+    "response_sha256": "8a3a778b9547e6c457576501575b47e51a078865bda79ff6ff52ce90ead238b1"
+  },
+  {
+    "purpose": "004548/801E21880 incoming 2022/08/03 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE to_bank='004548' AND to_account='801E21880' AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 2,
+    "elapsed_seconds": 12.183,
+    "response_sha256": "1b37d576681b6edda3cb40428cb8ba78fce97f264708e42d15aaa736c5ca0f81"
+  },
+  {
+    "purpose": "004548/801E21880 outgoing 2022/08/03 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE from_bank='004548' AND from_account='801E21880' AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 3,
+    "elapsed_seconds": 12.226,
+    "response_sha256": "97e510a59bb0ee3da6054dbcceb559f7305b33c1c147ba979cfee0bdf32d13f4"
+  },
+  {
+    "purpose": "011032/8027C22F0 incoming 2022/08/03 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE to_bank='011032' AND to_account='8027C22F0' AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 5,
+    "elapsed_seconds": 12.21,
+    "response_sha256": "07c31490d1ab938f0ee2027b7a08073ea7ceb2e99070270aa905a9037f88a892"
+  },
+  {
+    "purpose": "011032/8027C22F0 outgoing 2022/08/03 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE from_bank='011032' AND from_account='8027C22F0' AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 9,
+    "elapsed_seconds": 12.354,
+    "response_sha256": "4fb08b3bdbde7613bb44214e180eacc93a1616acfb27b8c54d6d9a058c740e8a"
+  },
+  {
+    "purpose": "0111736/804F0BAD0 incoming 2022/08/03 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE to_bank='0111736' AND to_account='804F0BAD0' AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 3,
+    "elapsed_seconds": 12.319,
+    "response_sha256": "6267715fae5c8ae55246517ac3018fa6a5fd4375a31783aa13ce1b64e14bad0a"
+  },
+  {
+    "purpose": "0111736/804F0BAD0 outgoing 2022/08/03 00:00",
+    "sql": "SELECT transaction_id, transaction_time, from_bank, from_account, to_bank, to_account FROM aml.transactions WHERE from_bank='0111736' AND from_account='804F0BAD0' AND transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' ORDER BY transaction_time, transaction_id LIMIT 201",
+    "limit": 201,
+    "row_count": 6,
+    "elapsed_seconds": 12.415,
+    "response_sha256": "c5720b398ddc1c16c687223dec47f2cbe27583dba5a4f423baf9133195652df1"
+  },
+  {
+    "purpose": "evaluation_only_labels_after_all_cases",
+    "sql": "SELECT MAX(CASE WHEN transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' AND ((from_bank='011798' AND from_account='800EA1EB0') OR (to_bank='011798' AND to_account='800EA1EB0')) THEN is_laundering ELSE 0 END) AS c0, MAX(CASE WHEN transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' AND ((from_bank='00214' AND from_account='80042CAE0') OR (to_bank='00214' AND to_account='80042CAE0')) THEN is_laundering ELSE 0 END) AS c1, MAX(CASE WHEN transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' AND ((from_bank='004548' AND from_account='801E21880') OR (to_bank='004548' AND to_account='801E21880')) THEN is_laundering ELSE 0 END) AS c2, MAX(CASE WHEN transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' AND ((from_bank='011032' AND from_account='8027C22F0') OR (to_bank='011032' AND to_account='8027C22F0')) THEN is_laundering ELSE 0 END) AS c3, MAX(CASE WHEN transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' AND ((from_bank='0111736' AND from_account='804F0BAD0') OR (to_bank='0111736' AND to_account='804F0BAD0')) THEN is_laundering ELSE 0 END) AS c4, MAX(CASE WHEN transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' AND ((from_bank='011798' AND from_account='800EA1EB0') OR (to_bank='011798' AND to_account='800EA1EB0')) THEN is_laundering ELSE 0 END) AS c5, MAX(CASE WHEN transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' AND ((from_bank='00214' AND from_account='80042CAE0') OR (to_bank='00214' AND to_account='80042CAE0')) THEN is_laundering ELSE 0 END) AS c6, MAX(CASE WHEN transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' AND ((from_bank='004548' AND from_account='801E21880') OR (to_bank='004548' AND to_account='801E21880')) THEN is_laundering ELSE 0 END) AS c7, MAX(CASE WHEN transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' AND ((from_bank='011032' AND from_account='8027C22F0') OR (to_bank='011032' AND to_account='8027C22F0')) THEN is_laundering ELSE 0 END) AS c8, MAX(CASE WHEN transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' AND ((from_bank='0111736' AND from_account='804F0BAD0') OR (to_bank='0111736' AND to_account='804F0BAD0')) THEN is_laundering ELSE 0 END) AS c9 FROM IBM_AML.hi_large_transactions WHERE (transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' AND ((from_bank='011798' AND from_account='800EA1EB0') OR (to_bank='011798' AND to_account='800EA1EB0'))) OR (transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' AND ((from_bank='00214' AND from_account='80042CAE0') OR (to_bank='00214' AND to_account='80042CAE0'))) OR (transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' AND ((from_bank='004548' AND from_account='801E21880') OR (to_bank='004548' AND to_account='801E21880'))) OR (transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' AND ((from_bank='011032' AND from_account='8027C22F0') OR (to_bank='011032' AND to_account='8027C22F0'))) OR (transaction_time >= TIMESTAMP '2022-08-02 00:00:00' AND transaction_time < TIMESTAMP '2022-08-03 00:00:00' AND ((from_bank='0111736' AND from_account='804F0BAD0') OR (to_bank='0111736' AND to_account='804F0BAD0'))) OR (transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' AND ((from_bank='011798' AND from_account='800EA1EB0') OR (to_bank='011798' AND to_account='800EA1EB0'))) OR (transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' AND ((from_bank='00214' AND from_account='80042CAE0') OR (to_bank='00214' AND to_account='80042CAE0'))) OR (transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' AND ((from_bank='004548' AND from_account='801E21880') OR (to_bank='004548' AND to_account='801E21880'))) OR (transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' AND ((from_bank='011032' AND from_account='8027C22F0') OR (to_bank='011032' AND to_account='8027C22F0'))) OR (transaction_time >= TIMESTAMP '2022-08-03 00:00:00' AND transaction_time < TIMESTAMP '2022-08-04 00:00:00' AND ((from_bank='0111736' AND from_account='804F0BAD0') OR (to_bank='0111736' AND to_account='804F0BAD0')))",
+    "limit": 1,
+    "row_count": 1,
+    "elapsed_seconds": 16.874,
+    "response_sha256": "11b1ed93160c8238b0c340b25dc9013f12ae4899c63f3d7356e546d0ce67c7d2"
+  }
+]

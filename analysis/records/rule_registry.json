@@ -1,0 +1,128 @@
+[
+  {
+    "rule_id": "R01",
+    "source": "P01",
+    "name": "同类大额转账/提现",
+    "coverage": "partial",
+    "status": "validated_on_full_file",
+    "template": "amount_above_type_quantile",
+    "fields": [
+      "type",
+      "amount",
+      "step"
+    ],
+    "parameters": {
+      "quantile": 0.99,
+      "calibration_step_max": 399,
+      "evaluation_step_min": 400,
+      "types": [
+        "TRANSFER",
+        "CASH_OUT"
+      ]
+    },
+    "parameter_basis": "project-defined; not an AUSTRAC threshold",
+    "missing_context": [
+      "customer profile",
+      "economic rationale"
+    ],
+    "limitation": "Only high amount is operationalised; does not establish fraud."
+  },
+  {
+    "rule_id": "R02",
+    "source": "P02",
+    "name": "多方汇入同一账户",
+    "coverage": "partial",
+    "status": "validated_exploratory_only",
+    "template": "transfer_fanin_fixed_bins",
+    "fields": [
+      "type",
+      "nameOrig",
+      "nameDest",
+      "step",
+      "amount"
+    ],
+    "parameters": {
+      "window": "floor((step-1)/24), fixed non-overlapping bins",
+      "min_senders": 5,
+      "type": "TRANSFER"
+    },
+    "parameter_basis": "project-defined; no official numeric threshold",
+    "missing_context": [
+      "depositor identity",
+      "beneficial ownership",
+      "customer expected activity"
+    ],
+    "limitation": "Distinct account IDs do not prove unrelated people. Fixed bins miss boundary-spanning patterns; no alerts in evaluation split."
+  },
+  {
+    "rule_id": "R03",
+    "source": "P03",
+    "name": "收款后后续小时转出",
+    "coverage": "partial",
+    "status": "limited_nonfraud_examples",
+    "template": "transfer_in_then_out",
+    "fields": [
+      "type",
+      "nameOrig",
+      "nameDest",
+      "step",
+      "amount"
+    ],
+    "parameters": {
+      "incoming_type": "TRANSFER",
+      "outgoing_types": [
+        "TRANSFER",
+        "CASH_OUT"
+      ],
+      "min_gap_steps": 1,
+      "max_gap_steps": 24
+    },
+    "parameter_basis": "project-defined hourly approximation",
+    "missing_context": [
+      "minute timestamps",
+      "fund attribution",
+      "economic rationale"
+    ],
+    "limitation": "No proof that incoming funds financed outgoing funds. Same-step ordering unknown. No linked rows labelled fraud."
+  },
+  {
+    "rule_id": "R04",
+    "source": "P04",
+    "name": "偏离付款账户长期历史",
+    "coverage": "insufficient",
+    "status": "not_recommended",
+    "reason": "Full file contains at most three rows per origin account; robust personal history unavailable."
+  },
+  {
+    "rule_id": "R05",
+    "source": "P05",
+    "name": "跨多日频繁提现",
+    "coverage": "limited",
+    "status": "not_recommended_as_main_demo",
+    "reason": "Some origins cash out in two day bins, but account histories are too sparse to establish frequent behaviour."
+  },
+  {
+    "rule_id": "R06",
+    "source": "P06",
+    "name": "身份变更后大额提现",
+    "coverage": "unsupported",
+    "status": "missing_fields",
+    "reason": "No identity change, email, phone or login event records."
+  },
+  {
+    "rule_id": "R07",
+    "source": "P07",
+    "name": "高风险地区转账",
+    "coverage": "unsupported",
+    "status": "missing_fields",
+    "reason": "No country, jurisdiction, cross-border classification or currency field."
+  },
+  {
+    "rule_id": "R08",
+    "source": "P08",
+    "name": "规避澳元现金报告阈值",
+    "coverage": "unsupported",
+    "status": "missing_context",
+    "reason": "PaySim local currency is not identified as AUD; cash transaction/reportability semantics and intent unavailable. Do not apply AUD 10000."
+  }
+]

@@ -1,0 +1,1975 @@
+{
+  "mode": "deterministic_no_llm",
+  "dataset": "synthetic_contract_fixture",
+  "rules": {
+    "baseline": {
+      "id": "transit",
+      "version": 1,
+      "policy_refs": [
+        "R01",
+        "R02"
+      ],
+      "conditions": [
+        {
+          "feature": "rapid_transit",
+          "op": ">=",
+          "value": 1
+        }
+      ],
+      "combine": "all"
+    },
+    "candidate": {
+      "id": "transit",
+      "version": 2,
+      "policy_refs": [
+        "R01",
+        "R02",
+        "R03"
+      ],
+      "conditions": [
+        {
+          "feature": "rapid_transit",
+          "op": ">=",
+          "value": 1
+        },
+        {
+          "feature": "source_count",
+          "op": ">=",
+          "value": 2
+        }
+      ],
+      "combine": "all"
+    }
+  },
+  "cases": [
+    {
+      "account": [
+        "001",
+        "source0"
+      ],
+      "start": "2022/09/02 00:00",
+      "as_of": "2022/09/03 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "empty",
+          "complete": true,
+          "rows": [],
+          "scope": [
+            [
+              "001",
+              "source0"
+            ],
+            "incoming",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              11,
+              "2022/09/02 01:00",
+              "001",
+              "source0",
+              "002",
+              "focus0"
+            ]
+          ],
+          "scope": [
+            [
+              "001",
+              "source0"
+            ],
+            "outgoing",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "empty",
+          "complete": true,
+          "evidence_ids": []
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            11
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 0,
+        "outgoing_count": 1,
+        "source_count": 0,
+        "rapid_transit": 0
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "development:001:source0",
+      "split": "development"
+    },
+    {
+      "account": [
+        "001",
+        "source1"
+      ],
+      "start": "2022/09/02 00:00",
+      "as_of": "2022/09/03 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "empty",
+          "complete": true,
+          "rows": [],
+          "scope": [
+            [
+              "001",
+              "source1"
+            ],
+            "incoming",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              13,
+              "2022/09/02 01:00",
+              "001",
+              "source1",
+              "002",
+              "focus1"
+            ]
+          ],
+          "scope": [
+            [
+              "001",
+              "source1"
+            ],
+            "outgoing",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "empty",
+          "complete": true,
+          "evidence_ids": []
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            13
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 0,
+        "outgoing_count": 1,
+        "source_count": 0,
+        "rapid_transit": 0
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "development:001:source1",
+      "split": "development"
+    },
+    {
+      "account": [
+        "001",
+        "source2"
+      ],
+      "start": "2022/09/02 00:00",
+      "as_of": "2022/09/03 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "empty",
+          "complete": true,
+          "rows": [],
+          "scope": [
+            [
+              "001",
+              "source2"
+            ],
+            "incoming",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              15,
+              "2022/09/02 01:00",
+              "001",
+              "source2",
+              "002",
+              "focus2"
+            ]
+          ],
+          "scope": [
+            [
+              "001",
+              "source2"
+            ],
+            "outgoing",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "empty",
+          "complete": true,
+          "evidence_ids": []
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            15
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 0,
+        "outgoing_count": 1,
+        "source_count": 0,
+        "rapid_transit": 0
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "development:001:source2",
+      "split": "development"
+    },
+    {
+      "account": [
+        "001",
+        "source3"
+      ],
+      "start": "2022/09/02 00:00",
+      "as_of": "2022/09/03 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "empty",
+          "complete": true,
+          "rows": [],
+          "scope": [
+            [
+              "001",
+              "source3"
+            ],
+            "incoming",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              17,
+              "2022/09/02 01:00",
+              "001",
+              "source3",
+              "002",
+              "focus3"
+            ]
+          ],
+          "scope": [
+            [
+              "001",
+              "source3"
+            ],
+            "outgoing",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "empty",
+          "complete": true,
+          "evidence_ids": []
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            17
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 0,
+        "outgoing_count": 1,
+        "source_count": 0,
+        "rapid_transit": 0
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "development:001:source3",
+      "split": "development"
+    },
+    {
+      "account": [
+        "001",
+        "source4"
+      ],
+      "start": "2022/09/02 00:00",
+      "as_of": "2022/09/03 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "empty",
+          "complete": true,
+          "rows": [],
+          "scope": [
+            [
+              "001",
+              "source4"
+            ],
+            "incoming",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              19,
+              "2022/09/02 01:00",
+              "001",
+              "source4",
+              "002",
+              "focus4"
+            ]
+          ],
+          "scope": [
+            [
+              "001",
+              "source4"
+            ],
+            "outgoing",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "empty",
+          "complete": true,
+          "evidence_ids": []
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            19
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 0,
+        "outgoing_count": 1,
+        "source_count": 0,
+        "rapid_transit": 0
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "development:001:source4",
+      "split": "development"
+    },
+    {
+      "account": [
+        "002",
+        "focus0"
+      ],
+      "start": "2022/09/02 00:00",
+      "as_of": "2022/09/03 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              11,
+              "2022/09/02 01:00",
+              "001",
+              "source0",
+              "002",
+              "focus0"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus0"
+            ],
+            "incoming",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              12,
+              "2022/09/02 02:00",
+              "002",
+              "focus0",
+              "003",
+              "dest0"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus0"
+            ],
+            "outgoing",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            11
+          ]
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            12
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 1,
+        "outgoing_count": 1,
+        "source_count": 1,
+        "rapid_transit": 1
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [
+          [
+            11,
+            12
+          ]
+        ],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "development:002:focus0",
+      "split": "development"
+    },
+    {
+      "account": [
+        "002",
+        "focus1"
+      ],
+      "start": "2022/09/02 00:00",
+      "as_of": "2022/09/03 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              13,
+              "2022/09/02 01:00",
+              "001",
+              "source1",
+              "002",
+              "focus1"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus1"
+            ],
+            "incoming",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              14,
+              "2022/09/02 02:00",
+              "002",
+              "focus1",
+              "003",
+              "dest1"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus1"
+            ],
+            "outgoing",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            13
+          ]
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            14
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 1,
+        "outgoing_count": 1,
+        "source_count": 1,
+        "rapid_transit": 1
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [
+          [
+            13,
+            14
+          ]
+        ],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "development:002:focus1",
+      "split": "development"
+    },
+    {
+      "account": [
+        "002",
+        "focus2"
+      ],
+      "start": "2022/09/02 00:00",
+      "as_of": "2022/09/03 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              15,
+              "2022/09/02 01:00",
+              "001",
+              "source2",
+              "002",
+              "focus2"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus2"
+            ],
+            "incoming",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              16,
+              "2022/09/02 02:00",
+              "002",
+              "focus2",
+              "003",
+              "dest2"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus2"
+            ],
+            "outgoing",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            15
+          ]
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            16
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 1,
+        "outgoing_count": 1,
+        "source_count": 1,
+        "rapid_transit": 1
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [
+          [
+            15,
+            16
+          ]
+        ],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "development:002:focus2",
+      "split": "development"
+    },
+    {
+      "account": [
+        "002",
+        "focus3"
+      ],
+      "start": "2022/09/02 00:00",
+      "as_of": "2022/09/03 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              17,
+              "2022/09/02 01:00",
+              "001",
+              "source3",
+              "002",
+              "focus3"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus3"
+            ],
+            "incoming",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              18,
+              "2022/09/02 02:00",
+              "002",
+              "focus3",
+              "003",
+              "dest3"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus3"
+            ],
+            "outgoing",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            17
+          ]
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            18
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 1,
+        "outgoing_count": 1,
+        "source_count": 1,
+        "rapid_transit": 1
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [
+          [
+            17,
+            18
+          ]
+        ],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "development:002:focus3",
+      "split": "development"
+    },
+    {
+      "account": [
+        "002",
+        "focus4"
+      ],
+      "start": "2022/09/02 00:00",
+      "as_of": "2022/09/03 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              19,
+              "2022/09/02 01:00",
+              "001",
+              "source4",
+              "002",
+              "focus4"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus4"
+            ],
+            "incoming",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              20,
+              "2022/09/02 02:00",
+              "002",
+              "focus4",
+              "003",
+              "dest4"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus4"
+            ],
+            "outgoing",
+            "2022/09/02 00:00",
+            "2022/09/03 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            19
+          ]
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            20
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 1,
+        "outgoing_count": 1,
+        "source_count": 1,
+        "rapid_transit": 1
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [
+          [
+            19,
+            20
+          ]
+        ],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "development:002:focus4",
+      "split": "development"
+    },
+    {
+      "account": [
+        "001",
+        "source0"
+      ],
+      "start": "2022/09/03 00:00",
+      "as_of": "2022/09/04 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "empty",
+          "complete": true,
+          "rows": [],
+          "scope": [
+            [
+              "001",
+              "source0"
+            ],
+            "incoming",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              21,
+              "2022/09/03 01:00",
+              "001",
+              "source0",
+              "002",
+              "focus0"
+            ]
+          ],
+          "scope": [
+            [
+              "001",
+              "source0"
+            ],
+            "outgoing",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "empty",
+          "complete": true,
+          "evidence_ids": []
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            21
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 0,
+        "outgoing_count": 1,
+        "source_count": 0,
+        "rapid_transit": 0
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "validation:001:source0",
+      "split": "validation"
+    },
+    {
+      "account": [
+        "001",
+        "source1"
+      ],
+      "start": "2022/09/03 00:00",
+      "as_of": "2022/09/04 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "empty",
+          "complete": true,
+          "rows": [],
+          "scope": [
+            [
+              "001",
+              "source1"
+            ],
+            "incoming",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              23,
+              "2022/09/03 01:00",
+              "001",
+              "source1",
+              "002",
+              "focus1"
+            ]
+          ],
+          "scope": [
+            [
+              "001",
+              "source1"
+            ],
+            "outgoing",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "empty",
+          "complete": true,
+          "evidence_ids": []
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            23
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 0,
+        "outgoing_count": 1,
+        "source_count": 0,
+        "rapid_transit": 0
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "validation:001:source1",
+      "split": "validation"
+    },
+    {
+      "account": [
+        "001",
+        "source2"
+      ],
+      "start": "2022/09/03 00:00",
+      "as_of": "2022/09/04 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "empty",
+          "complete": true,
+          "rows": [],
+          "scope": [
+            [
+              "001",
+              "source2"
+            ],
+            "incoming",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              25,
+              "2022/09/03 01:00",
+              "001",
+              "source2",
+              "002",
+              "focus2"
+            ]
+          ],
+          "scope": [
+            [
+              "001",
+              "source2"
+            ],
+            "outgoing",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "empty",
+          "complete": true,
+          "evidence_ids": []
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            25
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 0,
+        "outgoing_count": 1,
+        "source_count": 0,
+        "rapid_transit": 0
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "validation:001:source2",
+      "split": "validation"
+    },
+    {
+      "account": [
+        "001",
+        "source3"
+      ],
+      "start": "2022/09/03 00:00",
+      "as_of": "2022/09/04 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "empty",
+          "complete": true,
+          "rows": [],
+          "scope": [
+            [
+              "001",
+              "source3"
+            ],
+            "incoming",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              27,
+              "2022/09/03 01:00",
+              "001",
+              "source3",
+              "002",
+              "focus3"
+            ]
+          ],
+          "scope": [
+            [
+              "001",
+              "source3"
+            ],
+            "outgoing",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "empty",
+          "complete": true,
+          "evidence_ids": []
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            27
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 0,
+        "outgoing_count": 1,
+        "source_count": 0,
+        "rapid_transit": 0
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "validation:001:source3",
+      "split": "validation"
+    },
+    {
+      "account": [
+        "001",
+        "source4"
+      ],
+      "start": "2022/09/03 00:00",
+      "as_of": "2022/09/04 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "empty",
+          "complete": true,
+          "rows": [],
+          "scope": [
+            [
+              "001",
+              "source4"
+            ],
+            "incoming",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              29,
+              "2022/09/03 01:00",
+              "001",
+              "source4",
+              "002",
+              "focus4"
+            ]
+          ],
+          "scope": [
+            [
+              "001",
+              "source4"
+            ],
+            "outgoing",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "empty",
+          "complete": true,
+          "evidence_ids": []
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            29
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 0,
+        "outgoing_count": 1,
+        "source_count": 0,
+        "rapid_transit": 0
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "validation:001:source4",
+      "split": "validation"
+    },
+    {
+      "account": [
+        "002",
+        "focus0"
+      ],
+      "start": "2022/09/03 00:00",
+      "as_of": "2022/09/04 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              21,
+              "2022/09/03 01:00",
+              "001",
+              "source0",
+              "002",
+              "focus0"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus0"
+            ],
+            "incoming",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              22,
+              "2022/09/03 02:00",
+              "002",
+              "focus0",
+              "003",
+              "dest0"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus0"
+            ],
+            "outgoing",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            21
+          ]
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            22
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 1,
+        "outgoing_count": 1,
+        "source_count": 1,
+        "rapid_transit": 1
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [
+          [
+            21,
+            22
+          ]
+        ],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "validation:002:focus0",
+      "split": "validation"
+    },
+    {
+      "account": [
+        "002",
+        "focus1"
+      ],
+      "start": "2022/09/03 00:00",
+      "as_of": "2022/09/04 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              23,
+              "2022/09/03 01:00",
+              "001",
+              "source1",
+              "002",
+              "focus1"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus1"
+            ],
+            "incoming",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              24,
+              "2022/09/03 02:00",
+              "002",
+              "focus1",
+              "003",
+              "dest1"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus1"
+            ],
+            "outgoing",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            23
+          ]
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            24
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 1,
+        "outgoing_count": 1,
+        "source_count": 1,
+        "rapid_transit": 1
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [
+          [
+            23,
+            24
+          ]
+        ],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "validation:002:focus1",
+      "split": "validation"
+    },
+    {
+      "account": [
+        "002",
+        "focus2"
+      ],
+      "start": "2022/09/03 00:00",
+      "as_of": "2022/09/04 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              25,
+              "2022/09/03 01:00",
+              "001",
+              "source2",
+              "002",
+              "focus2"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus2"
+            ],
+            "incoming",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              26,
+              "2022/09/03 02:00",
+              "002",
+              "focus2",
+              "003",
+              "dest2"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus2"
+            ],
+            "outgoing",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            25
+          ]
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            26
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 1,
+        "outgoing_count": 1,
+        "source_count": 1,
+        "rapid_transit": 1
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [
+          [
+            25,
+            26
+          ]
+        ],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "validation:002:focus2",
+      "split": "validation"
+    },
+    {
+      "account": [
+        "002",
+        "focus3"
+      ],
+      "start": "2022/09/03 00:00",
+      "as_of": "2022/09/04 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              27,
+              "2022/09/03 01:00",
+              "001",
+              "source3",
+              "002",
+              "focus3"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus3"
+            ],
+            "incoming",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              28,
+              "2022/09/03 02:00",
+              "002",
+              "focus3",
+              "003",
+              "dest3"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus3"
+            ],
+            "outgoing",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            27
+          ]
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            28
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 1,
+        "outgoing_count": 1,
+        "source_count": 1,
+        "rapid_transit": 1
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [
+          [
+            27,
+            28
+          ]
+        ],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "validation:002:focus3",
+      "split": "validation"
+    },
+    {
+      "account": [
+        "002",
+        "focus4"
+      ],
+      "start": "2022/09/03 00:00",
+      "as_of": "2022/09/04 00:00",
+      "rule_version": 1,
+      "observations": {
+        "incoming": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              29,
+              "2022/09/03 01:00",
+              "001",
+              "source4",
+              "002",
+              "focus4"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus4"
+            ],
+            "incoming",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        },
+        "outgoing": {
+          "status": "ok",
+          "complete": true,
+          "rows": [
+            [
+              30,
+              "2022/09/03 02:00",
+              "002",
+              "focus4",
+              "003",
+              "dest4"
+            ]
+          ],
+          "scope": [
+            [
+              "002",
+              "focus4"
+            ],
+            "outgoing",
+            "2022/09/03 00:00",
+            "2022/09/04 00:00"
+          ]
+        }
+      },
+      "trace": [
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "incoming"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            29
+          ]
+        },
+        {
+          "action": {
+            "tool": "query_account_transactions",
+            "direction": "outgoing"
+          },
+          "status": "ok",
+          "complete": true,
+          "evidence_ids": [
+            30
+          ]
+        }
+      ],
+      "mode": "deterministic_no_llm",
+      "features": {
+        "incoming_count": 1,
+        "outgoing_count": 1,
+        "source_count": 1,
+        "rapid_transit": 1
+      },
+      "complete": true,
+      "findings": {
+        "rapid_transit": [
+          [
+            29,
+            30
+          ]
+        ],
+        "fan_in": [],
+        "fan_out": [],
+        "round_trip": []
+      },
+      "case_id": "validation:002:focus4",
+      "split": "validation"
+    }
+  ],
+  "evaluation": {
+    "decision": "hold",
+    "production_eligible": false,
+    "reason": "Insufficient evidence or no validation improvement",
+    "metrics": {
+      "development": {
+        "baseline": {
+          "cases": 10,
+          "alerts": 5,
+          "true_positives": 1,
+          "positives": 2,
+          "precision": 0.2,
+          "recall": 0.5
+        },
+        "candidate": {
+          "cases": 10,
+          "alerts": 0,
+          "true_positives": 0,
+          "positives": 2,
+          "precision": 0,
+          "recall": 0.0
+        }
+      },
+      "validation": {
+        "baseline": {
+          "cases": 10,
+          "alerts": 5,
+          "true_positives": 1,
+          "positives": 2,
+          "precision": 0.2,
+          "recall": 0.5
+        },
+        "candidate": {
+          "cases": 10,
+          "alerts": 0,
+          "true_positives": 0,
+          "positives": 2,
+          "precision": 0,
+          "recall": 0.0
+        }
+      }
+    },
+    "scope": "Sampled account-window labels, not whole-dataset recall; no production promotion"
+  },
+  "integrations": {
+    "llm": false,
+    "meterless": false,
+    "zetaris_live_preflight": "checked separately; SELECT 1 passed"
+  }
+}

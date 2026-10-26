@@ -1,0 +1,66 @@
+[
+  {
+    "paragraph_id": "P01",
+    "source_url": "https://www.austrac.gov.au/industry-and-business/education-and-resources/publications-and-resources/indicators-suspicious-activity-banking-sector",
+    "section": "Transaction monitoring overview",
+    "anchor_text": "These indicators can inform your transaction monitoring alerts that trigger further review.",
+    "source_text_sha256": "3fa12bb79bb3930e95cdca477b2b9eec2ab287375dc6126603143825fd05723f",
+    "paraphrase_zh": "异常、大额或复杂交易监测"
+  },
+  {
+    "paragraph_id": "P02",
+    "source_url": "https://www.austrac.gov.au/industry-and-business/education-and-resources/publications-and-resources/indicators-suspicious-activity-banking-sector",
+    "section": "Money laundering indicators",
+    "anchor_text": "has an account that receives deposits from multiple third parties",
+    "source_text_sha256": "3fa12bb79bb3930e95cdca477b2b9eec2ab287375dc6126603143825fd05723f",
+    "paraphrase_zh": "多个第三方向同一账户汇入"
+  },
+  {
+    "paragraph_id": "P03",
+    "source_url": "https://www.austrac.gov.au/industry-and-business/education-and-resources/publications-and-resources/indicators-suspicious-activity-banking-sector",
+    "section": "Money laundering indicators",
+    "anchor_text": "makes rapid or complex funds transfers through multiple accounts",
+    "source_text_sha256": "3fa12bb79bb3930e95cdca477b2b9eec2ab287375dc6126603143825fd05723f",
+    "paraphrase_zh": "资金快速经过多个账户"
+  },
+  {
+    "paragraph_id": "P04",
+    "source_url": "https://www.austrac.gov.au/industry-and-business/education-and-resources/publications-and-resources/indicators-suspicious-activity-banking-sector",
+    "section": "Money laundering indicators",
+    "anchor_text": "has transactions that are inconsistent with their profile or transaction history",
+    "source_text_sha256": "3fa12bb79bb3930e95cdca477b2b9eec2ab287375dc6126603143825fd05723f",
+    "paraphrase_zh": "交易与客户画像或历史不符"
+  },
+  {
+    "paragraph_id": "P05",
+    "source_url": "https://www.austrac.gov.au/industry-and-business/education-and-resources/publications-and-resources/indicators-suspicious-activity-banking-sector",
+    "section": "Money laundering indicators",
+    "anchor_text": "makes frequent cash deposits or withdrawals over multiple days",
+    "source_text_sha256": "3fa12bb79bb3930e95cdca477b2b9eec2ab287375dc6126603143825fd05723f",
+    "paraphrase_zh": "跨多日频繁存取现金"
+  },
+  {
+    "paragraph_id": "P06",
+    "source_url": "https://www.austrac.gov.au/industry-and-business/education-and-resources/publications-and-resources/indicators-suspicious-activity-banking-sector",
+    "section": "Scams indicators",
+    "anchor_text": "makes a large withdrawal following changes in their identification information, including email address or phone number",
+    "source_text_sha256": "3fa12bb79bb3930e95cdca477b2b9eec2ab287375dc6126603143825fd05723f",
+    "paraphrase_zh": "身份信息变更后大额提现"
+  },
+  {
+    "paragraph_id": "P07",
+    "source_url": "https://www.austrac.gov.au/industry-and-business/education-and-resources/publications-and-resources/indicators-suspicious-activity-banking-sector",
+    "section": "International transaction indicators",
+    "anchor_text": "transfers funds to or from higher-risk jurisdictions",
+    "source_text_sha256": "3fa12bb79bb3930e95cdca477b2b9eec2ab287375dc6126603143825fd05723f",
+    "paraphrase_zh": "涉及高风险司法辖区"
+  },
+  {
+    "paragraph_id": "P08",
+    "source_url": "https://www.austrac.gov.au/industry-and-business/education-and-resources/publications-and-resources/indicators-suspicious-activity-banking-sector",
+    "section": "Money laundering indicators",
+    "anchor_text": "splits large cash deposits into multiple smaller deposits below the $10,000 reporting threshold (known as structuring)",
+    "source_text_sha256": "3fa12bb79bb3930e95cdca477b2b9eec2ab287375dc6126603143825fd05723f",
+    "paraphrase_zh": "拆分现金存款规避报告阈值"
+  }
+]

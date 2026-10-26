@@ -1,0 +1,27 @@
+{
+  "query_id": "Q03_upstream_B",
+  "sql": "SELECT row_id,event_time,src_bank,src_account,dst_bank,dst_account,amount_received,receiving_currency,amount_paid,payment_currency,payment_format FROM transactions WHERE dst_bank=? AND dst_account=?\nAND event_time>=? AND event_time<? ORDER BY event_time,row_id",
+  "parameters": [
+    "011107",
+    "80171C720",
+    "2022/09/02 00:00",
+    "2022/09/07 19:57"
+  ],
+  "rows": [
+    {
+      "row_id": 3596547,
+      "event_time": "2022/09/07 16:53",
+      "src_bank": "0215803",
+      "src_account": "806CBBE20",
+      "dst_bank": "011107",
+      "dst_account": "80171C720",
+      "amount_received": "14546.79",
+      "receiving_currency": "US Dollar",
+      "amount_paid": "14546.79",
+      "payment_currency": "US Dollar",
+      "payment_format": "ACH"
+    }
+  ],
+  "complete": true,
+  "execution": "local SQLite against full official CSV; not Zetaris"
+}

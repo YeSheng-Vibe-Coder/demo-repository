@@ -1,0 +1,9 @@
+case,variant,status,review_verdict,model_responses,provider_tokens,sql_requests,unique_observed_transaction_ids,structured_transfer_claims,example_notation_in_prose,error
+1,baseline,insufficient_evidence,pass,4,9931,1,1,0,False,
+1,targeted,insufficient_evidence,pass,4,9961,1,1,0,True,
+2,targeted,review_rejected,reject,6,20427,3,4,0,False,
+2,baseline,insufficient_evidence,pass,7,25206,4,4,0,False,
+3,baseline,insufficient_evidence,pass,6,20067,3,1,1,False,
+3,targeted,model_unavailable,not_reviewed,7,25902,3,1,0,False,Planner contract invalid after one repair
+4,targeted,budget_exhausted,not_reviewed,5,16338,3,6,0,False,Mandatory case metadata exceeds local input bound; no model dispatched
+4,baseline,budget_exhausted,not_reviewed,4,15057,3,9,0,False,Mandatory case metadata exceeds local input bound; no model dispatched

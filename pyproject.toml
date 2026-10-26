@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aml-investigator"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["fastapi==0.159.1", "pydantic==2.14.1", "httpx==0.28.1", "uvicorn==0.54.0", "scikit-learn==1.7.2"]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "ruff==0.14.0"]
+
+[project.scripts]
+aml = "aml_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["services/aml-api"]
+
+[tool.pytest.ini_options]
+pythonpath = ["services/aml-api"]
+testpaths = ["tests"]
+

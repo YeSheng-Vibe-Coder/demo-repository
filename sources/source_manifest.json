@@ -1,0 +1,8 @@
+{
+  "retrieved_at_utc": "2026-10-20T07:12:32.383371+00:00",
+  "austrac_url": "https://www.austrac.gov.au/industry-and-business/education-and-resources/publications-and-resources/indicators-suspicious-activity-banking-sector",
+  "page_last_updated": "18 Sep 2026",
+  "html_sha256": "3608c344b513ab78e138485a21cc18c85d1d6f36bffd2531971876ea1c150f26",
+  "mapping_method": "Analyst-authored feasibility mapping against source snapshot and full-file Python audit. Policy-to-rule Agent not implemented or executed.",
+  "scope": "Dataset and document feasibility only; no Zetaris tenant or Meterless integration has been exercised."
+}

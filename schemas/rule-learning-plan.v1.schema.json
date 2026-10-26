@@ -1,0 +1,47 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "features": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 19,
+      "minItems": 3,
+      "title": "Features",
+      "type": "array"
+    },
+    "max_leaf_nodes": {
+      "maximum": 48,
+      "minimum": 8,
+      "title": "Max Leaf Nodes",
+      "type": "integer"
+    },
+    "min_samples_leaf": {
+      "maximum": 500,
+      "minimum": 5,
+      "title": "Min Samples Leaf",
+      "type": "integer"
+    },
+    "positive_weight": {
+      "maximum": 20,
+      "minimum": 1,
+      "title": "Positive Weight",
+      "type": "number"
+    },
+    "rationale": {
+      "maxLength": 400,
+      "minLength": 1,
+      "title": "Rationale",
+      "type": "string"
+    }
+  },
+  "required": [
+    "features",
+    "max_leaf_nodes",
+    "min_samples_leaf",
+    "positive_weight",
+    "rationale"
+  ],
+  "title": "UpdatePlan",
+  "type": "object"
+}

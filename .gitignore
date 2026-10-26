@@ -1,0 +1,20 @@
+data/raw/
+__pycache__/
+# Credentials and their backups never enter the repository; .env.example lists the variable names.
+.env*
+!.env.example
+*.pem
+*.key
+node_modules/
+.venv/
+.runtime/
+.pytest_cache/
+*.sqlite-wal
+*.sqlite-shm
+*.egg-info/
+.DS_Store
+
+.ruff_cache/
+
+# pen.dev design sources stay local (exports are in design/prototype)
+design/*.pen

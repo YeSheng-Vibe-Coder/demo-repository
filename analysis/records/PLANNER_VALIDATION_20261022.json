@@ -1,0 +1,117 @@
+{
+  "dataset": "same development-window smoke case; not independent validation",
+  "results": [
+    {
+      "run_id": "3bc11548-d662-41a8-8fcb-52955e560f76",
+      "status": "insufficient_evidence",
+      "budget_reservations_and_usage": {
+        "model_requests": 4,
+        "input_tokens": 7782,
+        "output_tokens": 1074,
+        "sql_requests": 1,
+        "actions": 1,
+        "replans": 1
+      },
+      "actual_model_responses": 4,
+      "actions": [
+        "query_account_transactions"
+      ],
+      "guard_blocks": 1,
+      "error": null,
+      "generalization_claim": false
+    },
+    {
+      "run_id": "faa2a51e-ac81-406c-914c-37744c9f6e96",
+      "status": "model_unavailable",
+      "budget_reservations_and_usage": {
+        "model_requests": 4,
+        "input_tokens": 18986,
+        "output_tokens": 2864,
+        "sql_requests": 2,
+        "actions": 2,
+        "replans": 1
+      },
+      "actual_model_responses": 3,
+      "actions": [
+        "query_account_transactions",
+        "query_account_transactions"
+      ],
+      "guard_blocks": 0,
+      "error": "Input exceeds conservative per-request bound; retrieve less evidence",
+      "generalization_claim": false
+    },
+    {
+      "run_id": "60e20465-e9c8-47f4-8abe-a7ae51348908",
+      "status": "model_unavailable",
+      "budget_reservations_and_usage": {
+        "model_requests": 7,
+        "input_tokens": 26900,
+        "output_tokens": 4648,
+        "sql_requests": 4,
+        "actions": 5,
+        "replans": 2
+      },
+      "actual_model_responses": 6,
+      "actions": [
+        "query_account_transactions",
+        "get_evidence",
+        "query_account_transactions",
+        "query_account_transactions",
+        "query_between_accounts"
+      ],
+      "guard_blocks": 0,
+      "error": "Input exceeds conservative per-request bound; retrieve less evidence",
+      "generalization_claim": false
+    }
+  ],
+  "context_fix_replay": {
+    "before_bytes": 12471,
+    "after_bytes": 11816,
+    "provider_called": false
+  },
+  "overall_live_acceptance": "not_passed",
+  "targeted_examples": "planned_not_implemented",
+  "weight_training": false,
+  "latest_live_review": {
+    "run_id": "8e9c390a-cd07-4d05-b355-a28c1ac84bdb",
+    "review_type": "human_readable_trace_audit_by_coding_agent_not_independent_llm_evaluator",
+    "review_status": "invalid_factual_claim",
+    "runtime_status": "insufficient_evidence",
+    "duration_seconds": 75.5,
+    "model_responses": 5,
+    "provider_tokens": 14466,
+    "sql_requests": 2,
+    "business_actions": 3,
+    "replans": 2,
+    "guard_blocks": 0,
+    "input_limit_failure": false,
+    "authoritative_observed_facts": {
+      "unique_transaction_ids": 1,
+      "incoming_to_focus": 1,
+      "outgoing_from_focus": 0,
+      "scope": "current window; ACH/Wire; self-transfers excluded; not full network absence"
+    },
+    "findings": [
+      {
+        "code": "DUPLICATE_VIEW_NOT_REVERSE_TRANSFER",
+        "severity": "major",
+        "detail": "Both account queries returned the same transaction ID with identical from/to endpoints. The final narrative invented an opposite-direction transfer."
+      },
+      {
+        "code": "SMOKE_MODE_INTERPRETATION",
+        "severity": "major",
+        "detail": "Planner treated absence of frozen rule as a reason available facts could not be interpreted, although smoke mode allows evidence-based characterization."
+      }
+    ],
+    "overall_live_acceptance": "not_passed",
+    "targeted_learning_used": false,
+    "independent_llm_evaluator_used": false,
+    "production_eligible": false,
+    "next_development_samples": [
+      "same transaction across two account views is one directed edge",
+      "unknown account scope differs from zero activity",
+      "absence of frozen rule does not prevent smoke characterization"
+    ],
+    "review_artifact_id": "ca1b9d14-50d7-4d40-9e24-e63463f54ba7"
+  }
+}

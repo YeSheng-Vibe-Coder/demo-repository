@@ -1,0 +1,79 @@
+{
+  "$defs": {
+    "Assignment": {
+      "additionalProperties": false,
+      "description": "One specialist investigator's share of a case, chosen by the coordinator.",
+      "properties": {
+        "accounts": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5,
+          "minItems": 1,
+          "title": "Accounts",
+          "type": "array"
+        },
+        "max_actions": {
+          "maximum": 6,
+          "minimum": 1,
+          "title": "Max Actions",
+          "type": "integer"
+        },
+        "question": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        },
+        "role": {
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Role",
+          "type": "string"
+        },
+        "tools": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Tools",
+          "type": "array"
+        }
+      },
+      "required": [
+        "role",
+        "question",
+        "accounts",
+        "tools",
+        "max_actions"
+      ],
+      "title": "Assignment",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "assignments": {
+      "items": {
+        "$ref": "#/$defs/Assignment"
+      },
+      "maxItems": 4,
+      "minItems": 1,
+      "title": "Assignments",
+      "type": "array"
+    },
+    "rationale": {
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Rationale",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rationale",
+    "assignments"
+  ],
+  "title": "TeamPlan",
+  "type": "object"
+}

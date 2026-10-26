@@ -1,0 +1,171 @@
+{
+  "$defs": {
+    "Account": {
+      "additionalProperties": false,
+      "properties": {
+        "account": {
+          "pattern": "^[A-Za-z0-9]{1,64}$",
+          "title": "Account",
+          "type": "string"
+        },
+        "bank": {
+          "pattern": "^[A-Za-z0-9]{1,64}$",
+          "title": "Bank",
+          "type": "string"
+        }
+      },
+      "required": [
+        "bank",
+        "account"
+      ],
+      "title": "Account",
+      "type": "object"
+    },
+    "Assignment": {
+      "additionalProperties": false,
+      "description": "One specialist investigator's share of a case, chosen by the coordinator.",
+      "properties": {
+        "accounts": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 5,
+          "minItems": 1,
+          "title": "Accounts",
+          "type": "array"
+        },
+        "max_actions": {
+          "maximum": 6,
+          "minimum": 1,
+          "title": "Max Actions",
+          "type": "integer"
+        },
+        "question": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        },
+        "role": {
+          "maxLength": 40,
+          "minLength": 1,
+          "title": "Role",
+          "type": "string"
+        },
+        "tools": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 6,
+          "minItems": 1,
+          "title": "Tools",
+          "type": "array"
+        }
+      },
+      "required": [
+        "role",
+        "question",
+        "accounts",
+        "tools",
+        "max_actions"
+      ],
+      "title": "Assignment",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "account": {
+      "$ref": "#/$defs/Account"
+    },
+    "alert_id": {
+      "anyOf": [
+        {
+          "maxLength": 100,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Alert Id"
+    },
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    },
+    "assignment": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Assignment"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "investigation_question": {
+      "default": "Identify evidence-supported suspicious transaction IDs and connected upstream/downstream patterns within scope; distinguish observed facts from unknowns.",
+      "maxLength": 600,
+      "minLength": 10,
+      "title": "Investigation Question",
+      "type": "string"
+    },
+    "parent_run_id": {
+      "anyOf": [
+        {
+          "maxLength": 40,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Run Id"
+    },
+    "rule_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rule Version"
+    },
+    "split": {
+      "default": "smoke",
+      "enum": [
+        "development",
+        "validation",
+        "test",
+        "smoke"
+      ],
+      "title": "Split",
+      "type": "string"
+    },
+    "start": {
+      "format": "date-time",
+      "title": "Start",
+      "type": "string"
+    },
+    "test_release": {
+      "default": false,
+      "title": "Test Release",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "account",
+    "start",
+    "as_of"
+  ],
+  "title": "CaseRequest",
+  "type": "object"
+}

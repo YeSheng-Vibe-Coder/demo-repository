@@ -1,0 +1,40 @@
+{
+  "query_id": "Q02_upstream_C",
+  "sql": "SELECT row_id,event_time,src_bank,src_account,dst_bank,dst_account,amount_received,receiving_currency,amount_paid,payment_currency,payment_format FROM transactions WHERE dst_bank=? AND dst_account=?\nAND event_time>=? AND event_time<? ORDER BY event_time,row_id",
+  "parameters": [
+    "018200",
+    "803118000",
+    "2022/09/02 00:00",
+    "2022/09/08 12:38"
+  ],
+  "rows": [
+    {
+      "row_id": 3596549,
+      "event_time": "2022/09/07 19:57",
+      "src_bank": "011107",
+      "src_account": "80171C720",
+      "dst_bank": "018200",
+      "dst_account": "803118000",
+      "amount_received": "8437.40",
+      "receiving_currency": "Yuan",
+      "amount_paid": "8437.40",
+      "payment_currency": "Yuan",
+      "payment_format": "ACH"
+    },
+    {
+      "row_id": 3596550,
+      "event_time": "2022/09/07 19:57",
+      "src_bank": "011107",
+      "src_account": "80171C720",
+      "dst_bank": "018200",
+      "dst_account": "803118000",
+      "amount_received": "97428.60",
+      "receiving_currency": "Yuan",
+      "amount_paid": "97428.60",
+      "payment_currency": "Yuan",
+      "payment_format": "ACH"
+    }
+  ],
+  "complete": true,
+  "execution": "local SQLite against full official CSV; not Zetaris"
+}

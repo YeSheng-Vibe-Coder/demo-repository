@@ -1,0 +1,38 @@
+[
+  {
+    "case_id": "CASE_LARGE",
+    "account": "C1629027766",
+    "trigger_transaction_id": 6239964,
+    "selection": "largest evaluation alert by amount",
+    "evidence_rows": 4,
+    "snapshot": "full dataset; post-event investigation, not pre-transaction decision",
+    "evidence_file": "CASE_LARGE_transactions.csv"
+  },
+  {
+    "case_id": "CASE_PRIORITY",
+    "account": "C761333500",
+    "trigger_transaction_id": 5914954,
+    "selection": "largest amount / calibration type P99 in evaluation; labels not used",
+    "evidence_rows": 4,
+    "snapshot": "full dataset; post-event investigation, not pre-transaction decision",
+    "evidence_file": "CASE_PRIORITY_transactions.csv"
+  },
+  {
+    "case_id": "CASE_FANIN",
+    "account": "C665576141",
+    "trigger_transaction_id": null,
+    "selection": "highest sender count then amount across full dataset; exploratory, not held-out validation",
+    "evidence_rows": 105,
+    "snapshot": "full dataset; post-event investigation, not pre-transaction decision",
+    "evidence_file": "CASE_FANIN_transactions.csv"
+  },
+  {
+    "case_id": "CASE_CHAIN",
+    "account": "C727141163",
+    "trigger_transaction_id": 5804583,
+    "selection": "shortest observed later-hour gap then row id",
+    "evidence_rows": 41,
+    "snapshot": "full dataset; post-event investigation, not pre-transaction decision",
+    "evidence_file": "CASE_CHAIN_transactions.csv"
+  }
+]

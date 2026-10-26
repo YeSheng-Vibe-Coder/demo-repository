@@ -1,0 +1,98 @@
+[
+  {
+    "split": "开发集",
+    "hours": 1,
+    "alerts": 209,
+    "period_candidates": 413,
+    "labelled_found": 11,
+    "labelled_total": 798,
+    "labelled_scope": 722,
+    "coverage_all_formats": 0.013784461152882205,
+    "coverage_scope": 0.015235457063711912,
+    "candidate_label_share": 0.026634382566585957
+  },
+  {
+    "split": "开发集",
+    "hours": 6,
+    "alerts": 1349,
+    "period_candidates": 2406,
+    "labelled_found": 75,
+    "labelled_total": 798,
+    "labelled_scope": 722,
+    "coverage_all_formats": 0.09398496240601503,
+    "coverage_scope": 0.1038781163434903,
+    "candidate_label_share": 0.03117206982543641
+  },
+  {
+    "split": "开发集",
+    "hours": 24,
+    "alerts": 6603,
+    "period_candidates": 8914,
+    "labelled_found": 156,
+    "labelled_total": 798,
+    "labelled_scope": 722,
+    "coverage_all_formats": 0.19548872180451127,
+    "coverage_scope": 0.21606648199445982,
+    "candidate_label_share": 0.017500560915413955
+  },
+  {
+    "split": "开发集",
+    "hours": 48,
+    "alerts": 13531,
+    "period_candidates": 15642,
+    "labelled_found": 238,
+    "labelled_total": 798,
+    "labelled_scope": 722,
+    "coverage_all_formats": 0.2982456140350877,
+    "coverage_scope": 0.3296398891966759,
+    "candidate_label_share": 0.015215445595192431
+  },
+  {
+    "split": "验证集",
+    "hours": 1,
+    "alerts": 1106,
+    "period_candidates": 2209,
+    "labelled_found": 23,
+    "labelled_total": 1002,
+    "labelled_scope": 856,
+    "coverage_all_formats": 0.022954091816367265,
+    "coverage_scope": 0.026869158878504672,
+    "candidate_label_share": 0.01041195110909914
+  },
+  {
+    "split": "验证集",
+    "hours": 6,
+    "alerts": 5708,
+    "period_candidates": 11074,
+    "labelled_found": 102,
+    "labelled_total": 1002,
+    "labelled_scope": 856,
+    "coverage_all_formats": 0.10179640718562874,
+    "coverage_scope": 0.1191588785046729,
+    "candidate_label_share": 0.009210763951598339
+  },
+  {
+    "split": "验证集",
+    "hours": 24,
+    "alerts": 15231,
+    "period_candidates": 26212,
+    "labelled_found": 220,
+    "labelled_total": 1002,
+    "labelled_scope": 856,
+    "coverage_all_formats": 0.21956087824351297,
+    "coverage_scope": 0.2570093457943925,
+    "candidate_label_share": 0.00839310239584923
+  },
+  {
+    "split": "验证集",
+    "hours": 48,
+    "alerts": 17714,
+    "period_candidates": 28754,
+    "labelled_found": 261,
+    "labelled_total": 1002,
+    "labelled_scope": 856,
+    "coverage_all_formats": 0.26047904191616766,
+    "coverage_scope": 0.30490654205607476,
+    "candidate_label_share": 0.009076997982889337
+  }
+]

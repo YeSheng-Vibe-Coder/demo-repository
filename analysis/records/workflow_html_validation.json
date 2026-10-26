@@ -1,0 +1,26 @@
+{
+  "file": "docs/项目流程与操作说明.html",
+  "steps": 9,
+  "checks": [
+    "all step navigation",
+    "single visible panel",
+    "active step accessibility",
+    "expand and collapse all",
+    "previous next action",
+    "hash navigation",
+    "print action",
+    "print stylesheet",
+    "no-script fallback",
+    "no external JS or CSS",
+    "no experiment figures",
+    "14 AUSTRAC policy rows",
+    "policy anchor preserves active workflow step",
+    "formal rules and thresholds",
+    "alert schema",
+    "per-alert optional paths",
+    "prompt template",
+    "final decision rationale"
+  ],
+  "passed": true,
+  "visual_browser_preview": "Unavailable: local file URL blocked by browser policy"
+}

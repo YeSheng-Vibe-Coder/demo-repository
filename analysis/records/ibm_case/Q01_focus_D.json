@@ -1,0 +1,81 @@
+{
+  "query_id": "Q01_focus_D",
+  "sql": "SELECT row_id,event_time,src_bank,src_account,dst_bank,dst_account,amount_received,receiving_currency,amount_paid,payment_currency,payment_format FROM transactions\nWHERE ((src_bank=? AND src_account=?) OR (dst_bank=? AND dst_account=?))\nAND event_time>=? AND event_time<? ORDER BY event_time,row_id",
+  "parameters": [
+    "002454",
+    "806E8ADD0",
+    "002454",
+    "806E8ADD0",
+    "2022/09/02 00:00",
+    "2022/09/09 00:00"
+  ],
+  "rows": [
+    {
+      "row_id": 3596552,
+      "event_time": "2022/09/08 12:38",
+      "src_bank": "018200",
+      "src_account": "803118000",
+      "dst_bank": "002454",
+      "dst_account": "806E8ADD0",
+      "amount_received": "2915.97",
+      "receiving_currency": "US Dollar",
+      "amount_paid": "2915.97",
+      "payment_currency": "US Dollar",
+      "payment_format": "ACH"
+    },
+    {
+      "row_id": 3596553,
+      "event_time": "2022/09/08 12:38",
+      "src_bank": "018200",
+      "src_account": "803118000",
+      "dst_bank": "002454",
+      "dst_account": "806E8ADD0",
+      "amount_received": "14546.79",
+      "receiving_currency": "US Dollar",
+      "amount_paid": "14546.79",
+      "payment_currency": "US Dollar",
+      "payment_format": "ACH"
+    },
+    {
+      "row_id": 3596554,
+      "event_time": "2022/09/08 16:58",
+      "src_bank": "002454",
+      "src_account": "806E8ADD0",
+      "dst_bank": "002454",
+      "dst_account": "806E8ADD0",
+      "amount_received": "1447904.55",
+      "receiving_currency": "Ruble",
+      "amount_paid": "18609.64",
+      "payment_currency": "US Dollar",
+      "payment_format": "ACH"
+    },
+    {
+      "row_id": 3596555,
+      "event_time": "2022/09/08 16:58",
+      "src_bank": "002454",
+      "src_account": "806E8ADD0",
+      "dst_bank": "0217125",
+      "dst_account": "8073CD950",
+      "amount_received": "316105.88",
+      "receiving_currency": "Ruble",
+      "amount_paid": "316105.88",
+      "payment_currency": "Ruble",
+      "payment_format": "ACH"
+    },
+    {
+      "row_id": 3596556,
+      "event_time": "2022/09/08 16:58",
+      "src_bank": "002454",
+      "src_account": "806E8ADD0",
+      "dst_bank": "0217125",
+      "dst_account": "8073CD950",
+      "amount_received": "1131798.67",
+      "receiving_currency": "Ruble",
+      "amount_paid": "1131798.67",
+      "payment_currency": "Ruble",
+      "payment_format": "ACH"
+    }
+  ],
+  "complete": true,
+  "execution": "local SQLite against full official CSV; not Zetaris"
+}

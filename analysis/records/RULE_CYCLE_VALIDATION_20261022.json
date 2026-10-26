@@ -1,0 +1,113 @@
+{
+  "cycle_id": "5b6f61409f7c48baa83a1b7bde0e2123",
+  "status": "completed",
+  "base_version": "9116b47a-3a6b-400a-aa31-63273a387e1a",
+  "alerts_emitted": 15,
+  "alerts_selected": 3,
+  "candidate_version": "66284661-b6e2-41a2-bd67-014f0a182c5c",
+  "rule_diff": {
+    "added_rules": [],
+    "disabled_rules": [
+      "IBM-REF-TRANSIT"
+    ],
+    "changed_rules": [
+      "IBM-REF-FANIN"
+    ],
+    "feature_definitions_changed": false,
+    "combination_or_weights_changed": true
+  },
+  "decision": "accept_for_experiment",
+  "publication": {
+    "published": true,
+    "active_version": "a7294fa1-9326-40a2-976b-49a122a9cf0f",
+    "previous_version": "9116b47a-3a6b-400a-aa31-63273a387e1a",
+    "evaluation_id": "c3cd93a4-d94f-48c2-8a1e-2b7bd0c48201",
+    "production_eligible": false
+  },
+  "monitoring": {
+    "checked": true,
+    "active_version": "a7294fa1-9326-40a2-976b-49a122a9cf0f",
+    "parent_version": "9116b47a-3a6b-400a-aa31-63273a387e1a",
+    "rolled_back": false,
+    "current_metrics": {
+      "n": 100,
+      "positives": 10,
+      "tp": 2,
+      "fp": 9,
+      "precision": 0.18181818181818182,
+      "recall": 0.2
+    },
+    "parent_metrics": {
+      "n": 100,
+      "positives": 10,
+      "tp": 1,
+      "fp": 12,
+      "precision": 0.07692307692307693,
+      "recall": 0.1
+    },
+    "monitor_manifest_sha256": "a944efa7eb0500a6754ea85a9cc91c972efe0adffe08ca33cac4554fee5994cb",
+    "policy": "rollback on incomplete source, fewer TP, or precision drop greater than 0.10 under matched alert budget"
+  },
+  "duration_seconds": 235.3,
+  "test_partition_opened": false,
+  "case_llm_reviewer_used": false,
+  "validation_metrics": {
+    "baseline": {
+      "n": 100,
+      "positives": 10,
+      "tp": 1,
+      "fp": 12,
+      "precision": 0.07692307692307693,
+      "recall": 0.1
+    },
+    "candidate": {
+      "n": 100,
+      "positives": 10,
+      "tp": 2,
+      "fp": 9,
+      "precision": 0.18181818181818182,
+      "recall": 0.2
+    },
+    "manifest_sha": "a944efa7eb0500a6754ea85a9cc91c972efe0adffe08ca33cac4554fee5994cb",
+    "cohort_kind": "diagnostic_enriched",
+    "actual_base_compared": true
+  },
+  "cases": [
+    {
+      "run_id": "3ae12f75-8b3f-4abd-8771-ac823691dc2c",
+      "status": "insufficient_evidence",
+      "usable_for_rule_update": true,
+      "observed_unique_transactions": 8,
+      "model_responses": 7,
+      "provider_tokens": 40120,
+      "sql_requests": 3,
+      "retrieved_positives": 0,
+      "selected_suspects": 0,
+      "candidate_still_alerts": true
+    },
+    {
+      "run_id": "2812cc2e-192b-412b-9c2d-92d091807595",
+      "status": "insufficient_evidence",
+      "usable_for_rule_update": true,
+      "observed_unique_transactions": 4,
+      "model_responses": 6,
+      "provider_tokens": 27061,
+      "sql_requests": 2,
+      "retrieved_positives": 0,
+      "selected_suspects": 0,
+      "candidate_still_alerts": true
+    },
+    {
+      "run_id": "397671dc-5120-492d-b0ee-571057b6b805",
+      "status": "insufficient_evidence",
+      "usable_for_rule_update": false,
+      "observed_unique_transactions": 68,
+      "model_responses": 5,
+      "provider_tokens": 27146,
+      "sql_requests": 2,
+      "retrieved_positives": 1,
+      "selected_suspects": 0,
+      "candidate_still_alerts": true
+    }
+  ]
+}

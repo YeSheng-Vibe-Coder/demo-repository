@@ -1,0 +1,334 @@
+{
+  "validation": {
+    "decision": "hold",
+    "reason": "Insufficient complete validation evidence or no improvement",
+    "candidate": {
+      "n": 100,
+      "positives": 10,
+      "tp": 1,
+      "fp": 1,
+      "precision": 0.5,
+      "recall": 0.1
+    },
+    "baseline": {
+      "n": 100,
+      "positives": 10,
+      "tp": 1,
+      "fp": 12,
+      "precision": 0.07692307692307693,
+      "recall": 0.1
+    },
+    "production_eligible": false,
+    "manifest_sha": "a2ccfd489e573fd34088dfa9fd5d00f36cb233e0669a62a41aa83c03969eb8d4",
+    "cohort_kind": "diagnostic_enriched",
+    "population_precision_claim_allowed": false,
+    "calibration_sha": "155ee18d63d729e648fe5d7c5632a12bcb2fa9cb063eac63a4815c9210185f61",
+    "validation_manifest": {
+      "manifest_version": "features/1.0",
+      "split": "validation",
+      "kind": "diagnostic_enriched",
+      "source_sha256": "d13635e297c64673826217631fb88d635c4f506052e1bde833895eda2a65c3f2",
+      "rows_sha256": "fddf8bbec1e9ff1d6f74be94bcf969443266b54af76009a5a2668f5bbebc45f1",
+      "start": "2022-08-10T00:00:00",
+      "end": "2022-08-11T00:00:00",
+      "account_disjoint": false,
+      "selection": "Fixed account/window label-stratified hash selection; NOT population precision",
+      "feature_scope": "ACH/Wire, self transfers excluded, max counterparty count per currency, strict later transit",
+      "history": "Trailing 48 hours before as_of, no future transactions; raw history may precede target partition",
+      "snapshot": "Source SHA references immutable uploaded dataset; view mutations invalidate this manifest"
+    },
+    "alert_budget": "Same deterministic case_id ordering and 50 alerts per sample observation day for both arms"
+  },
+  "calibration": {
+    "status": "calibrated_development_only",
+    "portfolio": {
+      "fan_in": {
+        "window_hours": 24,
+        "min_counterparties": 3
+      },
+      "fan_out": null,
+      "receive_then_send": null
+    },
+    "metrics": {
+      "n": 100,
+      "positives": 10,
+      "tp": 3,
+      "fp": 1,
+      "precision": 0.75,
+      "recall": 0.3
+    },
+    "development_manifest_sha": "16ec2719518da90641e609bc5d7967c69943450253fd6fb4f5487193d6d29dac",
+    "search_space": 196,
+    "source_sha256": "d13635e297c64673826217631fb88d635c4f506052e1bde833895eda2a65c3f2",
+    "combination": "OR",
+    "duplicate_policy_weighting": false,
+    "production_eligible": false
+  },
+  "generation": {
+    "role": "initial_rule_builder",
+    "base_version": null,
+    "status": "needs_calibration",
+    "calls": [
+      {
+        "template": "fan_in",
+        "usage": {
+          "prompt_tokens": 739,
+          "completion_tokens": 298,
+          "total_tokens": 1037,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          }
+        },
+        "model": "nvidia/nemotron-3.5-lightning-30b-a3b"
+      },
+      {
+        "template": "fan_out",
+        "usage": {
+          "prompt_tokens": 732,
+          "completion_tokens": 309,
+          "total_tokens": 1041,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          }
+        },
+        "model": "nvidia/nemotron-3.5-lightning-30b-a3b"
+      },
+      {
+        "template": "receive_then_send",
+        "usage": {
+          "prompt_tokens": 728,
+          "completion_tokens": 303,
+          "total_tokens": 1031,
+          "prompt_tokens_details": {
+            "audio_tokens": null,
+            "cached_tokens": 0
+          },
+          "completion_tokens_details": {
+            "accepted_prediction_tokens": null,
+            "audio_tokens": null,
+            "reasoning_tokens": 0,
+            "rejected_prediction_tokens": null
+          }
+        },
+        "model": "nvidia/nemotron-3.5-lightning-30b-a3b"
+      }
+    ],
+    "compiled_drafts": [
+      {
+        "draft": {
+          "schema_version": "rule/1.0",
+          "rule_id": "IBM-MAP-R03-fan_in-partial",
+          "dataset": "IBM-HI-Large-v8",
+          "source_refs": [
+            "P02"
+          ],
+          "policy_indicator_refs": [
+            "IBM-MAP-R03",
+            "IBM-MAP-R14"
+          ],
+          "template_id": "fan_in",
+          "template_version": "1.0",
+          "feature_ids": [
+            "incoming_counterparties"
+          ],
+          "field_bindings": {
+            "time": "transaction_time",
+            "source": "from_bank:from_account",
+            "target": "to_bank:to_account"
+          },
+          "expression": "template_default",
+          "parameters": {
+            "window_hours": null,
+            "min_counterparties": null
+          },
+          "parameter_basis": "needs_calibration",
+          "scope": "ACH_Wire",
+          "self_transfer_policy": "exclude",
+          "currency_policy": "separate",
+          "required_history": "48h",
+          "missing_context": [
+            "customer_identity",
+            "business_purpose",
+            "same_funds_proof"
+          ],
+          "coverage": "partial",
+          "status": "needs_calibration",
+          "support_evidence_spec": "transaction_ids_and_temporal_edges"
+        },
+        "compiler_version": "compiler/1.0",
+        "executable": false,
+        "sha256": "4f8799a2a91154b249c6dcb993979374a1b11687690cb81681bd5ae365b1df99"
+      },
+      {
+        "draft": {
+          "schema_version": "rule/1.0",
+          "rule_id": "IBM-MAP-R01-fan_out",
+          "dataset": "IBM-HI-Large-v8",
+          "source_refs": [
+            "P03"
+          ],
+          "policy_indicator_refs": [
+            "IBM-MAP-R01"
+          ],
+          "template_id": "fan_out",
+          "template_version": "1.0",
+          "feature_ids": [
+            "outgoing_counterparties"
+          ],
+          "field_bindings": {
+            "time": "transaction_time",
+            "source": "from_bank:from_account",
+            "target": "to_bank:to_account"
+          },
+          "expression": "template_default",
+          "parameters": {
+            "window_hours": null,
+            "min_counterparties": null
+          },
+          "parameter_basis": "needs_calibration",
+          "scope": "ACH_Wire",
+          "self_transfer_policy": "exclude",
+          "currency_policy": "separate",
+          "required_history": "48h",
+          "missing_context": [
+            "customer_identity",
+            "business_purpose",
+            "same_funds_proof"
+          ],
+          "coverage": "partial",
+          "status": "needs_calibration",
+          "support_evidence_spec": "transaction_ids_and_temporal_edges"
+        },
+        "compiler_version": "compiler/1.0",
+        "executable": false,
+        "sha256": "9514694553281f2b8ed911b3e9be818ecef091e6ed4d7c37fea5db17fa81aca9"
+      },
+      {
+        "draft": {
+          "schema_version": "rule/1.0",
+          "rule_id": "IBM-MAP-R02-transit_gap_hours",
+          "dataset": "IBM-HI-Large-v8",
+          "source_refs": [
+            "P03"
+          ],
+          "policy_indicator_refs": [
+            "IBM-MAP-R02"
+          ],
+          "template_id": "receive_then_send",
+          "template_version": "1.0",
+          "feature_ids": [
+            "transit_gap_hours"
+          ],
+          "field_bindings": {
+            "time": "transaction_time",
+            "source": "from_bank:from_account",
+            "target": "to_bank:to_account"
+          },
+          "expression": "template_default",
+          "parameters": {
+            "gap_hours": null
+          },
+          "parameter_basis": "needs_calibration",
+          "scope": "ACH_Wire",
+          "self_transfer_policy": "exclude",
+          "currency_policy": "separate",
+          "required_history": "48h",
+          "missing_context": [
+            "customer_identity",
+            "business_purpose",
+            "same_funds_proof"
+          ],
+          "coverage": "partial",
+          "status": "needs_calibration",
+          "support_evidence_spec": "transaction_ids_and_temporal_edges"
+        },
+        "compiler_version": "compiler/1.0",
+        "executable": false,
+        "sha256": "caf2f1a8c06bbdd7e2915f92322a074b6de15323e9c176eaa4fc9c5b745b5c15"
+      }
+    ],
+    "executable": false,
+    "source_snapshot_sha": "3fa12bb79bb3930e95cdca477b2b9eec2ab287375dc6126603143825fd05723f",
+    "generation_id": "5da8e6f1-6b9b-406d-bec0-9e9848669e19"
+  },
+  "cohorts": {
+    "development": {
+      "windows": 100,
+      "positive_windows_from_enrollment_QA": 10,
+      "manifest": {
+        "manifest_version": "features/1.0",
+        "split": "development",
+        "kind": "diagnostic_enriched",
+        "source_sha256": "d13635e297c64673826217631fb88d635c4f506052e1bde833895eda2a65c3f2",
+        "rows_sha256": "800794542b9a753cec8567a838bc23fa995188433c033efdbed26c2444ca9871",
+        "start": "2022-08-04T00:00:00",
+        "end": "2022-08-05T00:00:00",
+        "account_disjoint": false,
+        "selection": "Fixed account/window label-stratified hash selection; NOT population precision",
+        "feature_scope": "ACH/Wire, self transfers excluded, max counterparty count per currency, strict later transit",
+        "history": "Trailing 48 hours before as_of, no future transactions; raw history may precede target partition",
+        "snapshot": "Source SHA references immutable uploaded dataset; view mutations invalidate this manifest"
+      },
+      "manifest_sha": "16ec2719518da90641e609bc5d7967c69943450253fd6fb4f5487193d6d29dac"
+    },
+    "validation": {
+      "windows": 100,
+      "positive_windows_from_enrollment_QA": 10,
+      "manifest": {
+        "manifest_version": "features/1.0",
+        "split": "validation",
+        "kind": "diagnostic_enriched",
+        "source_sha256": "d13635e297c64673826217631fb88d635c4f506052e1bde833895eda2a65c3f2",
+        "rows_sha256": "fddf8bbec1e9ff1d6f74be94bcf969443266b54af76009a5a2668f5bbebc45f1",
+        "start": "2022-08-10T00:00:00",
+        "end": "2022-08-11T00:00:00",
+        "account_disjoint": false,
+        "selection": "Fixed account/window label-stratified hash selection; NOT population precision",
+        "feature_scope": "ACH/Wire, self transfers excluded, max counterparty count per currency, strict later transit",
+        "history": "Trailing 48 hours before as_of, no future transactions; raw history may precede target partition",
+        "snapshot": "Source SHA references immutable uploaded dataset; view mutations invalidate this manifest"
+      },
+      "manifest_sha": "a2ccfd489e573fd34088dfa9fd5d00f36cb233e0669a62a41aa83c03969eb8d4"
+    },
+    "test": {
+      "windows": 100,
+      "positive_windows_from_enrollment_QA": 10,
+      "manifest": {
+        "manifest_version": "features/1.0",
+        "split": "test",
+        "kind": "diagnostic_enriched",
+        "source_sha256": "d13635e297c64673826217631fb88d635c4f506052e1bde833895eda2a65c3f2",
+        "rows_sha256": "e5c7cd0b9622713dfc1fb066c2d31d90c5bdad8b92c95f6e34b2be24014b266b",
+        "start": "2022-08-15T00:00:00",
+        "end": "2022-08-16T00:00:00",
+        "account_disjoint": false,
+        "selection": "Fixed account/window label-stratified hash selection; NOT population precision",
+        "feature_scope": "ACH/Wire, self transfers excluded, max counterparty count per currency, strict later transit",
+        "history": "Trailing 48 hours before as_of, no future transactions; raw history may precede target partition",
+        "snapshot": "Source SHA references immutable uploaded dataset; view mutations invalidate this manifest"
+      },
+      "manifest_sha": "f0b8319e3ef6c3925e22f51beac81e14b614fca52adc8545d671f6a5fcddbea4"
+    }
+  },
+  "account_overlap_counts": {
+    "development__validation": 82,
+    "development__test": 77,
+    "validation__test": 78
+  },
+  "test_outcomes_inspected": false,
+  "test_used_for_tuning": false
+}

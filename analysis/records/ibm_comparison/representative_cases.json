@@ -1,0 +1,1480 @@
+[
+  {
+    "kind": "策略获益实例",
+    "case_id": "ALERT-4316296",
+    "seed": {
+      "case_id": "ALERT-4316296",
+      "trigger_id": 4316296,
+      "focal": [
+        "012",
+        "801018760"
+      ],
+      "asof": 12960,
+      "start": 2880,
+      "seed_ids": [
+        4033646,
+        4316296
+      ]
+    },
+    "fixed_metrics": {
+      "case_id": "ALERT-4316296",
+      "method": "fixed_incident",
+      "budget": "12",
+      "calls": "12",
+      "truncated": "False",
+      "candidate_edges": "118",
+      "positive_edges": "0",
+      "reference_groups": "0",
+      "complete_reference_groups": "0",
+      "reference_edges_total": "0",
+      "reference_edges_found": "0",
+      "reference_group_ids": "[]",
+      "completed_group_ids": "[]"
+    },
+    "adaptive_metrics": {
+      "case_id": "ALERT-4316296",
+      "method": "adaptive_incident",
+      "budget": "12",
+      "calls": "12",
+      "truncated": "False",
+      "candidate_edges": "130",
+      "positive_edges": "4",
+      "reference_groups": "0",
+      "complete_reference_groups": "0",
+      "reference_edges_total": "0",
+      "reference_edges_found": "0",
+      "reference_group_ids": "[]",
+      "completed_group_ids": "[]"
+    },
+    "first_different_step": 3,
+    "fixed_trace": [
+      {
+        "step": 1,
+        "account": [
+          "012",
+          "801018760"
+        ],
+        "direction": "all_incident",
+        "rows": 20,
+        "new_rows": 18,
+        "complete": true,
+        "evidence_ids": [
+          2323333,
+          2519861,
+          2703556,
+          2703826,
+          2834690,
+          2835514,
+          2913406,
+          3030195,
+          3346302,
+          3346606,
+          3688802,
+          3726700,
+          3994374,
+          4024216,
+          4033646,
+          4103211,
+          4316296,
+          4503017,
+          4582331,
+          4795520
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 2,
+        "account": [
+          "001916",
+          "800BEB090"
+        ],
+        "direction": "all_incident",
+        "rows": 25,
+        "new_rows": 20,
+        "complete": true,
+        "evidence_ids": [
+          1905969,
+          2026811,
+          2118639,
+          2206002,
+          2323333,
+          2324649,
+          2333781,
+          2401730,
+          2834690,
+          2991543,
+          3098248,
+          3206787,
+          3278610,
+          3287819,
+          3464886,
+          3726700,
+          3828975,
+          3878111,
+          4015757,
+          4033646,
+          4475869,
+          4582331,
+          4649566,
+          4731196,
+          4782683
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 3,
+        "account": [
+          "0113060",
+          "8078C5290"
+        ],
+        "direction": "all_incident",
+        "rows": 19,
+        "new_rows": 14,
+        "complete": true,
+        "evidence_ids": [
+          1994728,
+          1994727,
+          2166251,
+          2166250,
+          2333853,
+          2333854,
+          2519861,
+          2835514,
+          2981931,
+          2981932,
+          3581608,
+          3581607,
+          3688802,
+          4103209,
+          4103208,
+          4103211,
+          4316296,
+          4436275,
+          4436274
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 4,
+        "account": [
+          "011657",
+          "80107B430"
+        ],
+        "direction": "all_incident",
+        "rows": 15,
+        "new_rows": 10,
+        "complete": true,
+        "evidence_ids": [
+          2402409,
+          2684031,
+          2703556,
+          3001340,
+          3030195,
+          3205551,
+          3346302,
+          3415001,
+          3640365,
+          3877329,
+          3994374,
+          4024680,
+          4226494,
+          4355913,
+          4795520
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 5,
+        "account": [
+          "021745",
+          "8025F04A0"
+        ],
+        "direction": "all_incident",
+        "rows": 16,
+        "new_rows": 11,
+        "complete": true,
+        "evidence_ids": [
+          2703826,
+          2733095,
+          2733096,
+          2913406,
+          3206092,
+          3206091,
+          3346606,
+          3650052,
+          3650053,
+          3926601,
+          3926600,
+          4024216,
+          4449587,
+          4449586,
+          4489855,
+          4503017
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 6,
+        "account": [
+          "003123",
+          "801298FE0"
+        ],
+        "direction": "all_incident",
+        "rows": 7,
+        "new_rows": 0,
+        "complete": true,
+        "evidence_ids": [
+          1905969,
+          2206002,
+          2401730,
+          3098248,
+          3287819,
+          3828975,
+          4782683
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 7,
+        "account": [
+          "016643",
+          "80C2AA3C0"
+        ],
+        "direction": "all_incident",
+        "rows": 8,
+        "new_rows": 1,
+        "complete": true,
+        "evidence_ids": [
+          2026811,
+          2118639,
+          2324649,
+          2530249,
+          3206787,
+          3464886,
+          4015757,
+          4731196
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 8,
+        "account": [
+          "017649",
+          "806DF4C10"
+        ],
+        "direction": "all_incident",
+        "rows": 10,
+        "new_rows": 5,
+        "complete": true,
+        "evidence_ids": [
+          2333781,
+          2373178,
+          2991543,
+          3235228,
+          3278610,
+          3308563,
+          3878111,
+          3907279,
+          4436165,
+          4649566
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 9,
+        "account": [
+          "020",
+          "802220820"
+        ],
+        "direction": "all_incident",
+        "rows": 8,
+        "new_rows": 7,
+        "complete": true,
+        "evidence_ids": [
+          2010495,
+          2182324,
+          2422054,
+          3060022,
+          3571800,
+          4161877,
+          4475869,
+          4516936
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 10,
+        "account": [
+          "001501",
+          "800B95A50"
+        ],
+        "direction": "all_incident",
+        "rows": 24,
+        "new_rows": 10,
+        "complete": true,
+        "evidence_ids": [
+          1877299,
+          1994728,
+          1994727,
+          2166251,
+          2166250,
+          2254444,
+          2333853,
+          2333854,
+          2558004,
+          2981931,
+          2981932,
+          3049598,
+          3385426,
+          3581608,
+          3581607,
+          4103209,
+          4103208,
+          4121973,
+          4329053,
+          4436275,
+          4436274,
+          4475518,
+          4743909,
+          4743910
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 11,
+        "account": [
+          "008455",
+          "806A58DA0"
+        ],
+        "direction": "all_incident",
+        "rows": 18,
+        "new_rows": 13,
+        "complete": true,
+        "evidence_ids": [
+          2402409,
+          2461112,
+          2461113,
+          3001340,
+          3050411,
+          3050410,
+          3640365,
+          3650165,
+          3650164,
+          4024680,
+          4073799,
+          4073798,
+          4355913,
+          4603135,
+          4603137,
+          4603139,
+          4809700,
+          4809701
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 12,
+        "account": [
+          "001665",
+          "8016259D0"
+        ],
+        "direction": "all_incident",
+        "rows": 12,
+        "new_rows": 7,
+        "complete": true,
+        "evidence_ids": [
+          2050818,
+          2174089,
+          2684031,
+          2684150,
+          3186313,
+          3205551,
+          3317483,
+          3415001,
+          3761005,
+          3877329,
+          4226494,
+          4248715
+        ],
+        "reason": "FIFO"
+      }
+    ],
+    "adaptive_trace": [
+      {
+        "step": 1,
+        "account": [
+          "012",
+          "801018760"
+        ],
+        "direction": "all_incident",
+        "rows": 20,
+        "new_rows": 18,
+        "complete": true,
+        "evidence_ids": [
+          2323333,
+          2519861,
+          2703556,
+          2703826,
+          2834690,
+          2835514,
+          2913406,
+          3030195,
+          3346302,
+          3346606,
+          3688802,
+          3726700,
+          3994374,
+          4024216,
+          4033646,
+          4103211,
+          4316296,
+          4503017,
+          4582331,
+          4795520
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 2,
+        "account": [
+          "001916",
+          "800BEB090"
+        ],
+        "direction": "all_incident",
+        "rows": 25,
+        "new_rows": 20,
+        "complete": true,
+        "evidence_ids": [
+          1905969,
+          2026811,
+          2118639,
+          2206002,
+          2323333,
+          2324649,
+          2333781,
+          2401730,
+          2834690,
+          2991543,
+          3098248,
+          3206787,
+          3278610,
+          3287819,
+          3464886,
+          3726700,
+          3828975,
+          3878111,
+          4015757,
+          4033646,
+          4475869,
+          4582331,
+          4649566,
+          4731196,
+          4782683
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 3,
+        "account": [
+          "003123",
+          "801298FE0"
+        ],
+        "direction": "all_incident",
+        "rows": 7,
+        "new_rows": 0,
+        "complete": true,
+        "evidence_ids": [
+          1905969,
+          2206002,
+          2401730,
+          3098248,
+          3287819,
+          3828975,
+          4782683
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 4,
+        "account": [
+          "016643",
+          "80C2AA3C0"
+        ],
+        "direction": "all_incident",
+        "rows": 8,
+        "new_rows": 1,
+        "complete": true,
+        "evidence_ids": [
+          2026811,
+          2118639,
+          2324649,
+          2530249,
+          3206787,
+          3464886,
+          4015757,
+          4731196
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 5,
+        "account": [
+          "0113060",
+          "8078C5290"
+        ],
+        "direction": "all_incident",
+        "rows": 19,
+        "new_rows": 14,
+        "complete": true,
+        "evidence_ids": [
+          1994728,
+          1994727,
+          2166251,
+          2166250,
+          2333853,
+          2333854,
+          2519861,
+          2835514,
+          2981931,
+          2981932,
+          3581608,
+          3581607,
+          3688802,
+          4103209,
+          4103208,
+          4103211,
+          4316296,
+          4436275,
+          4436274
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 6,
+        "account": [
+          "001501",
+          "800B95A50"
+        ],
+        "direction": "all_incident",
+        "rows": 24,
+        "new_rows": 10,
+        "complete": true,
+        "evidence_ids": [
+          1877299,
+          1994728,
+          1994727,
+          2166251,
+          2166250,
+          2254444,
+          2333853,
+          2333854,
+          2558004,
+          2981931,
+          2981932,
+          3049598,
+          3385426,
+          3581608,
+          3581607,
+          4103209,
+          4103208,
+          4121973,
+          4329053,
+          4436275,
+          4436274,
+          4475518,
+          4743909,
+          4743910
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 7,
+        "account": [
+          "011",
+          "80005F430"
+        ],
+        "direction": "all_incident",
+        "rows": 30,
+        "new_rows": 23,
+        "complete": true,
+        "evidence_ids": [
+          1877299,
+          2042370,
+          2071388,
+          2086426,
+          2181981,
+          2254444,
+          2558004,
+          2637101,
+          2665097,
+          2752903,
+          2844704,
+          2875528,
+          2894776,
+          3049598,
+          3375623,
+          3385426,
+          2825512,
+          3630880,
+          3679416,
+          3849323,
+          3162480,
+          3917078,
+          3162482,
+          3965596,
+          4121973,
+          4250020,
+          2825513,
+          4475518,
+          4676418,
+          4742799
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 8,
+        "account": [
+          "02915",
+          "8017FFDE0"
+        ],
+        "direction": "all_incident",
+        "rows": 9,
+        "new_rows": 2,
+        "complete": true,
+        "evidence_ids": [
+          2042370,
+          2181981,
+          2665097,
+          2844704,
+          3375623,
+          3965596,
+          4742799,
+          4795649,
+          4795648
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 9,
+        "account": [
+          "014663",
+          "807C1C8E0"
+        ],
+        "direction": "all_incident",
+        "rows": 26,
+        "new_rows": 19,
+        "complete": true,
+        "evidence_ids": [
+          2059356,
+          2059355,
+          2071388,
+          2086426,
+          2218755,
+          2218756,
+          2364075,
+          2364076,
+          2656434,
+          2752903,
+          2826621,
+          2826620,
+          2894776,
+          2991996,
+          3630880,
+          3631241,
+          3631242,
+          3718152,
+          3917078,
+          4142767,
+          4152646,
+          4152647,
+          4369868,
+          4676418,
+          4690487,
+          4690488
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 10,
+        "account": [
+          "00410",
+          "80BB5B4C0"
+        ],
+        "direction": "all_incident",
+        "rows": 14,
+        "new_rows": 0,
+        "complete": true,
+        "evidence_ids": [
+          2059356,
+          2059355,
+          2218755,
+          2218756,
+          2364075,
+          2364076,
+          2826621,
+          2826620,
+          3631241,
+          3631242,
+          4152646,
+          4152647,
+          4690487,
+          4690488
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 11,
+        "account": [
+          "011657",
+          "80107B430"
+        ],
+        "direction": "all_incident",
+        "rows": 15,
+        "new_rows": 10,
+        "complete": true,
+        "evidence_ids": [
+          2402409,
+          2684031,
+          2703556,
+          3001340,
+          3030195,
+          3205551,
+          3346302,
+          3415001,
+          3640365,
+          3877329,
+          3994374,
+          4024680,
+          4226494,
+          4355913,
+          4795520
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 12,
+        "account": [
+          "021745",
+          "8025F04A0"
+        ],
+        "direction": "all_incident",
+        "rows": 16,
+        "new_rows": 11,
+        "complete": true,
+        "evidence_ids": [
+          2703826,
+          2733095,
+          2733096,
+          2913406,
+          3206092,
+          3206091,
+          3346606,
+          3650052,
+          3650053,
+          3926601,
+          3926600,
+          4024216,
+          4449587,
+          4449586,
+          4489855,
+          4503017
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      }
+    ]
+  },
+  {
+    "kind": "策略失败实例",
+    "case_id": "ALERT-3468460",
+    "seed": {
+      "case_id": "ALERT-3468460",
+      "trigger_id": 3468460,
+      "focal": [
+        "0240774",
+        "80F168680"
+      ],
+      "asof": 10080,
+      "start": 0,
+      "seed_ids": [
+        3302798,
+        3468460
+      ]
+    },
+    "fixed_metrics": {
+      "case_id": "ALERT-3468460",
+      "method": "fixed_incident",
+      "budget": "12",
+      "calls": "12",
+      "truncated": "False",
+      "candidate_edges": "93",
+      "positive_edges": "26",
+      "reference_groups": "0",
+      "complete_reference_groups": "0",
+      "reference_edges_total": "0",
+      "reference_edges_found": "0",
+      "reference_group_ids": "[]",
+      "completed_group_ids": "[]"
+    },
+    "adaptive_metrics": {
+      "case_id": "ALERT-3468460",
+      "method": "adaptive_incident",
+      "budget": "12",
+      "calls": "12",
+      "truncated": "False",
+      "candidate_edges": "102",
+      "positive_edges": "2",
+      "reference_groups": "0",
+      "complete_reference_groups": "0",
+      "reference_edges_total": "0",
+      "reference_edges_found": "0",
+      "reference_group_ids": "[]",
+      "completed_group_ids": "[]"
+    },
+    "first_different_step": 4,
+    "fixed_trace": [
+      {
+        "step": 1,
+        "account": [
+          "0240774",
+          "80F168680"
+        ],
+        "direction": "all_incident",
+        "rows": 16,
+        "new_rows": 14,
+        "complete": true,
+        "evidence_ids": [
+          560672,
+          996111,
+          1267789,
+          1314024,
+          1314023,
+          1545210,
+          1976358,
+          2064956,
+          2115979,
+          2168023,
+          2347714,
+          2377397,
+          2918044,
+          3219966,
+          3302798,
+          3468460
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 2,
+        "account": [
+          "0132499",
+          "80CA00460"
+        ],
+        "direction": "all_incident",
+        "rows": 15,
+        "new_rows": 8,
+        "complete": true,
+        "evidence_ids": [
+          996111,
+          1001767,
+          1274808,
+          1366260,
+          1545210,
+          1976358,
+          2025620,
+          2115979,
+          2213534,
+          2347714,
+          2458895,
+          2823701,
+          2918044,
+          3302798,
+          3638247
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 3,
+        "account": [
+          "0039556",
+          "80F540CB0"
+        ],
+        "direction": "all_incident",
+        "rows": 7,
+        "new_rows": 0,
+        "complete": true,
+        "evidence_ids": [
+          560672,
+          1267789,
+          2064956,
+          2168023,
+          2377397,
+          3219966,
+          3468460
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 4,
+        "account": [
+          "0112",
+          "8000C76D0"
+        ],
+        "direction": "all_incident",
+        "rows": 17,
+        "new_rows": 15,
+        "complete": true,
+        "evidence_ids": [
+          285399,
+          342060,
+          961858,
+          1314024,
+          1314023,
+          1468026,
+          1606988,
+          1919857,
+          1896522,
+          1896520,
+          2183879,
+          2377068,
+          2484886,
+          3015151,
+          3190893,
+          3536194,
+          3595646
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 5,
+        "account": [
+          "022205",
+          "802291DF0"
+        ],
+        "direction": "all_incident",
+        "rows": 9,
+        "new_rows": 2,
+        "complete": true,
+        "evidence_ids": [
+          1001767,
+          1285338,
+          1366260,
+          1747908,
+          2025620,
+          2213534,
+          2458895,
+          2823701,
+          3638247
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 6,
+        "account": [
+          "01665",
+          "8141F21B0"
+        ],
+        "direction": "all_incident",
+        "rows": 1,
+        "new_rows": 0,
+        "complete": true,
+        "evidence_ids": [
+          1274808
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 7,
+        "account": [
+          "0116",
+          "8000CC490"
+        ],
+        "direction": "all_incident",
+        "rows": 23,
+        "new_rows": 15,
+        "complete": true,
+        "evidence_ids": [
+          286379,
+          285399,
+          526160,
+          693713,
+          961858,
+          1329302,
+          1345034,
+          1468026,
+          1622555,
+          1919857,
+          2183879,
+          2377068,
+          2582129,
+          2591675,
+          2659922,
+          2975942,
+          2985745,
+          3015151,
+          3142000,
+          3468148,
+          3468152,
+          3536194,
+          3663492
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 8,
+        "account": [
+          "0238190",
+          "80E7CEDF0"
+        ],
+        "direction": "all_incident",
+        "rows": 12,
+        "new_rows": 7,
+        "complete": true,
+        "evidence_ids": [
+          342060,
+          560280,
+          1437302,
+          1606988,
+          1992414,
+          2172015,
+          2484886,
+          2591754,
+          2956712,
+          3190893,
+          3595646,
+          3711922
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 9,
+        "account": [
+          "0013078",
+          "8053B01E0"
+        ],
+        "direction": "all_incident",
+        "rows": 17,
+        "new_rows": 16,
+        "complete": true,
+        "evidence_ids": [
+          992649,
+          1896531,
+          1896532,
+          1896522,
+          1896497,
+          1896501,
+          1896502,
+          1896485,
+          1896510,
+          1896489,
+          1896506,
+          1896518,
+          1896482,
+          1896526,
+          1896527,
+          1896514,
+          1896493
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 10,
+        "account": [
+          "0213",
+          "80C93DF00"
+        ],
+        "direction": "all_incident",
+        "rows": 14,
+        "new_rows": 13,
+        "complete": true,
+        "evidence_ids": [
+          1896480,
+          1896504,
+          1896512,
+          1896495,
+          1896520,
+          1896508,
+          1896487,
+          1896499,
+          2367216,
+          1896484,
+          1896524,
+          1896529,
+          1896491,
+          1896516
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 11,
+        "account": [
+          "03533",
+          "802293280"
+        ],
+        "direction": "all_incident",
+        "rows": 1,
+        "new_rows": 0,
+        "complete": true,
+        "evidence_ids": [
+          1285338
+        ],
+        "reason": "FIFO"
+      },
+      {
+        "step": 12,
+        "account": [
+          "011107",
+          "80094D8A0"
+        ],
+        "direction": "all_incident",
+        "rows": 2,
+        "new_rows": 1,
+        "complete": true,
+        "evidence_ids": [
+          732226,
+          1747908
+        ],
+        "reason": "FIFO"
+      }
+    ],
+    "adaptive_trace": [
+      {
+        "step": 1,
+        "account": [
+          "0240774",
+          "80F168680"
+        ],
+        "direction": "all_incident",
+        "rows": 16,
+        "new_rows": 14,
+        "complete": true,
+        "evidence_ids": [
+          560672,
+          996111,
+          1267789,
+          1314024,
+          1314023,
+          1545210,
+          1976358,
+          2064956,
+          2115979,
+          2168023,
+          2347714,
+          2377397,
+          2918044,
+          3219966,
+          3302798,
+          3468460
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 2,
+        "account": [
+          "0132499",
+          "80CA00460"
+        ],
+        "direction": "all_incident",
+        "rows": 15,
+        "new_rows": 8,
+        "complete": true,
+        "evidence_ids": [
+          996111,
+          1001767,
+          1274808,
+          1366260,
+          1545210,
+          1976358,
+          2025620,
+          2115979,
+          2213534,
+          2347714,
+          2458895,
+          2823701,
+          2918044,
+          3302798,
+          3638247
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 3,
+        "account": [
+          "0039556",
+          "80F540CB0"
+        ],
+        "direction": "all_incident",
+        "rows": 7,
+        "new_rows": 0,
+        "complete": true,
+        "evidence_ids": [
+          560672,
+          1267789,
+          2064956,
+          2168023,
+          2377397,
+          3219966,
+          3468460
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 4,
+        "account": [
+          "022205",
+          "802291DF0"
+        ],
+        "direction": "all_incident",
+        "rows": 9,
+        "new_rows": 2,
+        "complete": true,
+        "evidence_ids": [
+          1001767,
+          1285338,
+          1366260,
+          1747908,
+          2025620,
+          2213534,
+          2458895,
+          2823701,
+          3638247
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 5,
+        "account": [
+          "0112",
+          "8000C76D0"
+        ],
+        "direction": "all_incident",
+        "rows": 17,
+        "new_rows": 15,
+        "complete": true,
+        "evidence_ids": [
+          285399,
+          342060,
+          961858,
+          1314024,
+          1314023,
+          1468026,
+          1606988,
+          1919857,
+          1896522,
+          1896520,
+          2183879,
+          2377068,
+          2484886,
+          3015151,
+          3190893,
+          3536194,
+          3595646
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 6,
+        "account": [
+          "0116",
+          "8000CC490"
+        ],
+        "direction": "all_incident",
+        "rows": 23,
+        "new_rows": 15,
+        "complete": true,
+        "evidence_ids": [
+          286379,
+          285399,
+          526160,
+          693713,
+          961858,
+          1329302,
+          1345034,
+          1468026,
+          1622555,
+          1919857,
+          2183879,
+          2377068,
+          2582129,
+          2591675,
+          2659922,
+          2975942,
+          2985745,
+          3015151,
+          3142000,
+          3468148,
+          3468152,
+          3536194,
+          3663492
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 7,
+        "account": [
+          "0238190",
+          "80E7CEDF0"
+        ],
+        "direction": "all_incident",
+        "rows": 12,
+        "new_rows": 7,
+        "complete": true,
+        "evidence_ids": [
+          342060,
+          560280,
+          1437302,
+          1606988,
+          1992414,
+          2172015,
+          2484886,
+          2591754,
+          2956712,
+          3190893,
+          3595646,
+          3711922
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 8,
+        "account": [
+          "0118",
+          "80DC26100"
+        ],
+        "direction": "all_incident",
+        "rows": 21,
+        "new_rows": 14,
+        "complete": true,
+        "evidence_ids": [
+          560280,
+          643107,
+          744049,
+          1174372,
+          1376025,
+          1437302,
+          1992398,
+          1992414,
+          2020190,
+          2111664,
+          2172015,
+          2240331,
+          2377099,
+          2514228,
+          2591754,
+          2956712,
+          3132086,
+          3171406,
+          3271062,
+          3624835,
+          3711922
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 9,
+        "account": [
+          "0117",
+          "80DC150C0"
+        ],
+        "direction": "all_incident",
+        "rows": 13,
+        "new_rows": 6,
+        "complete": true,
+        "evidence_ids": [
+          643107,
+          978922,
+          1029112,
+          1376025,
+          1822150,
+          1992398,
+          2111664,
+          2357670,
+          2514228,
+          3025317,
+          3132086,
+          3624835,
+          3673110
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 10,
+        "account": [
+          "0137218",
+          "80DD93080"
+        ],
+        "direction": "all_incident",
+        "rows": 9,
+        "new_rows": 2,
+        "complete": true,
+        "evidence_ids": [
+          744049,
+          1174372,
+          1637993,
+          2020190,
+          2240331,
+          2377099,
+          3054255,
+          3171406,
+          3271062
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 11,
+        "account": [
+          "0038478",
+          "80E23DC00"
+        ],
+        "direction": "all_incident",
+        "rows": 19,
+        "new_rows": 14,
+        "complete": true,
+        "evidence_ids": [
+          286379,
+          442878,
+          526462,
+          1158906,
+          1298220,
+          1622555,
+          1760581,
+          1791509,
+          1919930,
+          2216279,
+          2386722,
+          2601594,
+          2659922,
+          2869182,
+          2975942,
+          3093251,
+          3410035,
+          3605439,
+          3663492
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      },
+      {
+        "step": 12,
+        "account": [
+          "0240243",
+          "80EDB4670"
+        ],
+        "direction": "all_incident",
+        "rows": 10,
+        "new_rows": 3,
+        "complete": true,
+        "evidence_ids": [
+          291139,
+          526462,
+          1298220,
+          1730296,
+          1730297,
+          1919930,
+          2216279,
+          2601594,
+          3093251,
+          3605439
+        ],
+        "reason": "Prefer bridge/fork accounts supported by already observed edges"
+      }
+    ]
+  }
+]

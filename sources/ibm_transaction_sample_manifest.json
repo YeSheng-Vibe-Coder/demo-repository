@@ -1,0 +1,21 @@
+{
+  "url": "https://www.kaggle.com/api/v1/datasets/download/ealtman2019/ibm-transactions-for-anti-money-laundering-aml/HI-Small_Trans.csv",
+  "range_bytes": "0-65535",
+  "sha256": "58046cbe776609167edf5f39ea8b56da83bfe262cb2011615b6de099085a9133",
+  "header": [
+    "Timestamp",
+    "From Bank",
+    "Account",
+    "To Bank",
+    "Account",
+    "Amount Received",
+    "Receiving Currency",
+    "Amount Paid",
+    "Payment Currency",
+    "Payment Format",
+    "Is Laundering"
+  ],
+  "complete_sample_rows": 684,
+  "scope": "header and prefix only; not representative/full-file validation",
+  "excluded_partial_last_line": true
+}

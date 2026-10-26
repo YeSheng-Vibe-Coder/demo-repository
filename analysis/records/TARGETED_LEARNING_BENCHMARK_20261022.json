@@ -1,0 +1,261 @@
+{
+  "kind": "paired_development_diagnostic_not_independent_validation",
+  "date_sydney": "2026-10-22",
+  "new_cases": 4,
+  "total_investigations": 8,
+  "enrollment": {
+    "positive_account_windows": 2,
+    "negative_account_windows": 2,
+    "period": "2022-08-04 to 2022-08-05 dataset_naive",
+    "degree_filter": "1..12 distinct counterparties in enrollment features",
+    "excluded_debug_seed": true,
+    "labels_in_planner_or_reviewer": false,
+    "test_partition_used": false
+  },
+  "manifest_sha256": "2c738de80d3c6d0af63d58e8cd9602a6471ccdd6e76a66981564beba923d437c",
+  "summary": {
+    "baseline": {
+      "cases": 4,
+      "review_pass": 3,
+      "review_reject": 0,
+      "review_unavailable": 0,
+      "not_reviewed": 1,
+      "review_needs_evidence": 0,
+      "provider_tokens": 70261,
+      "sql_requests": 11,
+      "guard_blocks": 1
+    },
+    "targeted": {
+      "cases": 4,
+      "review_pass": 1,
+      "review_reject": 1,
+      "review_unavailable": 0,
+      "not_reviewed": 2,
+      "review_needs_evidence": 0,
+      "provider_tokens": 72628,
+      "sql_requests": 10,
+      "guard_blocks": 2
+    }
+  },
+  "runs": [
+    {
+      "case": 1,
+      "variant": "baseline",
+      "run_id": "1e157a0c-158a-4959-be61-46203bdc9c6c",
+      "status": "insufficient_evidence",
+      "review_verdict": "pass",
+      "model_responses": 4,
+      "provider_tokens": 9931,
+      "sql_requests": 1,
+      "unique_observed_transaction_ids": 1,
+      "structured_transfer_claims": 0,
+      "example_notation_in_prose": false,
+      "error": null,
+      "evaluation_config_sha256": "07c0ae48385558df09e52f20e206f7382a5cdbb209b8ef8a74e02ab0b7532f7a",
+      "policy_manifest": {
+        "planner_prompt_sha256": "322edb6238cc23dcaf65a52e7b3c8c81cc5eebc439a41e72f97b1bb10b3d2a97",
+        "tool_catalog_sha256": "6355d6b3df0727beee4ac6e9b0217a2820e583f8a283a65e0c70ab75fa5b5e63",
+        "targeted_examples": "targeted-evidence/1.0",
+        "variant": "baseline",
+        "reviewer": "evidence-review/1.0"
+      }
+    },
+    {
+      "case": 1,
+      "variant": "targeted",
+      "run_id": "69691e33-3b95-4cf0-9c72-836039dc6e21",
+      "status": "insufficient_evidence",
+      "review_verdict": "pass",
+      "model_responses": 4,
+      "provider_tokens": 9961,
+      "sql_requests": 1,
+      "unique_observed_transaction_ids": 1,
+      "structured_transfer_claims": 0,
+      "example_notation_in_prose": true,
+      "error": null,
+      "evaluation_config_sha256": "07c0ae48385558df09e52f20e206f7382a5cdbb209b8ef8a74e02ab0b7532f7a",
+      "policy_manifest": {
+        "planner_prompt_sha256": "322edb6238cc23dcaf65a52e7b3c8c81cc5eebc439a41e72f97b1bb10b3d2a97",
+        "tool_catalog_sha256": "6355d6b3df0727beee4ac6e9b0217a2820e583f8a283a65e0c70ab75fa5b5e63",
+        "targeted_examples": "targeted-evidence/1.0",
+        "variant": "targeted",
+        "reviewer": "evidence-review/1.0"
+      }
+    },
+    {
+      "case": 2,
+      "variant": "targeted",
+      "run_id": "c87dd424-fd87-422a-818c-2fd6fa87c761",
+      "status": "review_rejected",
+      "review_verdict": "reject",
+      "model_responses": 6,
+      "provider_tokens": 20427,
+      "sql_requests": 3,
+      "unique_observed_transaction_ids": 4,
+      "structured_transfer_claims": 0,
+      "example_notation_in_prose": false,
+      "error": null,
+      "evaluation_config_sha256": "07c0ae48385558df09e52f20e206f7382a5cdbb209b8ef8a74e02ab0b7532f7a",
+      "policy_manifest": {
+        "planner_prompt_sha256": "322edb6238cc23dcaf65a52e7b3c8c81cc5eebc439a41e72f97b1bb10b3d2a97",
+        "tool_catalog_sha256": "6355d6b3df0727beee4ac6e9b0217a2820e583f8a283a65e0c70ab75fa5b5e63",
+        "targeted_examples": "targeted-evidence/1.0",
+        "variant": "targeted",
+        "reviewer": "evidence-review/1.0"
+      }
+    },
+    {
+      "case": 2,
+      "variant": "baseline",
+      "run_id": "5382870b-107d-4d93-9a66-63f661e344c0",
+      "status": "insufficient_evidence",
+      "review_verdict": "pass",
+      "model_responses": 7,
+      "provider_tokens": 25206,
+      "sql_requests": 4,
+      "unique_observed_transaction_ids": 4,
+      "structured_transfer_claims": 0,
+      "example_notation_in_prose": false,
+      "error": null,
+      "evaluation_config_sha256": "07c0ae48385558df09e52f20e206f7382a5cdbb209b8ef8a74e02ab0b7532f7a",
+      "policy_manifest": {
+        "planner_prompt_sha256": "322edb6238cc23dcaf65a52e7b3c8c81cc5eebc439a41e72f97b1bb10b3d2a97",
+        "tool_catalog_sha256": "6355d6b3df0727beee4ac6e9b0217a2820e583f8a283a65e0c70ab75fa5b5e63",
+        "targeted_examples": "targeted-evidence/1.0",
+        "variant": "baseline",
+        "reviewer": "evidence-review/1.0"
+      }
+    },
+    {
+      "case": 3,
+      "variant": "baseline",
+      "run_id": "af96ea60-3e41-441a-9be9-752d53ba43ab",
+      "status": "insufficient_evidence",
+      "review_verdict": "pass",
+      "model_responses": 6,
+      "provider_tokens": 20067,
+      "sql_requests": 3,
+      "unique_observed_transaction_ids": 1,
+      "structured_transfer_claims": 1,
+      "example_notation_in_prose": false,
+      "error": null,
+      "evaluation_config_sha256": "07c0ae48385558df09e52f20e206f7382a5cdbb209b8ef8a74e02ab0b7532f7a",
+      "policy_manifest": {
+        "planner_prompt_sha256": "322edb6238cc23dcaf65a52e7b3c8c81cc5eebc439a41e72f97b1bb10b3d2a97",
+        "tool_catalog_sha256": "6355d6b3df0727beee4ac6e9b0217a2820e583f8a283a65e0c70ab75fa5b5e63",
+        "targeted_examples": "targeted-evidence/1.0",
+        "variant": "baseline",
+        "reviewer": "evidence-review/1.0"
+      }
+    },
+    {
+      "case": 3,
+      "variant": "targeted",
+      "run_id": "1bedddde-d338-4362-9fbd-c6e3b00a5557",
+      "status": "model_unavailable",
+      "review_verdict": "not_reviewed",
+      "model_responses": 7,
+      "provider_tokens": 25902,
+      "sql_requests": 3,
+      "unique_observed_transaction_ids": 1,
+      "structured_transfer_claims": 0,
+      "example_notation_in_prose": false,
+      "error": "Planner contract invalid after one repair",
+      "evaluation_config_sha256": "07c0ae48385558df09e52f20e206f7382a5cdbb209b8ef8a74e02ab0b7532f7a",
+      "policy_manifest": {
+        "planner_prompt_sha256": "322edb6238cc23dcaf65a52e7b3c8c81cc5eebc439a41e72f97b1bb10b3d2a97",
+        "tool_catalog_sha256": "6355d6b3df0727beee4ac6e9b0217a2820e583f8a283a65e0c70ab75fa5b5e63",
+        "targeted_examples": "targeted-evidence/1.0",
+        "variant": "targeted",
+        "reviewer": "evidence-review/1.0"
+      }
+    },
+    {
+      "case": 4,
+      "variant": "targeted",
+      "run_id": "edd368e8-44ce-4d64-9c54-fb0ea4883b98",
+      "status": "budget_exhausted",
+      "review_verdict": "not_reviewed",
+      "model_responses": 5,
+      "provider_tokens": 16338,
+      "sql_requests": 3,
+      "unique_observed_transaction_ids": 6,
+      "structured_transfer_claims": 0,
+      "example_notation_in_prose": false,
+      "error": "Mandatory case metadata exceeds local input bound; no model dispatched",
+      "evaluation_config_sha256": "07c0ae48385558df09e52f20e206f7382a5cdbb209b8ef8a74e02ab0b7532f7a",
+      "policy_manifest": {
+        "planner_prompt_sha256": "322edb6238cc23dcaf65a52e7b3c8c81cc5eebc439a41e72f97b1bb10b3d2a97",
+        "tool_catalog_sha256": "6355d6b3df0727beee4ac6e9b0217a2820e583f8a283a65e0c70ab75fa5b5e63",
+        "targeted_examples": "targeted-evidence/1.0",
+        "variant": "targeted",
+        "reviewer": "evidence-review/1.0"
+      }
+    },
+    {
+      "case": 4,
+      "variant": "baseline",
+      "run_id": "e8b42dfc-8e7a-4c68-bf85-396e1df526ff",
+      "status": "budget_exhausted",
+      "review_verdict": "not_reviewed",
+      "model_responses": 4,
+      "provider_tokens": 15057,
+      "sql_requests": 3,
+      "unique_observed_transaction_ids": 9,
+      "structured_transfer_claims": 0,
+      "example_notation_in_prose": false,
+      "error": "Mandatory case metadata exceeds local input bound; no model dispatched",
+      "evaluation_config_sha256": "07c0ae48385558df09e52f20e206f7382a5cdbb209b8ef8a74e02ab0b7532f7a",
+      "policy_manifest": {
+        "planner_prompt_sha256": "322edb6238cc23dcaf65a52e7b3c8c81cc5eebc439a41e72f97b1bb10b3d2a97",
+        "tool_catalog_sha256": "6355d6b3df0727beee4ac6e9b0217a2820e583f8a283a65e0c70ab75fa5b5e63",
+        "targeted_examples": "targeted-evidence/1.0",
+        "variant": "baseline",
+        "reviewer": "evidence-review/1.0"
+      }
+    }
+  ],
+  "control_checks": [
+    {
+      "control": "known_wrong_reverse_narrative",
+      "verdict": "reject",
+      "run_id": "7e3a8f3e-4309-4648-80f1-9c92e7887903"
+    },
+    {
+      "control": "known_correct_single_edge",
+      "verdict": "pass",
+      "run_id": "76e61083-d8e8-46a2-86d6-a4a37ba80599"
+    },
+    {
+      "control": "isolated_wrong_reverse",
+      "verdict": "reject",
+      "run_id": "05efafe4-b368-4473-9dfd-e88ad2496733"
+    }
+  ],
+  "control_calibration_cost": {
+    "responses": 9,
+    "provider_tokens": 17230,
+    "known_debug_seed_not_heldout": true
+  },
+  "frozen_reviewer_prompt_sha256": "7c022ae3127513fd8ceb9d448d4b5be3b6186f654a1dc50693d6a43a08163107",
+  "example_library_sha256": "989ae0b5806e73f0f9c29b610a6d2d6817daffa2554dc17b3d89e291f49824c6",
+  "manual_audit_findings": [
+    "The targeted sparse-positive narrative used fictional t1/B->A notation; reviewer did not flag it. This is a provenance warning, not a fabricated reverse edge.",
+    "Targeted active-positive review included scope complaints that confused focus-account queries with unqueried counterparty scopes; review rejection alone is not an accuracy measure.",
+    "Baseline sparse-negative narrative claimed no further queries were possible despite remaining tools/windows; reviewer passed it.",
+    "Only one of five final proposals included structured transfer claims. Empty structured claims cannot count as proven endpoint correctness."
+  ],
+  "conclusion": "No demonstrated benefit from targeted examples v1.0. Not promoted; default remains baseline. Independent review is enabled but not established as a ground-truth oracle.",
+  "next_design_priorities": [
+    "Evidence-backed structured final claims with required provenance when transaction facts are asserted",
+    "Separate candidate assertions from unresolved questions in reviewer rubric",
+    "Explicit case investigation objective, independent of rule presence, without fixed action order",
+    "Budget-aware example retrieval and compact evidence inventory"
+  ],
+  "weight_training": false,
+  "automatic_promotion": false,
+  "all_features_production_ready": false,
+  "business_alignment": "Historical account-level diagnostic; not the agreed alert-investigation-rule-update business evaluation",
+  "case_llm_gate_removed": true,
+  "superseded_by": "docs/architecture/IMPLEMENTATION_ALIGNMENT_AUDIT.md"
+}

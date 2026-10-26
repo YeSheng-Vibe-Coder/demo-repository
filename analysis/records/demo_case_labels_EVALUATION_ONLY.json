@@ -1,0 +1,24 @@
+[
+  {
+    "case_id": "CASE_LARGE",
+    "labelled_fraud_rows": 0,
+    "fraud_transaction_ids": []
+  },
+  {
+    "case_id": "CASE_PRIORITY",
+    "labelled_fraud_rows": 1,
+    "fraud_transaction_ids": [
+      5914954
+    ]
+  },
+  {
+    "case_id": "CASE_FANIN",
+    "labelled_fraud_rows": 0,
+    "fraud_transaction_ids": []
+  },
+  {
+    "case_id": "CASE_CHAIN",
+    "labelled_fraud_rows": 0,
+    "fraud_transaction_ids": []
+  }
+]

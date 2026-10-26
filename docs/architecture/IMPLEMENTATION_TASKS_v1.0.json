@@ -1,0 +1,255 @@
+{
+  "spec_version": "1.0",
+  "authority": "AML_Agent_Technical_Spec_v1.0.md section 8.2",
+  "notes": "实际实现以 docs/operations/RUNBOOK.md 和 FastAPI OpenAPI 为准；设计目标尚未全部验收。",
+  "tasks": [
+    {
+      "id": "WP01",
+      "name": "契约与存储",
+      "planned_paths": [
+        "services/aml-api/aml_agent/"
+      ],
+      "dependencies": [],
+      "acceptance": "schema/状态机、事务、409/幂等/lease 测试",
+      "status": "research_cycle_live_verified_broader_acceptance_pending",
+      "spec_sections": [
+        "7",
+        "9.2",
+        "5.4"
+      ],
+      "required_handoff": [
+        "commit",
+        "schema_config_dependency_versions",
+        "test_commands_and_results",
+        "mock_live_replay_classification",
+        "sponsor_call_sites",
+        "open_items_and_error_codes"
+      ],
+      "evidence": "analysis/README.md"
+    },
+    {
+      "id": "WP02",
+      "name": "模型与 Runtime",
+      "planned_paths": [
+        "services/aml-api/aml_agent/"
+      ],
+      "dependencies": [
+        "WP01"
+      ],
+      "acceptance": "models/chat、错误认证、结构化输出、真实 Nemotron 回执与用量",
+      "status": "research_cycle_live_verified_broader_acceptance_pending",
+      "spec_sections": [
+        "1.1",
+        "9.1.1",
+        "9.1.4",
+        "5.4"
+      ],
+      "required_handoff": [
+        "commit",
+        "schema_config_dependency_versions",
+        "test_commands_and_results",
+        "mock_live_replay_classification",
+        "sponsor_call_sites",
+        "open_items_and_error_codes"
+      ],
+      "evidence": "analysis/README.md"
+    },
+    {
+      "id": "WP03",
+      "name": "Zetaris 工具",
+      "planned_paths": [
+        "services/aml-api/aml_agent/"
+      ],
+      "dependencies": [
+        "WP01"
+      ],
+      "acceptance": "聚合/明细/历史、完整性、scope、无标签、查询性能",
+      "status": "research_cycle_live_verified_broader_acceptance_pending",
+      "spec_sections": [
+        "2",
+        "4.2.2",
+        "9.1.2"
+      ],
+      "required_handoff": [
+        "commit",
+        "schema_config_dependency_versions",
+        "test_commands_and_results",
+        "mock_live_replay_classification",
+        "sponsor_call_sites",
+        "open_items_and_error_codes"
+      ],
+      "evidence": "analysis/README.md"
+    },
+    {
+      "id": "WP04",
+      "name": "政策与初版规则",
+      "planned_paths": [
+        "services/aml-api/aml_agent/"
+      ],
+      "dependencies": [
+        "WP01",
+        "WP02",
+        "WP03"
+      ],
+      "acceptance": "来源逐段映射、参数空位、缺字段/行业限制、编译验证",
+      "status": "implemented_pending_live_acceptance",
+      "spec_sections": [
+        "2.3",
+        "4.1"
+      ],
+      "required_handoff": [
+        "commit",
+        "schema_config_dependency_versions",
+        "test_commands_and_results",
+        "mock_live_replay_classification",
+        "sponsor_call_sites",
+        "open_items_and_error_codes"
+      ]
+    },
+    {
+      "id": "WP05",
+      "name": "调查 Planner",
+      "planned_paths": [
+        "services/aml-api/aml_agent/"
+      ],
+      "dependencies": [
+        "WP01",
+        "WP02",
+        "WP03"
+      ],
+      "acceptance": "初始问题、不同观察产生不同动作、Replan、合法终止",
+      "status": "research_cycle_live_verified_broader_acceptance_pending",
+      "spec_sections": [
+        "4.2",
+        "5"
+      ],
+      "required_handoff": [
+        "commit",
+        "schema_config_dependency_versions",
+        "test_commands_and_results",
+        "mock_live_replay_classification",
+        "sponsor_call_sites",
+        "open_items_and_error_codes"
+      ],
+      "evidence": "analysis/README.md"
+    },
+    {
+      "id": "WP06",
+      "name": "Meterless 集成",
+      "planned_paths": [
+        "services/orchestrator/"
+      ],
+      "dependencies": [
+        "WP01",
+        "WP02",
+        "WP05"
+      ],
+      "acceptance": "唯一外层循环、H-MEM 过滤、outbox、恢复、reflect=false、conformance",
+      "status": "research_cycle_live_verified_broader_acceptance_pending",
+      "spec_sections": [
+        "4.2.3",
+        "5.3",
+        "7",
+        "9.1.3"
+      ],
+      "required_handoff": [
+        "commit",
+        "schema_config_dependency_versions",
+        "test_commands_and_results",
+        "mock_live_replay_classification",
+        "sponsor_call_sites",
+        "open_items_and_error_codes"
+      ],
+      "evidence": "analysis/README.md"
+    },
+    {
+      "id": "WP07",
+      "name": "校准与评估",
+      "planned_paths": [
+        "services/aml-api/aml_agent/"
+      ],
+      "dependencies": [
+        "WP01",
+        "WP03",
+        "WP04"
+      ],
+      "acceptance": "dev 校准、冻结验证、标签隔离、统计/预算口径、hold/reject",
+      "status": "research_cycle_live_verified_broader_acceptance_pending",
+      "spec_sections": [
+        "4.1.3",
+        "6"
+      ],
+      "required_handoff": [
+        "commit",
+        "schema_config_dependency_versions",
+        "test_commands_and_results",
+        "mock_live_replay_classification",
+        "sponsor_call_sites",
+        "open_items_and_error_codes"
+      ],
+      "evidence": "analysis/README.md"
+    },
+    {
+      "id": "WP08",
+      "name": "规则闭环",
+      "planned_paths": [
+        "services/aml-api/aml_agent/"
+      ],
+      "dependencies": [
+        "WP04",
+        "WP06",
+        "WP07"
+      ],
+      "acceptance": "base_version、候选差异、自动实验版本与回滚",
+      "status": "research_cycle_live_verified_broader_acceptance_pending",
+      "spec_sections": [
+        "4.3"
+      ],
+      "required_handoff": [
+        "commit",
+        "schema_config_dependency_versions",
+        "test_commands_and_results",
+        "mock_live_replay_classification",
+        "sponsor_call_sites",
+        "open_items_and_error_codes"
+      ],
+      "evidence": "analysis/README.md"
+    },
+    {
+      "id": "WP09",
+      "name": "展示与回执",
+      "planned_paths": [
+        "services/aml-api/aml_agent/"
+      ],
+      "dependencies": [
+        "WP01"
+      ],
+      "acceptance": "来源→告警→Plan→证据→评估全链路，状态真实",
+      "status": "cli_implemented_ui_pending",
+      "spec_sections": [
+        "8.3",
+        "9.2.1"
+      ],
+      "required_handoff": [
+        "commit",
+        "schema_config_dependency_versions",
+        "test_commands_and_results",
+        "mock_live_replay_classification",
+        "sponsor_call_sites",
+        "open_items_and_error_codes"
+      ]
+    },
+    {
+      "id": "WP10",
+      "name": "Planner 定向样本与策略改进闭环",
+      "status": "label_scoring_and_rule_cycle_implemented_auto_strategy_learning_pending",
+      "dependencies": [
+        "WP05"
+      ],
+      "spec_sections": [
+        "6.4"
+      ],
+      "acceptance": "开发集定向正反例、独立评分和失败归因；冻结候选等预算验证；版本注册与回滚；无标签/未来泄漏；不执行 RL 或权重训练"
+    }
+  ]
+}

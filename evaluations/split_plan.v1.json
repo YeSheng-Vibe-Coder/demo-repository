@@ -1,0 +1,18 @@
+{
+  "version": "temporal-cohort/1.0",
+  "dataset": "IBM-HI-Large-v8",
+  "time_basis": "dataset_naive",
+  "frozen_before_label_profile": true,
+  "label_usage": "Independent cohort QA/sampling and evaluation only; never a model feature",
+  "development": {"start": "2022-08-04T00:00:00", "end": "2022-08-08T00:00:00"},
+  "validation": {"start": "2022-08-10T00:00:00", "end": "2022-08-13T00:00:00"},
+  "test": {"start": "2022-08-15T00:00:00", "end": "2022-08-18T00:00:00"},
+  "embargo_hours": 48,
+  "minimum_positive_transactions_per_partition": 10,
+  "diagnostic_cohort": {"account_windows_per_partition": 100, "target_positive_fraction": 0.1, "selection": "label-stratified within each fixed time partition; not population precision"},
+  "natural_cohort": {"selection": "stable hash, label-blind within each fixed time partition", "report_population_prevalence_separately": true},
+  "history": "Only transactions before case_as_of; prior raw history may be used but no labels or cross-split memory. Such overlap is reported, not claimed as account-disjoint validation.",
+  "test_access": "QA aggregate counts may be inspected before implementation; case-level outcomes remain held out; no test-driven tuning",
+  "observed_debug_dates_excluded": ["2022-08-02", "2022-08-03"],
+  "outside_range": "Retained in source; excluded from this first experiment, including long timestamp tail"
+}

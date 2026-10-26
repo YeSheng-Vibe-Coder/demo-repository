@@ -1,0 +1,454 @@
+Learn how to use this guidance
+Your obligations
+Your AML/CTF program
+Develop your AML/CTF programs
+Your AML/CTF program overview
+Step 1: Establish your governance framework
+Governing body
+Senior manager
+AML/CTF compliance officer
+Governance and oversight for sole traders and micro businesses
+Establishing a strong AML/CTF culture
+Step 2: Identify and assess your risks: risk assessment
+Step 3: Manage and mitigate your risks – AML/CTF policies
+Step 4: Review and update your AML/CTF program
+Step 5: Conduct an independent evaluation
+Record keeping
+Record keeping overview
+Record keeping in ADI authorised account transfers
+Record keeping in correspondent banking relationships
+Record keeping checklist
+Customer due diligence
+Overview of customer due diligence
+Assigning customer risk ratings
+Initial customer due diligence
+Overview of initial customer due diligence
+Initial customer due diligence guides by customer type
+Initial CDD for individuals
+Initial CDD for sole traders
+Initial CDD for body corporate, partnership or unincorporated association
+Initial CDD for trust
+Initial CDD for government body
+Delayed initial customer due diligence
+Identifying individuals who don't have standard ID
+Alternative ID for First Nations peoples
+Examples of using alternative ID procedures
+Reliance on customer identification by a third party
+Overview of reliance on customer identification by a third party
+Reliance under customer due diligence arrangements
+Reliance on a case-by-case basis
+Managing risk and assessing foreign jurisdictions
+Enhanced customer due diligence
+Ongoing customer due diligence
+Overview of ongoing customer due diligence
+What you must monitor for
+How to monitor your customers
+Responding to unusual transactions and behaviour
+Reviewing and updating customers’ ML/TF risk and KYC information
+Politically exposed persons
+Domestic PEP examples
+Foreign PEP example
+International organisation PEP example
+Persons designated for targeted financial sanctions
+Source of funds and source of wealth
+Examples of establishing source of funds and source of wealth with customers
+Transitioning existing customers
+Personnel due diligence and training
+Identifying personnel roles that require due diligence and training
+Personnel due diligence (PDD)
+AML/CTF training
+Examples of personnel due diligence and training in practice
+Reporting to us
+Suspicious matter reports
+Threshold transaction reports
+International funds transfer reports
+Our compliance reports
+Legal professional privilege (Reform)
+Tipping off
+Cross-border movement reports
+Exemptions and modifications
+Exemptions from AML/CTF obligations
+Applying for exemptions and modifications
+Exemption policy
+Keep open notices
+Industry contribution levy
+Consequences of not complying
+Additional guidance
+Applying to have an AUSTRAC decision reviewed
+Correspondent banking relationships
+Exemptions from AML/CTF obligations for businesses providing only item 54 designated services
+Financial services for customers that financial institutions assess to be higher risk
+Data breaches and AML/CTF considerations
+Determining ownership and control structures
+High-risk countries, regions and groups
+Reporting groups
+Understanding reporting groups
+Forming reporting groups
+Obligations for lead entities and members
+The travel rule
+When the travel rule doesn’t apply
+Travel rule overview
+Travel rule obligations for ordering institutions
+Travel rule obligations for intermediary institutions
+Travel rule obligations for beneficiary institutions
+Additional travel rule obligations when transferring virtual assets
+Foreign branches and subsidiaries
+Using outsourcing to help meet your obligations
+Repeal of the Financial Transaction Reports Act 1988
+New information gathering powers
+Section 172A examination powers
+Program starter kits
+Accountant program starter kit
+Accounting program starter kit: Getting started
+Step 1: Customise your accounting program using the starter kit
+Step 2: Use your accounting program
+Step 3: Maintain and review your accounting program
+Accounting program starter kit: Document library
+Accounting program starter kit: examples of dealing with clients
+Updates to the accountant program starter kit
+Conveyancer program starter kit
+Conveyancing program starter kit: Getting started
+Step 1: Customise your conveyancing program using the starter kit
+Step 2: Use your conveyancing program
+Step 3: Maintain and review your conveyancing program
+Conveyancing program starter kit: Document library
+Conveyancing program starter kit: examples of dealing with clients
+Updates to the conveyancer program starter kit
+Jeweller program starter kit
+Regulation options for dealers in precious metals, stones and products
+Jeweller program starter kit: Getting started
+Step 1: Customise your jeweller program using the starter kit
+Step 2: Use your jeweller program
+Step 3: Maintain and review your jeweller program
+Jeweller program starter kit: Document library
+Jeweller program starter kit: examples of dealing with customers
+Examples of linked transactions in practice for dealers in precious metals, stones and products
+Updates to the jeweller program starter kit
+Legal profession program starter kit
+Legal profession program starter kit: Getting started
+Step 1: Customise your legal profession program using the starter kit
+Step 2: Use your legal profession program
+Step 3: Maintain and review your legal profession program
+Legal profession program starter kit: Document library
+Legal profession program starter kit: examples of dealing with clients
+Updates to the legal profession program starter kit
+Real estate program starter kit
+Real estate program starter kit: Getting started
+Step 1: Customise your real estate program using the starter kit
+Step 2: Use your real estate program
+Step 3: Maintain and review your real estate program
+Real estate program starter kit: Document library
+Real estate program starter kit: examples of dealing with customers
+Updates to the real estate program starter kit
+Risks and indicators of suspicious activity
+Risks and indicators of suspicious activity overview
+Risk insights and indicators of suspicious activity for accountants
+Indicators of suspicious activity for the banking sector
+Indicators of suspicious activity for the bullion sector
+Indicators of suspicious activity for the casino sector
+Risk insights and indicators of suspicious activity for dealers in precious stones, metals and other products
+Indicators of suspicious activity for the financial planners sector
+Risk insights and indicators of suspicious activity for legal professionals
+Indicators of suspicious activity for the life insurance sector
+Indicators of suspicious activity for non-bank lenders and financiers
+Indicators of suspicious activity for the on-course bookmaker sector
+Indicators of suspicious activity for the online betting agencies sector
+Indicators of suspicious activity for the pubs and clubs sector
+Risk insights and indicators of suspicious activity for the real estate sector
+Indicators of suspicious activity relating to customers who are not for profit organisations
+Indicators of suspicious activity for the remittance service providers sector
+Indicators of suspicious activity for the securities and derivatives sector
+Indicators of suspicious activity for the superannuation sector
+Indicators of suspicious activity for virtual asset service providers
+Latest guidance updates
+Paying invoices and notices
+✕
+We’ve created suspicious activity indicators for the banking sector to help you identify potential money laundering, terrorism financing, proliferation financing and other serious criminal activities.
+On this page
+Customer identification and behaviour
+Money laundering
+Tax crimes, fraud and scams
+Serious financial and organised crime
+Terrorism, national security and international crime
+Proliferation financing indicators
+Suspicious matter reporting
+Related pages
+These indicators can inform your transaction monitoring alerts that trigger further review. To complement these indicators, you must also ensure your transaction monitoring systems alert you to unusual, large or complex transactions or patterns of transactions.
+This indicators list isn’t exhaustive. You should consider other indicators specific to your business’s individual risk profile and circumstances.
+Customer identification and behaviour
+Read our list of suspicious activity indicators for customer identification and behaviour.
+Customer identification indicators
+A customer:
+provides an identification document that cannot be authenticated
+refuses or is reluctant to provide identification information or documents
+provides identification information that is false, misleading, vague, or cannot be verified
+has inconsistencies in information across different identification documents
+provides a post office box address for their residential address
+displays a pattern of name variations or uses aliases from one transaction to another
+has sources of wealth or sources of funds that are unexplained or inconsistent with their profile
+has common identifiers in their customer identification information with another customer that appears to be unrelated.
+Customer behaviour indicators
+A customer:
+makes an unusual enquiry to staff about whether they report to government authorities. For example, AUSTRAC, the Australian Taxation Office or law enforcement agencies
+is the subject of law enforcement enquiries, or their activity is
+provides cash that has a distinct or unusual odour
+appears nervous, overly defensive or evasive when questioned
+appears to be directed by a third party, or makes a transaction in a branch while accompanied, overseen or directed by a third party
+is a signatory to a relative’s account and makes large cash deposits into it
+becomes defensive when questioned over their financial transactions
+undertakes transactions that appear inconsistent with their profile or transaction history
+knows few details about a transaction or its purpose
+is reluctant to identify the source of funds for a transaction or their source of wealth
+enquires about reporting thresholds or attempts to persuade the reporting entity not to file mandated reports
+alters the transaction amount after being asked for identification information or documents
+makes transactions at different branches or approaches different tellers within the same branch
+frequently exchanges small cash denominations for larger cash denominations
+appears to be collaborating with third parties to deposit lower amounts of cash to avoid customer identification or reporting thresholds
+makes numerous outgoing payments to apparently unrelated parties shortly after they receive incoming funds
+has a third party or relative conducting transactions on their account, who appears to be nervous.
+Money laundering
+Read our list of suspicious activity indicators for money laundering.
+Money laundering indicators
+A customer:
+holds a visitor or other short-term visa and opens an account during a short stay in Australia
+is suspected of using a personal account for business purposes, or vice-versa
+uses large amounts of cash to pay for international funds transfers
+makes frequent cash deposits or withdrawals over multiple days
+has unusually large volumes of cash deposits and withdrawals, inconsistent with their profile
+has third parties who structure cash deposits into their bank account
+has third-party transfers to and from their account with no apparent economic rationale
+has transactions that are inconsistent with their profile or transaction history
+makes a rounded-sum transaction that appears inconsistent with what is expected from the customer
+appears to use their accounts to transfer money through to other accounts only in an attempt to layer illicit funds
+has an inactive account that begins to see frequent financial activity
+makes transactions that are unnecessarily complex for their declared purpose
+makes transactions that involve persons or entities identified by media, law enforcement or intelligence agencies as being linked to criminal activities
+uses complex company or trust structures and associated banking arrangements in an attempt to obscure the source and beneficial ownership of their funds
+opens accounts using front or shell companies
+purchases high-value assets that are inconsistent with their profile
+attempts to layer funds through both domestic and international funds transfers to accounts held with multiple domestic and foreign banks
+splits large cash deposits into multiple smaller deposits below the $10,000 reporting threshold (known as structuring)
+makes multiple transactions when one transaction would suffice
+makes rapid or complex funds transfers through multiple accounts
+makes unusually rapid funds transfers in a manner inconsistent with their profile, or that have no economic rationale
+makes rapid and complex funds transfers between multiple companies linked by shareholders, trusts or beneficial owners
+makes rapid international funds transfers immediately after a deposit
+makes large or rapid domestic funds transfers between their personal and business transaction accounts
+transfers funds between accounts held with multiple domestic and foreign banks
+makes cash deposits on the same day across multiple branches and/or ATMs
+makes cash deposits at both the branch (teller) and the same branch’s ATMs
+makes multiple cash deposits at the same location over a short period of time
+makes cash deposits via ATMs across multiple accounts using a single card (issued by a domestic or international financial institution) or mobile number
+has an account that receives deposits from multiple third parties
+who controls and attempts to layer funds between multiple accounts, or small group of customers who do this.
+A business customer:
+has a newly opened account that receives large cash deposits or frequent cash deposits where the customer has no prior financial profile, or has a newly registered ABN/ACN
+has transactions that appear inconsistent with their declared business.
+Trade-based money laundering indicators
+A customer:
+has transactions and accompanying documents that show evidence of over- or under-invoicing
+has overly complex company or directorship structures
+has trading activity that’s inconsistent with their profile or market trends, or via relationships with no economic rationale
+sends or receives funds to or from higher-risk jurisdictions for trade-based money laundering. This includes jurisdictions with free trade zones, special economic zones, foreign trade zones or export processing zones
+is suddenly involved in the import or export of goods, without having been involved in this type of activity previously
+is unable to produce appropriate documentation to support a transaction
+has international payments that involve multiple entities which appear to have connected addresses, contact details or key personnel
+provides supporting documentation for transactions that includes unreasonably high or additional charges
+upon receiving an incoming international funds transfer, immediately either:
+splits and transfers funds to multiple domestic company bank accounts
+sends funds back overseas, often to the ordering company or to the same country (this is known as ‘u-turn’ activity or ‘carouseling’).
+A company customer:
+appears to conduct business exclusively with a single counterparty
+prefers to pay in cash even if they qualify for credit facilities
+has significant domestic transfers or cash transactions in excess of expectations for their declared business (possible co-mingling of illicit and licit funds)
+operates in porous border regions close to higher-risk jurisdictions for trade-based money laundering
+trades goods to or from higher-risk sectors for trade-based money laundering
+trades in goods where prices may be subjective
+appears from open-source information to be operating in a different industry compared to the goods they import or export.
+Tax crimes, fraud and scams
+Read our suspicious activity indicators for tax crimes, fraud and scams.
+Tax evasion (personal) indicators
+A customer:
+makes international funds transfers to or from tax secrecy jurisdictions
+who is based domestically uses non-resident accounts to receive cash deposits
+makes funds transfers between personal and business accounts to obfuscate the source or destination of funds
+uses business accounts for personal transactions
+makes cash deposits and withdrawals at branches below the $10,000 reporting threshold (known as structuring)
+uses agent banking arrangements to deposit cash for no apparent logical reason or economic rationale.
+Child exploitation indicators
+A customer:
+makes small-value transactions ranging from between $50 and $1,500 to higher-risk jurisdictions for child exploitation
+has transferred amounts that are typically rounded in the native currency of the higher-risk jurisdiction for child exploitation
+makes payments for VPN software, screen capture, live-streaming programs, metadata stripping or anonymising software
+has transactions that correspond to purchases of webcam or livestreaming platforms, including those providing adult entertainment
+has no work or family links to jurisdictions they are sending funds to
+attempts to disguise international funds transfers by describing payments as ‘accommodation,’ ‘education,’ ‘school,’ ‘uniform’ or 'medical bills'
+has a transaction history that includes the use of credit cards or ATMs in higher-risk jurisdictions for child exploitation
+has travel-related expenses closely before or after funds transfers to higher-risk jurisdiction for child exploitation
+makes payments for accommodation in higher-risk jurisdiction for child exploitation
+purchases a travel money card or pre-paid credit card accepted in higher-risk jurisdictions for child exploitation.
+Tax evasion (business) indicators
+A customer:
+has business transactions that involve foreign jurisdictions with no economic rationale
+has a business that sends international transactions to or from tax secrecy jurisdictions
+cannot provide a reasonable explanation about why they’re making transfers to professional facilitators in Australia and overseas
+uses complex corporate or legal structures for no logical reason or economic rationale
+has complex corporate or legal structures located in known tax secrecy jurisdictions
+has transactions that appear to be linked to the shadow economy
+uses personal accounts for business transactions
+receives international funds transfers described as ‘loan’, ‘loan draw down’ or ‘loan advance’
+sends or receives funds internationally described as ‘consulting fees’ or ‘management fees’
+makes complicated funds transfers with no apparent economic rationale
+uses third-party company accounts
+transfers funds to international entities, followed soon after by incoming funds transfers of similar amounts from the same international entities
+is both the ordering and beneficiary customer for multiple outgoing international funds transfers
+makes cheque deposits into a business account followed immediately by cash withdrawals of an equivalent value on the same day
+makes regular large cash withdrawals which may indicate wage payments for non-existent employees to lower their tax liability.
+A company customer:
+transfers funds internationally to tax secrecy jurisdictions or business centres described as ‘set up fees’ or ‘annual registration fees’, often involving online service providers
+transfers funds domestically to a facilitator such as a lawyer or an accountant, who will then send the funds internationally to a tax secrecy jurisdiction on the customer’s behalf
+has a transaction history that lacks evidence of compulsory regulatory payment transactions. For example, pay-as you-go instalment payments, employee superannuation payments, etc.
+Identify fraud indicators
+A customer provides:
+identification information that’s false, misleading, vague, or cannot be verified
+residential address details of a vacant or non-existent property.
+Other indicators include:
+third parties using stolen identity documents to gain access to a customer’s bank account to steal funds
+multiple customers using the same identification details such as mobile numbers, email addresses or IP addresses, to open accounts
+a third party conducting a micro-transaction as a ‘test payment’ to confirm if a customer’s account is active.
+Welfare fraud indicators
+A customer:
+receiving government benefits has transactions that are inconsistent with the expected profile of a customer receiving government benefits
+receiving government benefits has additional transactions that may indicate an additional source of income
+withdraws sums of cash to lower their account balance, in an attempt to meet asset test requirements for eligibility for a government benefit
+sends large amounts of NDIS-sourced funds internationally
+has the majority of their NDIS-sourced funds paid into loan accounts
+uses NDIS-sourced funds for transactions inconsistent with their profile
+accumulates NDIS-sourced funds over a period of time, followed by large withdrawals or expenditure on goods or services unrelated to disability support
+known to be running a NDIS provider business or providing disability support services has transactions that don’t appear to correlate with this.
+Scams indicators
+A customer:
+makes a large withdrawal following changes in their identification information, including email address or phone number
+frequently changes their identification information, including email addresses, phone number or IP address which may also indicate an account takeover
+has cash withdrawals from their account immediately following the receipt of apparently stolen funds
+makes rapid domestic funds transfers from their account following the receipt of apparently stolen funds
+provides minimal, inconsistent information or avoids answering questions about the purpose of a transaction
+has an IP address that’s linked to a higher-risk jurisdiction for scams
+receives deposits from multiple bank accounts in different names, inconsistent with their profile
+has transactions that are inconsistent with their profile
+advises they’re participating in an investment opportunity
+appears coached or rehearsed when answering personal and onboarding questions
+advises they’re sending funds to a friend or family in a higher-risk jurisdiction for scams.
+Serious financial and organised crime
+Read our suspicious activity indicators for serious financial and organised crime.
+Phoenixing indicators
+Phoenixing refers to the illegal practice where a new company is created to continue the business of a company that has been deliberately liquidated to avoid paying its debts, including taxes, creditors and employee entitlements.
+A customer:
+makes minimal business payments through bank accounts for daily business operations
+receives funds from multiple ‘service’ related companies
+makes multiple funds transfers to third party individual’s bank accounts.
+A company customer:
+is in a higher-risk profession for phoenixing. For example, property, construction, labour hire, security, mining, agriculture, horticulture or transport sectors
+withdraws or transfers all funds from a business account, with little or no balance remaining to cover business expenses
+has a transaction history that lacks evidence of compulsory regulatory payment transactions. For example, pay-as you-go tax instalment payments, employee superannuation payments, etc.
+cannot explain changes in the name, contact details or signatories to their account
+suddenly has financial activity on a dormant account, despite being a deregistered company
+that’s newly registered and has the same, or similar, transactions and contact details (including directors or beneficial owners), as a recently closed company.
+Terrorism, national security and international crime
+Read our suspicious activity indicators for terrorism, national security and international crime.
+International transaction indicators
+A customer:
+transfers funds to or from higher-risk jurisdictions
+transfers funds overseas similar in value to recent cash deposits
+sends multiple low-value international funds transfers
+sends multiple international funds transfers inconsistent with their profile
+sends multiple outgoing funds transfers paid for in cash of amounts below the $10,000 reporting threshold
+sends or receives high-volume or high-value funds transfers with no apparent economic rationale
+deposits or receives funds into several accounts, consolidates into a single account and then transfers the funds internationally
+transfers funds to a beneficiary where there’s no apparent existing relationship
+uses multiple foreign bank accounts for no apparent logical reason or economic rationale
+sends funds transfers to the same overseas beneficiary as multiple other customers.
+Terrorism financing indicators
+A customer:
+makes international funds transfers to multiple beneficiaries in the same higher-risk jurisdiction for terrorism financing
+makes unusual cash withdrawals after a financial institution refuses to conduct an international transfer to a higher-risk jurisdiction for terrorism financing
+has incorrect spelling or provides variations on their name when transferring funds to a higher-risk jurisdictions for terrorism financing
+makes multiple low-value domestic transfers to a single account or has cash deposits from multiple third parties
+makes multiple cash deposits into their account described as ‘donations’ or ‘family support’
+transfers funds through multiple accounts followed by large cash withdrawals or outgoing international funds transfers
+is identified as a proscribed entity suspected of terrorism or terrorism-financing using a third-party’s account to conduct transfers, deposits or withdrawals
+is matched through screening against an Australian or international sanctions list.
+Open-source information
+Open-source information:
+identifies a party to a transaction to have links to known terrorist organisations or terrorism activities
+identifies a customer to have links to known terrorist organisations or terrorism activities
+indicates a customer displays extremist ideologies. For example, social, political or environmental.
+Other indicators:
+multiple customers make international funds transfers to the same beneficiary in a high-risk jurisdiction for terrorism financing
+company customer transfers funds between business and personal accounts inconsistent with the type of account held and or the expected transaction volume
+a newly established company customer transfers funds to a higher-risk jurisdiction for terrorism financing, where open-source information indicates the company appears to sell dual-use materials.
+Proliferation financing indicators
+A customer:
+uses complex company or trust structures and associated banking arrangements to obscure the source and beneficial ownership of funds
+uses financial services or conducts transactions that are physically distanced from the actual trade of goods. For example, an Australian registered company may ship goods from an offshore operational location, but use onshore financial services to receive payment.
+is matched through screening against an Australian or international sanctions list
+transfers funds to or from higher-risk jurisdictions
+transfers funds overseas that have a similar value to recent cash deposits
+enquires about due diligence processes when transacting with individuals, networks, companies or countries of proliferation concern
+conducts business in dual use goods (goods suitable for both civilian and military purposes) listed on the
+Defence and Strategic Goods List
+trades in goods which are labelled with incorrect Australian Harmonized Export Commodity Classification (AHECC) code, exports classifications or description.
+undertakes trade using unusual routes or transhipment points
+trades in dual use goods without a clear end use or end user
+is connected to industries with higher proliferation financing risks. This includes those identified in
+Australia’s proliferation financing national risk assessments
+and the Australian Sanctions Office
+advisory note
+on sanctions and proliferation financing.
+Corporations:
+share directors and management, addresses, emails, phone numbers or financial infrastructure with other entities in their networks
+obscure their identities and activities by:
+using aliases and using alternate spellings or versions of company names
+operating through subsidiaries or branches
+including third-country nationals in ownership structures
+registering in jurisdictions with opaque corporate registers, where information on ultimate beneficial ownership is not easily accessible.
+Actions and controls
+screen customers against the Department of Foreign Affairs and Trade (DFAT) consolidated list for known terrorists and sanctioned entities
+train staff on proliferation financing indicators and how to escalate matters
+conduct further identification and verification processes in relation to customers who are corporations. This includes cross-checking for corporations sharing details with other entities.
+Suspicious matter reporting
+If you suspect on reasonable grounds that a customer or a transaction involving your customer is linked to a crime, submit a
+suspicious matter report (SMR)
+to us within the required timeframes. This includes where you suspect on reasonable grounds that a person:
+is committing a crime
+isn’t who they claim to be
+could be the victim of a crime.
+On their own, one of these indicators may not suggest suspicious activity. If you’re unsure whether there are reasonable grounds for a suspicion, you should conduct further monitoring and examination. This may include applying
+enhanced customer due diligence (ECDD)
+measures.
+For more information on complying with your reporting obligations, see our
+suspicious matter reporting reference guide
+and
+suspicious matter reporting checklist
+.
+Related pages
+Your industry
+Proliferation financing in Australia national risk assessment 2022
+Terrorism financing in Australia national risk assessment 2024
+Money laundering in Australia national risk assessment 2024
+.
+This guidance sets out how we interpret certain Australian legislation, along with associated Rules and regulations. Australian courts are ultimately responsible for interpreting these laws and determining if any provisions of these laws are contravened.
+The examples and scenarios in this guidance are meant to help explain our interpretation of these laws. They’re not exhaustive or meant to cover every possible scenario.
+This guidance provides general information and isn't a substitute for legal advice. This guidance avoids legal language wherever possible and it might include generalisations about the application of the law. Some provisions of the law referred to have exceptions or important qualifications. In most cases your particular circumstances must be taken into account when determining how the law applies to you.
+Last updated:
+                  18 Sep 2026
+Was this page helpful?
+Was this page helpful?
+Was this page helpful?
+Yes
+No
+Why or why not? (optional)
+Please note that feedback you provide here will be used only for the purpose of improving our website. If you have a specific question about your AML/CTF obligations, please
+contact us
+.
+Leave this field blank

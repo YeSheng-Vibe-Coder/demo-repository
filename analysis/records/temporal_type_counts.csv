@@ -1,0 +1,11 @@
+period,type,rows,fraud
+calibration,CASH_IN,1264501,0
+calibration,CASH_OUT,2036404,2240
+calibration,DEBIT,36934,0
+calibration,PAYMENT,1939542,0
+calibration,TRANSFER,478739,2221
+evaluation,CASH_IN,134783,0
+evaluation,CASH_OUT,201096,1876
+evaluation,DEBIT,4498,0
+evaluation,PAYMENT,211953,0
+evaluation,TRANSFER,54170,1876

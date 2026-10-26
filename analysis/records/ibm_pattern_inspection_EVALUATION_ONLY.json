@@ -1,0 +1,153 @@
+{
+  "source_url": "https://www.kaggle.com/api/v1/datasets/download/ealtman2019/ibm-transactions-for-anti-money-laundering-aml/HI-Small_Patterns.txt",
+  "sha256": "2c546b5ce6009e73851f0139af053cf845f08bf92f3bc82fe1eb937dec2ef39b",
+  "downloaded_bytes": 323844,
+  "attempts": 370,
+  "types": {
+    "FAN-OUT": 48,
+    "CYCLE": 54,
+    "GATHER-SCATTER": 51,
+    "STACK": 43,
+    "RANDOM": 41,
+    "BIPARTITE": 49,
+    "FAN-IN": 40,
+    "SCATTER-GATHER": 44
+  },
+  "transaction_occurrences": 3209,
+  "limitation": "Only publisher pattern annotation downloaded and inspected; not yet joined against full HI-Small_Trans.csv. Contains labels and must be evaluation-only.",
+  "first_cycle": {
+    "pattern": "CYCLE",
+    "rows": [
+      [
+        "2022/09/01 00:03",
+        "01467",
+        "8013C4030",
+        "020",
+        "80BC62F10",
+        "58702.10",
+        "Yuan",
+        "58702.10",
+        "Yuan",
+        "ACH",
+        "1"
+      ],
+      [
+        "2022/09/01 02:52",
+        "020",
+        "80BC62F10",
+        "0240229",
+        "80F025640",
+        "7332.87",
+        "Swiss Franc",
+        "7332.87",
+        "Swiss Franc",
+        "ACH",
+        "1"
+      ],
+      [
+        "2022/09/02 08:44",
+        "0240229",
+        "80F025640",
+        "0217",
+        "80FD27570",
+        "26443.70",
+        "Shekel",
+        "26443.70",
+        "Shekel",
+        "ACH",
+        "1"
+      ],
+      [
+        "2022/09/02 12:29",
+        "0217",
+        "80FD27570",
+        "0024856",
+        "8090E8EB0",
+        "10621.24",
+        "Canadian Dollar",
+        "10621.24",
+        "Canadian Dollar",
+        "ACH",
+        "1"
+      ],
+      [
+        "2022/09/03 10:20",
+        "0024856",
+        "8090E8EB0",
+        "0071",
+        "804ABCE90",
+        "637140.60",
+        "Rupee",
+        "637140.60",
+        "Rupee",
+        "ACH",
+        "1"
+      ],
+      [
+        "2022/09/03 12:08",
+        "0071",
+        "804ABCE90",
+        "0213737",
+        "805494C30",
+        "621578.18",
+        "Rupee",
+        "621578.18",
+        "Rupee",
+        "ACH",
+        "1"
+      ],
+      [
+        "2022/09/03 13:24",
+        "0213737",
+        "805494C30",
+        "014290",
+        "801B949C0",
+        "7222.58",
+        "Euro",
+        "7222.58",
+        "Euro",
+        "ACH",
+        "1"
+      ],
+      [
+        "2022/09/04 03:24",
+        "014290",
+        "801B949C0",
+        "0010057",
+        "803DE1580",
+        "892031.21",
+        "Yen",
+        "892031.21",
+        "Yen",
+        "ACH",
+        "1"
+      ],
+      [
+        "2022/09/04 09:44",
+        "0010057",
+        "803DE1580",
+        "0028628",
+        "80ACEE280",
+        "11364.12",
+        "Australian Dollar",
+        "11364.12",
+        "Australian Dollar",
+        "ACH",
+        "1"
+      ],
+      [
+        "2022/09/04 15:51",
+        "0028628",
+        "80ACEE280",
+        "01467",
+        "8013C4030",
+        "7945.55",
+        "US Dollar",
+        "7945.55",
+        "US Dollar",
+        "ACH",
+        "1"
+      ]
+    ]
+  }
+}

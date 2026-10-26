@@ -1,0 +1,155 @@
+{
+  "$defs": {
+    "RuleAtom": {
+      "additionalProperties": false,
+      "properties": {
+        "feature_id": {
+          "title": "Feature Id",
+          "type": "string"
+        },
+        "operator": {
+          "enum": [
+            "ge",
+            "le"
+          ],
+          "title": "Operator",
+          "type": "string"
+        },
+        "rule_id": {
+          "pattern": "^IBM-[A-Za-z0-9_-]{1,60}$",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "threshold": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Threshold",
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule_id",
+        "feature_id",
+        "operator",
+        "threshold",
+        "source_refs"
+      ],
+      "title": "RuleAtom",
+      "type": "object"
+    },
+    "RuleGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "cutoff": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 80,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cutoff"
+        },
+        "group_id": {
+          "pattern": "^[A-Za-z0-9_-]{1,40}$",
+          "title": "Group Id",
+          "type": "string"
+        },
+        "operator": {
+          "enum": [
+            "all",
+            "any",
+            "weighted"
+          ],
+          "title": "Operator",
+          "type": "string"
+        },
+        "rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "weights": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 16,
+          "title": "Weights",
+          "type": "array"
+        }
+      },
+      "required": [
+        "group_id",
+        "operator",
+        "rule_ids"
+      ],
+      "title": "RuleGroup",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "group_operator": {
+      "enum": [
+        "all",
+        "any"
+      ],
+      "title": "Group Operator",
+      "type": "string"
+    },
+    "groups": {
+      "items": {
+        "$ref": "#/$defs/RuleGroup"
+      },
+      "maxItems": 32,
+      "minItems": 1,
+      "title": "Groups",
+      "type": "array"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/RuleAtom"
+      },
+      "maxItems": 160,
+      "minItems": 1,
+      "title": "Rules",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "rule-program/1.0",
+      "default": "rule-program/1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "threshold_basis": {
+      "const": "research_hypothesis_not_regulatory_limit",
+      "default": "research_hypothesis_not_regulatory_limit",
+      "title": "Threshold Basis",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rules",
+    "groups",
+    "group_operator"
+  ],
+  "title": "RuleProgram",
+  "type": "object"
+}
