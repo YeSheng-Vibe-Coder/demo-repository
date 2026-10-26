@@ -19,10 +19,6 @@ Agent/源码版：[Markdown 技术规范](AML_Agent_Technical_Spec_v1.0.md)。
 
 `docs/archive/` 中的 `Agent技术实现方案_v1.md` 和 `agent-budget.example.json` 为历史讨论/配置草案，已被正式版本替代，不作为当前实现契约。
 
-## 分发包
-
-`output/AML_Agent_Technical_Spec_v1.0.zip` 包含 HTML/Markdown 正式规范、配置、工作包和统一实验 README；不包含应用凭据或原始交易数据。包中只附最新脱敏 JSON 回执；历史完整 JSON/CSV 在仓库 analysis/records/，不打包原始交易数据。实验结果统一见 [实验 README](../../analysis/README.md)，不能代替待完成的验收。规范中的仓库路径指项目源码位置；文档包不是可运行安装包。
-
 当前实现（Zetaris 特征库、决策树规则学习 agent、调查团队与 World Model、上下文与执行规则）见 [运行指南](../operations/RUNBOOK.md) 与 [执行 Harness](EXECUTION_HARNESS.md)。不执行强化学习或模型权重训练。
 
 上一版的实现对照与 Planner 学习设计已移至 `docs/archive/`（`*_v1`），按当时版本保留。
