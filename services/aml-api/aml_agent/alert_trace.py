@@ -77,11 +77,15 @@ def account_verdicts(focus: str, edges: list[dict], members: list[dict], conclus
                 if account.split(":")[1] in refs:
                     item["tools"].add(action["tool"])
     case_suspicious = conclusion.get("conclusion") == "suspicious"
+    # The team's own per-account verdict decides when it gave one; inference from transactions is only for older runs.
+    team = {v["account_ref"]: v["verdict"] for v in conclusion.get("account_verdicts", [])}
     result = []
     for account, item in accounts.items():
         bank, number = account.split(":")
         in_chain = number in chain_text
-        if account == focus:
+        if team:
+            verdict = {"suspicious": "suspicious", "cleared": "cleared"}.get(team.get(account), "unresolved" if account in team else "observed")
+        elif account == focus:
             verdict = "suspicious" if case_suspicious else ("cleared" if conclusion.get("conclusion") == "not_supported" else "unresolved")
         elif item["confirmed"] or (in_chain and case_suspicious):
             verdict = "suspicious"
@@ -306,12 +310,31 @@ def run_detail(store: Store, run_id: str) -> dict:
     }
 
 
-def live_case(store: Store, run_id: str, policy: dict) -> dict | None:
-    """A dashboard-started investigation as a case, built exactly like the recorded rounds (case_row); None until decided."""
+def live_case(store: Store, run_id: str, policy: dict, graded: dict | None = None) -> dict | None:
+    """A dashboard-started investigation as a case, built exactly like the recorded rounds (case_row); None until decided.
+
+    `graded` is the evaluation-side grading of the run (LearningCycle.grade, as for the rounds), when available.
+    """
     state = store.get(run_id)
     if not (state.get("adjudication") or {}).get("decision"):
         return None
-    return case_row(store, "live", {"run_id": run_id, "status": state["status"], "features": state["rule_context"]["alert"]["features"]}, policy)
+    case = {"run_id": run_id, "status": state["status"], "features": state["rule_context"]["alert"]["features"]}
+    return case_row(store, "live", {**case, **(graded or {})}, policy)
+
+
+def grade_live(store: Store, run_ids: list[str]) -> dict[str, dict]:
+    """Grade decided live runs with the same evaluation as the investigation rounds (labels, after the fact)."""
+    if not run_ids:
+        return {}
+    from .cli import api_token
+    from .learning_cycle import LearningCycle
+    from .settings import Settings
+
+    items = []
+    for run_id in run_ids:
+        alert_id = store.get(run_id)["request"]["alert_id"]
+        items.append({"alert": {**store.read_artifact(alert_id, "rule_alert"), "alert_id": alert_id}, "run_id": run_id, "worker_exit": 0})
+    return {g["run_id"]: g for g in LearningCycle(Settings.load(), api_token()).grade(items)}
 
 
 def alert_rows(store: Store, policy: dict, investigated: set) -> list[dict]:
@@ -358,13 +381,15 @@ def view(store: Store) -> dict:
     # Live investigations from the dashboard count once the senior investigator has decided.
     from .live import RUNS
 
-    for runs in (json.loads(RUNS.read_text()) if RUNS.exists() else {}).values():
-        if runs[-1] in seen:
-            continue
-        seen.add(runs[-1])
-        case = live_case(store, runs[-1], policy)
-        if case:
-            cases.append(case)
+    latest = [runs[-1] for runs in (json.loads(RUNS.read_text()) if RUNS.exists() else {}).values()
+              if runs[-1] not in seen and (store.get(runs[-1]).get("adjudication") or {}).get("decision")]
+    try:
+        graded = grade_live(store, latest)
+    except Exception:  # no data access here: the cases are still shown, without the label check
+        graded = {}
+    for run_id in latest:
+        seen.add(run_id)
+        cases.append(live_case(store, run_id, policy, graded.get(run_id)))
     return {
         "validation": {**volume, "rule_version": current.get("label"), "alerts_per_day": current.get("flagged_per_day"),
                        "alerted_accounts": current.get("flagged_accounts"), "chain_recall": current.get("chain_recall"),
