@@ -253,7 +253,10 @@ b.tier-high, b.tier-mid, b.tier-low { background: none; }
 .rconds span { font-size: 11px; padding: 4px 8px; border-radius: 6px; background: var(--panel2); }
 .rbody { display: none; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid var(--line); }
 .rule.open .rbody { display: flex; animation: fadein .3s; }
-.ind { display: grid; grid-template-columns: 130px 1fr auto; gap: 10px; align-items: start; font-size: 12px; }
+.ind { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; gap: 10px; align-items: start; font-size: 12px; }
+/* English shows raw feature ids (new_counterparty_share_24h): a wider column, and long ids wrap inside it instead of running into the description. */
+html[lang="en"] .ind { grid-template-columns: 200px minmax(0, 1fr) auto; }
+.ind b { min-width: 0; overflow-wrap: anywhere; }
 .ind p { margin: 0; color: var(--dim); } .ind p small { display: block; margin-top: 2px; }
 .rbody blockquote { margin: 0; padding: 10px 12px; border-radius: 8px; background: #F4F8F3; border-left: 3px solid var(--primary); font-style: italic; font-size: 12px; }
 [data-theme="night"] .rbody blockquote { background: #18271F; }

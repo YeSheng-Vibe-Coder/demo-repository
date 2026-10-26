@@ -31,6 +31,7 @@
   }
   function setLang(lang) {
     window.LANG = lang; localStorage.setItem("aml-lang", lang);
+    document.documentElement.lang = lang === "en" ? "en" : "zh-CN";
     $("#lang").textContent = lang === "en" ? "中文" : "EN";
     applyStaticLang();
     if (!DATA) return;
