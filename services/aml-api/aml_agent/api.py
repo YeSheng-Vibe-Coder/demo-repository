@@ -218,10 +218,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if db is None:
             raise HTTPException(404, "Run: python -m aml_agent.cli alert-index")
         data = OUTPUT / "data.json" if (OUTPUT / "data.json").exists() else SNAPSHOT
-        from .live import statuses
+        from .alert_trace import live_case
+        from .live import primary_policy, statuses
 
-        return alert_index.page(db, alert_index.investigated(data), {"page": page, "q": q, "day": day, "tier": tier, "rule": rule, "status": status},
-                                statuses(store))
+        live_states = statuses(store)
+        result = alert_index.page(db, alert_index.investigated(data), {"page": page, "q": q, "day": day, "tier": tier, "rule": rule, "status": status},
+                                  live_states)
+        # A decided live investigation is shown with the same case builder as the recorded rounds (latest investigation wins).
+        policy = None
+        for row in result["rows"]:
+            state = live_states.get((row["account"], row["day"]))
+            if state and state["status"] == "investigated":
+                policy = policy if policy is not None else primary_policy(store)
+                row["case"] = live_case(store, state["run_id"], policy)
+        return result
 
     @app.get("/dashboard/api/alerts/summary")
     def alerts_summary():

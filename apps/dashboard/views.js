@@ -105,7 +105,9 @@ window.AMLViews = (() => {
   const filters = { q: "", day: "", tier: "", rule: "", status: "" };
   const PAGE = 20;
   let page = 0, listed = [], served = true, ready = Promise.resolve();
-  const caseOf = (account, day) => DATA.trace.cases.find(c => c.account === account && c.day === day);
+  // The latest investigation of an account-day wins: a live one (round "live") over a recorded round.
+  const caseOf = (account, day) => { const all = DATA.trace.cases.filter(c => c.account === account && c.day === day);
+    return all.find(c => c.round === "live") || all[0]; };
 
   function activeGroups() {
     const v = DATA.versions.find(x => x.id === DATA.active_version) || DATA.versions[DATA.versions.length - 1];
@@ -128,7 +130,7 @@ window.AMLViews = (() => {
       rules: row.rules, tier: { ...grade, tier: row.tier }, decision: null, chain_accounts: null,
       detail: { hit_rules: hits }, evaluation: { new_chain_accounts: [] } };
   }
-  const asCase = c => ({ ...c, key: `${c.account}|${c.day}`, investigated: true, status: "investigated" });
+  const asCase = c => ({ ...c, run: c.run || c.key, key: `${c.account}|${c.day}`, investigated: true, status: "investigated" });
   const STATUS = { investigated: ["已初步调查", "Investigated"], running: ["调查中", "Investigating"], failed: ["调查失败", "Failed"], pending: ["未初步调查", "Not investigated"] };
   const statusPill = c => { const st = c.status || (c.investigated ? "investigated" : "pending");
     return `<i class="status ${st}"${c.error ? ` title="${H.esc(failure(c.error))}"` : ""}>${tr(STATUS[st])}</i>`; };
@@ -148,7 +150,7 @@ window.AMLViews = (() => {
     const item = H.el("div", "toast " + kind, H.esc(text)); box.appendChild(item);
     setTimeout(() => item.classList.add("out"), 7000); setTimeout(() => item.remove(), 7600);
   }
-  const rowCase = row => { const c = caseOf(row.account, row.day); return c ? asCase(c) : pendingCase(row); };
+  const rowCase = row => { const c = row.case || caseOf(row.account, row.day); return c ? asCase(c) : pendingCase(row); };
 
   async function renderTrace() {
     const v = DATA.trace.validation;
@@ -550,6 +552,7 @@ window.AMLViews = (() => {
 
   async function resumeLive(c) {
     const found = await fetch(`/dashboard/api/live/for?${new URLSearchParams({ account: c.account, day: c.day })}`).then(r => r.ok ? r.json() : null).catch(() => null);
+    if (found?.run_id && found.run_id === c.run) return;  // the replay above already shows this investigation
     if (found?.run_id && current === c) pollLive(c, found.run_id);
     else if (!c.investigated && current === c) {
       const box = H.$("#d-live-sec");

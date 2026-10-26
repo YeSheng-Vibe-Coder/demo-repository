@@ -306,6 +306,14 @@ def run_detail(store: Store, run_id: str) -> dict:
     }
 
 
+def live_case(store: Store, run_id: str, policy: dict) -> dict | None:
+    """A dashboard-started investigation as a case, built exactly like the recorded rounds (case_row); None until decided."""
+    state = store.get(run_id)
+    if not (state.get("adjudication") or {}).get("decision"):
+        return None
+    return case_row(store, "live", {"run_id": run_id, "status": state["status"], "features": state["rule_context"]["alert"]["features"]}, policy)
+
+
 def alert_rows(store: Store, policy: dict, investigated: set) -> list[dict]:
     """Uninvestigated validation alerts, highest priority per tier (exported by showcase-metrics): rules and grading only."""
     from .showcase import tier_of
@@ -351,12 +359,12 @@ def view(store: Store) -> dict:
     from .live import RUNS
 
     for runs in (json.loads(RUNS.read_text()) if RUNS.exists() else {}).values():
-        state = store.get(runs[-1])
-        if runs[-1] in seen or not (state.get("adjudication") or {}).get("decision"):
+        if runs[-1] in seen:
             continue
         seen.add(runs[-1])
-        live = {"run_id": runs[-1], "status": state["status"], "features": state["rule_context"]["alert"]["features"]}
-        cases.append(case_row(store, "live", live, policy))
+        case = live_case(store, runs[-1], policy)
+        if case:
+            cases.append(case)
     return {
         "validation": {**volume, "rule_version": current.get("label"), "alerts_per_day": current.get("flagged_per_day"),
                        "alerted_accounts": current.get("flagged_accounts"), "chain_recall": current.get("chain_recall"),
