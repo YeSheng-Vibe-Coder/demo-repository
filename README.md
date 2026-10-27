@@ -1,34 +1,34 @@
 # AML Investigation Agent
 
-在 IBM HI-Large v8（Azure VM 上由 Zetaris 提供的 1.8 亿笔交易）上运行的可解释反洗钱调查系统。三个 agent 协作，调查证据反哺规则：
+An explainable anti-money laundering investigation system running on IBM HI-Large v8 (1.8 billion transactions provided on an Azure VM by Zetaris). Three agents collaborate, and investigation evidence feeds back into the rule system:
 
 ```
-规则（决策树，链路召回 ≥ 97%）→ 告警
-  → 风险分级 agent：把告警排成高 / 中 / 低并给出优先级
-  → 调查 agent：高级调查员分工 → 多名调查员并行追查上下游 → 合并 → 高级调查员研判（证据清单）
-  → 规则更新 agent：从调查结果归纳并收紧规则、提出新特征 → 新规则版本（验证集门禁）
+Rules (decision tree, link recall ≥ 97%) → Alerts
+  → Risk-tiering agent: ranks alerts into high / medium / low and assigns priority
+  → Investigation agent: senior investigator assigns tasks → multiple investigators trace upstream/downstream in parallel → merge results → senior investigator adjudicates (evidence list)
+  → Rule update agent: summarizes findings from investigations, tightens rules, proposes new features → new rule version (validation-set gate)
 ```
 
-模型使用 NVIDIA Nemotron（Ultra 负责分级、研判与规则更新，Lightning 负责调查员）；Meterless 引擎负责调查循环（Markovian）、案件记忆（H-MEM）和多调查员共享的案件图（World Model）。调查员看不到标签；标签只在评估侧使用；测试集保持关闭。
+The models use NVIDIA Nemotron (Ultra handles tiering, adjudication, and rule updates; Lightning handles investigators). The Meterless engine is responsible for the investigation loop (Markovian), case memory (H-MEM), and the shared case graph for multiple investigators (World Model). Investigators do not see labels; labels are used only on the evaluation side; the test set remains closed.
 
-数据：IBM AML 合成交易数据集 HI-Large v8（[Kaggle](https://www.kaggle.com/datasets/ealtman2019/ibm-transactions-for-anti-money-laundering-aml)，CDLA-Sharing-1.0）。
+Data: IBM AML synthetic transaction dataset HI-Large v8 ([Kaggle](https://www.kaggle.com/datasets/ealtman2019/ibm-transactions-for-anti-money-laundering-aml), CDLA-Sharing-1.0).
 
-## 先看你要做什么
+## First, decide what you want to do
 
-| 你想… | 需要什么 | 看哪一节 |
-|---|---|---|
-| 浏览看板：规则、告警追查（已调查案件的关系网与回放）、规则自学习 | 只要 Python，不需要任何密钥或数据 | [1. 只看看板](#1-只看看板不需要任何密钥) |
-| 在看板上点"立刻调查"，让调查团队实时调查一条告警 | 你自己的 NVIDIA API key + 能查询数据的 Zetaris（二选一） | [2. 实时调查](#2-实时调查立刻调查) |
-| 重新学习规则、风险分级、重算指标 | NVIDIA key + 团队 VM 上的 1.8 亿笔全量数据 | [3. 学习与重算](#3-学习与重算需要团队-vm-全量数据) |
+| You want to…                                                                                                                      | What you need                                                            | See section                                                                                  |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| Browse the dashboard: rules, alert investigation (relationship network and replay for investigated cases), and rule self-learning | Only Python; no keys or data required                                    | [1. Just view the dashboard](#1-just-view-the-dashboard-no-keys-required)                    |
+| Click "Investigate Now" on the dashboard to let the investigation team investigate an alert in real time                          | Your own NVIDIA API key + accessible Zetaris data source (either option) | [2. Live investigation](#2-live-investigation-investigate-now)                               |
+| Re-learn rules, re-tier risk, and recompute metrics                                                                               | NVIDIA key + the full 1.8B dataset on the team VM                        | [3. Learning and recomputation](#3-learning-and-recomputation-requires-team-vm-full-dataset) |
 
-所有数据查询都通过 Zetaris（本项目赞助方）的 REST SQL 完成。实时调查的数据有两种来源，查询逻辑完全相同：
+All data queries are executed through Zetaris (the project sponsor) via REST SQL. Real-time investigation data can come from two sources, with identical query logic:
 
-- **方式 A：直连团队 VM 上的 Zetaris**。不用下载数据，需要向项目负责人要 VM 访问和 Zetaris API key。
-- **方式 B：在自己电脑上运行 Zetaris，装入本地数据包**。数据包约 0.9 GB，包含验证期的 1350 万笔交易和特征。不依赖 VM，但需要 Docker（8 GB 内存）。
+- **Option A: Connect directly to the team VM's Zetaris**. No data download is required; you need VM access and a Zetaris API key from the project lead.
+- **Option B: Run Zetaris locally and load the local data package**. The package is about 0.9 GB and contains 13.5 million validation-period transactions and features. It does not depend on the VM, but requires Docker (8 GB memory).
 
-## 1. 只看看板（不需要任何密钥）
+## 1. Just view the dashboard (no keys required)
 
-仓库里提交了看板数据快照：`apps/dashboard/snapshot/data.json` 是规则版本、已调查案件和规则自学习数据，`alerts.sqlite.gz` 是验证期全部 35 万条告警及其风险分级，首次启动时自动解压。只需要 Python 3.11+：
+The repository includes a dashboard data snapshot: `apps/dashboard/snapshot/data.json` contains rule versions, investigated cases, and rule self-learning data, while `alerts.sqlite.gz` contains all 350,000 alerts in the validation period and their risk tiers; it is automatically decompressed on first launch. Only Python 3.11+ is required:
 
 ```bash
 git clone -b open-source git@github.com:YeSheng-Vibe-Coder/demo-repository.git aml-agent && cd aml-agent
@@ -37,70 +37,70 @@ python3 -m venv .venv
 .venv/bin/python -m aml_agent.cli serve-dashboard
 ```
 
-终端打印出地址后（首次约 20 秒），打开 <http://127.0.0.1:8020/dashboard>。端口被占用时加 `--port 8030`。左下角可切换中文 / English 与白天 / 夜间模式。
+After the terminal prints the address (about 20 seconds on first run), open <http://127.0.0.1:8020/dashboard>. If the port is occupied, add `--port 8030`. In the lower-left corner, you can switch between Chinese / English and day / night mode.
 
-| 页面 | 内容 |
-|---|---|
-| 告警追查 | 验证期交易量、洗钱交易、告警量、链路召回；全部告警列表（按风险等级排序，可按账户 / 日期 / 等级 / 规则 / 调查状态筛选）。点一行打开详情：命中规则、分级依据、调查结论与账户判定、关系网追查（按调查员分色）、调查回放时间线 |
-| 规则自学习 | 告警 → 风险分级 → 调查 → 证据 → 学习 → 新规则的闭环；三个 agent 每一轮的决策与效果 |
-| 规则 | 当前规则（决策树 + 规则卡，含 AUSTRAC 原文与指标公式），可切换历史版本 |
+| Page                | Content                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Alert investigation | Validation-period transaction volume, money laundering transactions, alert volume, and link recall; full alert list (sorted by risk level, filterable by account / date / level / rule / investigation status). Click a row to open details: matching rules, tiering rationale, investigation conclusion and account determination, relationship network tracing (colored by investigator), and investigation replay timeline |
+| Rule self-learning  | Alert → risk tiering → investigation → evidence → learning → closed loop for new rules; each round of decisions and effects for the three agents                                                                                                                                                                                                                                                                              |
+| Rules               | Current rules (decision tree + rule cards with AUSTRAC text and metric formulas), with historical versions available                                                                                                                                                                                                                                                                                                          |
 
-这个只读看板里点"立刻调查"，会提示需要先完成第 2 节的配置。
+In this read-only dashboard, clicking "Investigate Now" will prompt you to complete the setup in section 2 first.
 
-## 2. 实时调查（"立刻调查"）
+## 2. Live investigation ("Investigate Now")
 
-### 2.1 共同准备（A、B 都要做）
+### 2.1 Shared setup (required for both A and B)
 
-1. 完成第 1 节的安装（clone、`.venv`、`pip install -e .`）。
-2. 安装 **Node.js 22.7 或更新版本**（调查团队的编排器 `services/orchestrator` 用它运行，不需要 `npm install`）。
-3. 申请 **NVIDIA API key**：在 <https://build.nvidia.com> 注册后免费申请。调查员、高级调查员、风险分级 agent、规则更新 agent 都用它调用 Nemotron。
-4. 复制配置模板：`cp .env.example .env.local`，填入 `NVIDIA_API_KEY`。Zetaris 的三项按下面 A 或 B 填写。`.env.local` 已被 Git 忽略，**不要提交，也不要发到群里**。
+1. Complete the setup in section 1 (clone, `.venv`, `pip install -e .`).
+2. Install **Node.js 22.7 or later** (the investigation team's orchestrator `services/orchestrator` runs on it; no `npm install` is required).
+3. Request a **NVIDIA API key**: sign up at <https://build.nvidia.com> and apply for a free one. Investigators, senior investigators, risk-tiering agent, and rule update agent all call Nemotron with it.
+4. Copy the config template: `cp .env.example .env.local`, then fill in `NVIDIA_API_KEY`. Fill in the three Zetaris settings based on option A or B below. `.env.local` is already ignored by Git; **do not commit it and do not send it to chat groups**.
 
-### 2.2 方式 A：直连团队 VM
+### 2.2 Option A: Connect directly to the team VM
 
-适合不想下载数据、能拿到 VM 访问的成员。
+Suitable for members who do not want to download data and who can access the VM.
 
-1. 向项目负责人要两样东西（私下发送，不要写进仓库）：
-   - **VM 的 SSH 访问**：把你的 SSH 公钥（`~/.ssh/id_ed25519.pub`）发给负责人，由他加到 VM 上。负责人会告诉你用户名和地址。
-   - **Zetaris API key 和 Org ID**。
-2. 打开 SSH 隧道，把 VM 上的 Zetaris REST 端口转发到本机 8888，并保持这个终端开着：
+1. Ask the project lead for two things (send privately, do not write them into the repo):
+   - **VM SSH access**: send your SSH public key (`~/.ssh/id_ed25519.pub`) to the lead so it can be added to the VM. The lead will tell you the username and address.
+   - **Zetaris API key and Org ID**.
+2. Open an SSH tunnel and forward the VM's Zetaris REST port to local port 8888, keeping this terminal open:
 
    ```bash
-   ssh -N -L 8888:localhost:8888 <用户名>@<VM 地址>
+   ssh -N -L 8888:localhost:8888 <username>@<VM address>
    ```
 
-3. 在 `.env.local` 里填写：
+3. Fill in `.env.local` as follows:
 
    ```bash
    ZETARIS_REST_URL=http://localhost:8888/api/v1.0
-   ZETARIS_API_KEY=<负责人给你的 key>
-   ZETARIS_ORG_ID=<负责人给你的 Org ID>
+   ZETARIS_API_KEY=<key provided by the lead>
+   ZETARIS_ORG_ID=<Org ID provided by the lead>
    ```
 
-4. 继续 [2.4 启动](#24-启动并调查)。
+4. Continue to [2.4 Start](#24-start-and-investigate).
 
-### 2.3 方式 B：本机 Zetaris + 本地数据包
+### 2.3 Option B: Local Zetaris + local data package
 
-适合想完全在自己电脑上运行的成员。数据包只覆盖实时调查需要的部分：
+Suitable for members who want to run everything on their own machine. The data package covers only the portion needed for real-time investigation:
 
-- 验证期（2022-09-05 至 09-25）告警涉及的交易，加上前 30 天历史（基线比较和新对手方检查要回看 30 天）；
-- 共 1350 万笔 ACH / Wire 交易，**不含洗钱标签列**；
-- 这些天的特征分片，以及调查需要的规则版本、分级策略、校准数据。
+- Validation-period alerts (2022-09-05 to 09-25), plus the previous 30 days of history (baseline comparison and new-counterparty checks look back 30 days);
+- A total of 13.5 million ACH/Wire transactions, **without the money-laundering label column**;
+- Feature shards for those days, along with the rule versions, tiering strategy, and calibration data needed for investigation.
 
-装好后，本机 Zetaris 里的表名、路径和 VM 完全一样（`aml.transactions`、`IBM_AML.agent_day_*`），代码不做任何切换。
+After setup, the table names, paths, and VM are exactly the same on local Zetaris (`aml.transactions`, `IBM_AML.agent_day_*`); the application does not switch logic.
 
-**第 1 步：安装 Zetaris 平台。** 从 Zetaris Cloud 的下载页（黑客松账号）下载 `zetaris-platform.zip`，按压缩包里的 README 操作：
+**Step 1: Install Zetaris.** Download `zetaris-platform.zip` from the Zetaris Cloud download page (hackathon account), and follow the README in the archive:
 
 ```bash
 unzip zetaris-platform.zip && cd zetaris-platform
-docker login zetarishackathon.azurecr.io   # 粘贴下载页给出的登录命令
-./preflight.sh                             # 检查 Docker 内存（需 8 GB）等
+docker login zetarishackathon.azurecr.io   # paste the login command provided on the download page
+./preflight.sh                             # check Docker memory (requires 8 GB) and other prerequisites
 docker compose pull
-docker compose up -d                       # 首次启动 5-10 分钟
-./verify.sh                                # 9 项检查全部通过即可
+docker compose up -d                       # first start takes 5-10 minutes
+./verify.sh                                # all 9 checks must pass
 ```
 
-**第 2 步：下载数据包，放进 Zetaris 的数据卷。** 回到本项目目录：
+**Step 2: Download the data package and place it into Zetaris's data volume.** Return to this project directory:
 
 ```bash
 mkdir -p .runtime/local-data
@@ -108,81 +108,81 @@ curl -L -o .runtime/local-data/aml-local-pack.tar \
   https://github.com/YeSheng-Vibe-Coder/demo-repository/releases/download/local-pack-v1/aml-local-pack.tar
 tar -xf .runtime/local-data/aml-local-pack.tar -C .runtime/local-data
 
-# 复制到 Zetaris 的 customer-data 卷（容器内路径 /home/zetaris/customer-data/shared/ibm），并交给 Zetaris 的用户
+# Copy into Zetaris's customer-data volume (container path /home/zetaris/customer-data/shared/ibm) and hand it to the Zetaris user
 docker run --rm -v zetaris_customer-data:/data -v "$PWD/.runtime/local-data/aml-local-pack/ibm:/pack:ro" alpine \
   sh -c 'mkdir -p /data/shared/ibm && cp -R /pack/. /data/shared/ibm/ && chown -R 1001:1001 /data/shared/ibm'
 ```
 
-**第 3 步：拿到本机 Zetaris 的 API key。** 打开 <http://localhost:3000>，用 `admin@zetaris.com` / `Zetaris1@` 登录（建议随后修改密码），在网页里生成一个 API key，并记下 Org ID。然后在 `.env.local` 里填写：
+**Step 3: Obtain your local Zetaris API key.** Open <http://localhost:3000>, log in with `admin@zetaris.com` / `Zetaris1@` (recommended to change the password afterward), generate an API key in the UI, and record the Org ID. Then fill in `.env.local`:
 
 ```bash
 ZETARIS_REST_URL=http://localhost:8888/api/v1.0
-ZETARIS_API_KEY=<刚生成的 key>
-ZETARIS_ORG_ID=<你的 Org ID>
+ZETARIS_API_KEY=<key you just generated>
+ZETARIS_ORG_ID=<your Org ID>
 ```
 
-**第 4 步：注册数据并核对。**
+**Step 4: Register the data and verify it.**
 
 ```bash
 .venv/bin/python -m aml_agent.cli local-pack install
 ```
 
-这一步会做三件事：
+This does three things:
 
-- 在 Zetaris 里注册 `AML.transactions` 和三张 `IBM_AML.agent_day_*` 特征表（Lightning FILESTORE，Parquet）；
-- 把调查需要的状态合并进 `.runtime/`；
-- 用 Zetaris 查询行数，与数据包里记录的 VM 结果对比。
+- Registers `AML.transactions` and the three `IBM_AML.agent_day_*` feature tables in Zetaris (Lightning FILESTORE, Parquet);
+- Merges the investigation-required state into `.runtime/`;
+- Uses a Zetaris row-count query to compare against the VM result recorded in the data package.
 
-输出里 `"verified": true` 就表示数据和 VM 一致（13,505,048 笔交易）。可以重复运行。
+If the output contains `"verified": true`, the data matches the VM state (13,505,048 transactions). You can run this repeatedly.
 
-### 2.4 启动并调查
+### 2.4 Start and investigate
 
 ```bash
-.venv/bin/python -m aml_agent.cli status   # 检查 NVIDIA 各角色模型和 Zetaris 是否可达（不打印密钥）
-.venv/bin/python -m aml_agent.cli serve    # API + 看板
+.venv/bin/python -m aml_agent.cli status   # check whether the NVIDIA roles and Zetaris are reachable (does not print secrets)
+.venv/bin/python -m aml_agent.cli serve    # API + dashboard
 ```
 
-打开 <http://127.0.0.1:8010/dashboard>（注意端口是 **8010**，不是只读看板的 8020）。在"告警追查"里点任意一条验证期告警，再点"立刻调查"。详情里会实时显示进度：
+Open <http://127.0.0.1:8010/dashboard> (note the port is **8010**, not the 8020 read-only dashboard). In the "Alert Investigation" screen, click any validation-period alert, then click "Investigate Now". The details view displays progress in real time:
 
-- 准备阶段：预取证据、高级调查员分工，约 1-2 分钟；
-- 各调查员的每一步；
-- 最后合并结论和高级调查员研判。
+- Preparation stage: prefetch evidence, assign tasks to senior investigators, roughly 1-2 minutes;
+- Each step taken by each investigator;
+- Final merged conclusion and senior investigator adjudication.
 
-一次调查通常需要十分钟左右，同时最多运行两个。失败会自动重试最多 2 次，并在列表里标出原因。关闭详情后，列表状态会显示为"调查中 / 已调查 / 失败"。
+A single investigation usually takes about ten minutes, and at most two can run at once. Failures automatically retry up to 2 times and are marked with the reason in the list. After closing the detail panel, the list status shows "Investigating / Investigated / Failed".
 
-### 2.5 常见问题
+### 2.5 Common issues
 
-| 现象 | 原因与处理 |
-|---|---|
-| 点"立刻调查"提示缺少配置 | `.env.local` 里缺 `NVIDIA_API_KEY` 或 `ZETARIS_API_KEY`；改完后重启 `serve` |
-| `status` 里 `zetaris_datasources` 不是 200 | 方式 A：隧道没开或已断开，重新运行 `ssh -N -L ...`。方式 B：Zetaris 没启动好，运行 `./verify.sh` |
-| `local-pack install` 报 `verified: false` | 第 2 步的复制没完成或路径不对，重新执行 `docker run ... cp` 那一步，再运行 install |
-| 本机查询很慢 | 给 Docker 至少 8 GB 内存；参考 Zetaris README 的 "Tuning the query engine" |
-| 调查显示"失败"，原因是模型调用出错 | 多为 NVIDIA 免费额度限流或网络问题；系统会自动重试，也可以稍后再点一次 |
+| Symptom                                                          | Cause and fix                                                                                                                           |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Clicking "Investigate Now" prompts that configuration is missing | `.env.local` is missing `NVIDIA_API_KEY` or `ZETARIS_API_KEY`; restart `serve` after fixing it                                          |
+| `status` shows `zetaris_datasources` is not 200                  | Option A: tunnel is not open or was disconnected; rerun `ssh -N -L ...`. Option B: Zetaris was not started correctly; run `./verify.sh` |
+| `local-pack install` reports `verified: false`                   | Step 2 copy did not complete or the path was wrong; rerun the `docker run ... cp` step and then run install again                       |
+| Local queries are slow                                           | Give Docker at least 8 GB of memory; see Zetaris README section "Tuning the query engine"                                               |
+| Investigation shows "Failed" because the model call failed       | Usually due to NVIDIA rate limiting or network issues; the system retries automatically, or you can try again later                     |
 
-## 3. 学习与重算（需要团队 VM 全量数据）
+## 3. Learning and recomputation (requires the full team VM dataset)
 
-下面的命令需要完整的 1.8 亿笔数据和评估标签，只能用方式 A 连接团队 VM：
+The following commands require the complete 1.8 billion transaction dataset and evaluation labels and can only connect via option A to the team VM:
 
 ```bash
 export PYTHONPATH=services/aml-api
-.venv/bin/python -m aml_agent.cli learning-cycle --investigator-round val-r4 --split validation --per-cell 4   # 一轮验证期调查
-.venv/bin/python -m aml_agent.cli learning-cycle --tier-agent --tier-patterns   # 风险分级 agent 学习并发布分级策略
-.venv/bin/python -m aml_agent.cli learning-cycle --update-from dev-r3           # 规则更新 agent 依据调查结果更新规则
-.venv/bin/python -m aml_agent.cli showcase-metrics                             # 重算看板用的验证期链路指标
-.venv/bin/python -m aml_agent.cli alert-index --snapshot                       # 导出验证期全部告警（按当前主分级），并更新压缩快照
-.venv/bin/python -m aml_agent.cli dashboard --snapshot                         # 导出看板数据，并更新仓库里的快照
+.venv/bin/python -m aml_agent.cli learning-cycle --investigator-round val-r4 --split validation --per-cell 4   # one round of validation-period investigation
+.venv/bin/python -m aml_agent.cli learning-cycle --tier-agent --tier-patterns   # risk-tiering agent learns and publishes the tiering policy
+.venv/bin/python -m aml_agent.cli learning-cycle --update-from dev-r3           # rule update agent updates rules based on investigation results
+.venv/bin/python -m aml_agent.cli showcase-metrics                             # recompute validation-period link metrics for the dashboard
+.venv/bin/python -m aml_agent.cli alert-index --snapshot                       # export all validation-period alerts (using the current primary tiering) and update the compressed snapshot
+.venv/bin/python -m aml_agent.cli dashboard --snapshot                         # export dashboard data and refresh the repository snapshot
 ```
 
-重新制作本地数据包（项目负责人）：
+To recreate the local data package (project lead):
 
 ```bash
-AML_VM_SSH="ssh -i <私钥> <用户名>@<VM 地址>" scripts/export_local_pack.sh   # 从 VM 导出交易和特征分片
-.venv/bin/python -m aml_agent.cli local-pack build                            # 打包，并从 VM 的 Zetaris 记录核对用的行数
+AML_VM_SSH="ssh -i <private key> <username>@<VM address>" scripts/export_local_pack.sh   # export transactions and feature shards from the VM
+.venv/bin/python -m aml_agent.cli local-pack build                            # package and verify the row count against the VM Zetaris record
 gh release upload local-pack-v1 .runtime/local-data/aml-local-pack.tar --clobber
 ```
 
-测试：
+Testing:
 
 ```bash
 .venv/bin/pip install -e '.[dev]'
@@ -190,40 +190,40 @@ gh release upload local-pack-v1 .runtime/local-data/aml-local-pack.tar --clobber
 node --experimental-transform-types --test services/orchestrator/worker.test.ts
 ```
 
-## 目录
+## Directory structure
 
 ```text
-apps/dashboard/              看板前端（纯 JS + SVG）；snapshot/ 为提交的数据快照
-services/aml-api/aml_agent/  后端：API、CLI、调查工作流、三个 agent、Zetaris 工具、评估与看板数据
-services/orchestrator/       TypeScript 编排：team.ts（调查团队）、worker.ts（单个调查员）
-vendor/meterless/            固定版本的 Meterless 引擎（Markovian、H-MEM、World Model）与许可
-docs/                        规范、运行指南、看板字段说明、规则版本记录；docs/archive 为历史方案
-schemas/                     从 Pydantic 契约导出的 JSON Schema（测试保证与代码一致）
-tests/                       契约、边界与流程测试
-evaluations/                 冻结的时间划分（开发 / 验证 / 测试关闭 / 监控）
-sources/                     政策来源快照与数据来源记录
-scripts/                     维护脚本：从 VM 导出本地数据包
-analysis/                    早期实验结果与原始回执（按当时版本保留）
-deploy/colab/                在 Colab GPU 上自托管 Nemotron Lightning 的 notebook
-.runtime/                    私有运行状态、评估标签、导出数据（Git 忽略）
+apps/dashboard/              dashboard frontend (plain JS + SVG); snapshot/ contains the committed data snapshot
+services/aml-api/aml_agent/  backend: API, CLI, investigation workflow, three agents, Zetaris tools, evaluation, and dashboard data
+services/orchestrator/       TypeScript orchestration: team.ts (investigation team), worker.ts (single investigator)
+vendor/meterless/            pinned Meterless engine (Markovian, H-MEM, World Model) and license
+docs/                        specifications, runbooks, dashboard field descriptions, and rule version records; docs/archive contains historical proposals
+schemas/                     JSON Schema exported from Pydantic contracts (tests guarantee this remains consistent with code)
+tests/                       contract, boundary, and workflow tests
+evaluations/                 frozen time splits (development / validation / test-closed / monitoring)
+sources/                     policy source snapshots and data-source records
+scripts/                     maintenance scripts: exporting local data packages from the VM
+analysis/                    early experiments and raw receipts (preserved by version)
+deploy/colab/                notebook for self-hosting Nemotron Lightning on Colab GPU
+.runtime/                    private runtime state, evaluation labels, and exported data (Git ignored)
 ```
 
-## 代码入口（`services/aml-api/aml_agent/`）
+## Code entry points (`services/aml-api/aml_agent/`)
 
-| 职责 | 模块 |
-|---|---|
-| API、CLI、状态账本 | `api.py`、`cli.py`、`store.py` |
-| 看板数据与只读服务 | `dashboard.py`（导出）、`alert_trace.py`（告警追查与回放）、`showcase.py`（三个 agent 的推理与指标）、`dashboard_server.py`、`live.py`（实时调查） |
-| 规则：DSL、学习、版本 | `rule_program.py`、`rule_learning.py`、`rule_versions.py`、`rule_changelog.py`、`chains.py`（洗钱链路与链路召回） |
-| 风险分级 agent | `tier_agent.py`（策略学习与发布）、`tiering.py`（参考模型） |
-| 调查 agent | `workflow.py`（调查循环、团队协调与合并）、`adjudication.py`（高级调查员研判）、`investigator_training.py`、`contracts.py`、`digest.py`、`candidates.py`、`harness.py`、`calibration.py` |
-| 规则更新 agent 与闭环 | `learning_cycle.py`、`feature_proposals.py` |
-| Zetaris 查询、特征与工具 | `zetaris.py`、`feature_store.py`、`feature_registry.py`、`tools.py`、`evidence.py`、`local_pack.py`（本地数据包） |
-| 评估、模型与配置 | `evaluation.py`、`providers.py`、`profile.py`、`settings.py` |
+| Responsibility                         | Module                                                                                                                                                                                                                     |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API, CLI, state ledger                 | `api.py`, `cli.py`, `store.py`                                                                                                                                                                                             |
+| Dashboard data and read-only services  | `dashboard.py` (export), `alert_trace.py` (alert investigation and replay), `showcase.py` (reasoning and metrics for three agents), `dashboard_server.py`, `live.py` (live investigation)                                  |
+| Rules: DSL, learning, versioning       | `rule_program.py`, `rule_learning.py`, `rule_versions.py`, `rule_changelog.py`, `chains.py` (money-laundering chains and link recall)                                                                                      |
+| Risk-tiering agent                     | `tier_agent.py` (policy learning and publishing), `tiering.py` (reference model)                                                                                                                                           |
+| Investigation agent                    | `workflow.py` (investigation loop, team coordination, and merge), `adjudication.py` (senior investigator review), `investigator_training.py`, `contracts.py`, `digest.py`, `candidates.py`, `harness.py`, `calibration.py` |
+| Rule update agent and closed loop      | `learning_cycle.py`, `feature_proposals.py`                                                                                                                                                                                |
+| Zetaris queries, features, and tooling | `zetaris.py`, `feature_store.py`, `feature_registry.py`, `tools.py`, `evidence.py`, `local_pack.py` (local data package)                                                                                                   |
+| Evaluation, models, and config         | `evaluation.py`, `providers.py`, `profile.py`, `settings.py`                                                                                                                                                               |
 
-## 更多文档
+## More documentation
 
-- [运行指南](docs/operations/RUNBOOK.md)：密钥、命令、特征库、调查方式与限制。
-- [看板数据字段](docs/dashboard/DATA_FIELDS.md)：`data.json` 每个字段的含义。
-- [规则版本记录](docs/rules/RULE_VERSIONS.md)：每个版本的来源、规则与效果。
-- [技术规范](docs/architecture/AML_Agent_Technical_Spec_v1.0.md)、[执行 Harness](docs/architecture/EXECUTION_HARNESS.md)、[配置](docs/architecture/AML_Agent_Config_v1.0.json)（唯一参数来源）。
+- [Runbook](docs/operations/RUNBOOK.md): keys, commands, feature store, investigation modes, and limitations.
+- [Dashboard data fields](docs/dashboard/DATA_FIELDS.md): the meaning of each field in `data.json`.
+- [Rule version history](docs/rules/RULE_VERSIONS.md): the source, rules, and impact of each version.
+- [Technical specification](docs/architecture/AML_Agent_Technical_Spec_v1.0.md), [execution harness](docs/architecture/EXECUTION_HARNESS.md), and [configuration](docs/architecture/AML_Agent_Config_v1.0.json) (the single source of parameters).
